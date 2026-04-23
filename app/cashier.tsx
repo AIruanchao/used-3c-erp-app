@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Button, Card, Chip, Divider } from 'react-native-paper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../hooks/useAuth';
 import { cashierCheckout } from '../services/cashier-service';
 import { searchDevice } from '../services/inventory-service';
@@ -21,6 +22,7 @@ import { getErrorMessage } from '../lib/errors';
 
 export default function CashierScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { storeId, organizationId } = useAuth();
   const params = useLocalSearchParams<{ deviceId?: string; deviceSn?: string; salePrice?: string }>();
   const [deviceId, setDeviceId] = useState(params.deviceId ?? '');
@@ -98,12 +100,19 @@ export default function CashierScreen() {
       Alert.alert('收银成功', `订单号: ${result.saleOrderId}\n利润: ¥${typeof result.profit === 'number' ? result.profit.toFixed(2) : result.profit}`, [
         { text: '好的', onPress: () => router.back() },
       ]);
+
+      // Invalidate related queries
+      queryClient.invalidateQueries({ queryKey: ['dailyReport'] });
+      queryClient.invalidateQueries({ queryKey: ['stats'] });
+      queryClient.invalidateQueries({ queryKey: ['financeSummary'] });
+      queryClient.invalidateQueries({ queryKey: ['inventorySearch'] });
+      queryClient.invalidateQueries({ queryKey: ['outboundSearch'] });
     } catch (err) {
       Alert.alert('收银失败', getErrorMessage(err));
     } finally {
       setLoading(false);
     }
-  }, [storeId, organizationId, deviceId, deviceSn, salePrice, paymentMethod, router]);
+  }, [storeId, organizationId, deviceId, deviceSn, salePrice, paymentMethod, router, queryClient]);
 
   return (
     <KeyboardAvoidingView

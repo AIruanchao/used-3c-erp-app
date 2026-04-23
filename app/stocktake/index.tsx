@@ -7,7 +7,7 @@ import { EmptyState } from '../../components/common/EmptyState';
 import { QueryError } from '../../components/common/QueryError';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
 import { formatDate } from '../../lib/utils';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 interface StocktakeSession {
   id: string;
@@ -18,6 +18,7 @@ interface StocktakeSession {
 
 export default function StocktakeScreen() {
   const { storeId, organizationId } = useAuth();
+  const queryClient = useQueryClient();
   const [showNew, setShowNew] = useState(false);
   const [scope, setScope] = useState('FULL');
   const [creating, setCreating] = useState(false);

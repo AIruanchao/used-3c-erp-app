@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { StyleSheet, TextInput, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { Button, Card } from 'react-native-paper';
 import { useRouter } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../hooks/useAuth';
 import { createRepair } from '../../services/repair-service';
 import { findOrCreateCustomer } from '../../services/finance-service';
@@ -9,6 +10,7 @@ import { getErrorMessage } from '../../lib/errors';
 
 export default function NewRepairScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { storeId, organizationId } = useAuth();
   const [sn, setSn] = useState('');
   const [description, setDescription] = useState('');
@@ -68,12 +70,15 @@ export default function NewRepairScreen() {
         },
         { text: '返回', style: 'cancel', onPress: () => router.back() },
       ]);
+
+      queryClient.invalidateQueries({ queryKey: ['dailyReport'] });
+      queryClient.invalidateQueries({ queryKey: ['stats'] });
     } catch (err) {
       Alert.alert('创建失败', getErrorMessage(err));
     } finally {
       setLoading(false);
     }
-  }, [storeId, organizationId, sn, description, customerName, customerPhone, router]);
+  }, [storeId, organizationId, sn, description, customerName, customerPhone, router, queryClient]);
 
   return (
     <KeyboardAvoidingView

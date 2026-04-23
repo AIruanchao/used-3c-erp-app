@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Button, Card, Chip, SegmentedButtons } from 'react-native-paper';
 import { useRouter } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../hooks/useAuth';
 import { useScanner } from '../../hooks/useScanner';
 import { useInboundStore } from '../../stores/inbound-store';
@@ -24,6 +25,7 @@ type InboundStep = 'scan' | 'info' | 'confirm';
 
 export default function InboundScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { storeId, organizationId } = useAuth();
   const { handleBarcodeScanned, isScanning } = useScanner();
   const scanResults = useInboundStore((s) => s.scanResults);
@@ -162,6 +164,12 @@ export default function InboundScreen() {
         { text: '继续入库', onPress: resetForm },
         { text: '查看库存', onPress: () => router.push('/(tabs)/inventory' as never) },
       ]);
+
+      // Invalidate related queries so other screens show fresh data
+      queryClient.invalidateQueries({ queryKey: ['dailyReport'] });
+      queryClient.invalidateQueries({ queryKey: ['stats'] });
+      queryClient.invalidateQueries({ queryKey: ['inventorySearch'] });
+      queryClient.invalidateQueries({ queryKey: ['outboundSearch'] });
     } catch (err) {
       Alert.alert('入库失败', getErrorMessage(err));
     } finally {
@@ -181,6 +189,7 @@ export default function InboundScreen() {
     batteryHealth,
     router,
     resetForm,
+    queryClient,
   ]);
 
   return (
