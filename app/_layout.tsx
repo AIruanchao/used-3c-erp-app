@@ -10,6 +10,7 @@ import { useAuthStore } from '../stores/auth-store';
 import { useAppStore } from '../stores/app-store';
 import { setNavigationRef, setLogoutRef } from '../lib/api';
 import { ErrorBoundary } from '../components/common/ErrorBoundary';
+import { useOffline } from '../hooks/useOffline';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,6 +28,9 @@ export default function RootLayout() {
   const hydrate = useAuthStore((s) => s.hydrate);
   const logout = useAuthStore((s) => s.logout);
   const router = useRouter();
+
+  // Enable offline detection and queue flushing
+  useOffline();
 
   useEffect(() => {
     hydrate();
