@@ -147,6 +147,7 @@ export default function CashierScreen() {
                 value={salePrice}
                 onChangeText={setSalePrice}
                 keyboardType="decimal-pad"
+                returnKeyType="done"
               />
             </Card.Content>
           </Card>

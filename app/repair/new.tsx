@@ -12,7 +12,6 @@ export default function NewRepairScreen() {
   const { storeId, organizationId } = useAuth();
   const [sn, setSn] = useState('');
   const [description, setDescription] = useState('');
-  const [estimatedCost, setEstimatedCost] = useState('');
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [loading, setLoading] = useState(false);
@@ -114,13 +113,6 @@ export default function NewRepairScreen() {
               onChangeText={setDescription}
               multiline
               numberOfLines={4}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="预估费用（可选）"
-              value={estimatedCost}
-              onChangeText={setEstimatedCost}
-              keyboardType="decimal-pad"
             />
             <Button
               mode="contained"

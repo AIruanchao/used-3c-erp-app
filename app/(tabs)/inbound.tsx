@@ -304,6 +304,7 @@ export default function InboundScreen() {
                     value={unitCost}
                     onChangeText={setUnitCost}
                     keyboardType="decimal-pad"
+                    returnKeyType="done"
                   />
                   <TextInput
                     style={styles.input}
@@ -311,6 +312,7 @@ export default function InboundScreen() {
                     value={peerPrice}
                     onChangeText={setPeerPrice}
                     keyboardType="decimal-pad"
+                    returnKeyType="done"
                   />
                   <TextInput
                     style={styles.input}
@@ -318,6 +320,7 @@ export default function InboundScreen() {
                     value={retailPrice}
                     onChangeText={setRetailPrice}
                     keyboardType="decimal-pad"
+                    returnKeyType="done"
                   />
                   <TextInput
                     style={styles.input}

@@ -160,6 +160,7 @@ export default function RepairDetailScreen() {
               value={laborCost}
               onChangeText={setLaborCost}
               keyboardType="decimal-pad"
+              returnKeyType="done"
             />
             <Text style={styles.fieldLabel}>配件信息(可选)</Text>
             <TextInput
@@ -176,6 +177,7 @@ export default function RepairDetailScreen() {
                   value={partCost}
                   onChangeText={setPartCost}
                   keyboardType="decimal-pad"
+                  returnKeyType="done"
                 />
                 <TextInput
                   style={styles.quoteInput}
@@ -183,6 +185,7 @@ export default function RepairDetailScreen() {
                   value={partPrice}
                   onChangeText={setPartPrice}
                   keyboardType="decimal-pad"
+                  returnKeyType="done"
                 />
               </>
             ) : null}
