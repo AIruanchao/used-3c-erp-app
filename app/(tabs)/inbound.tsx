@@ -157,7 +157,7 @@ export default function InboundScreen() {
         condition: condition || undefined,
         channel: channel || undefined,
         sourceType: sourceType,
-        batteryHealth: batteryHealth ? parseInt(batteryHealth, 10) : null,
+        batteryHealth: batteryHealth ? (parseInt(batteryHealth, 10) || null) : null,
       });
 
       Alert.alert('入库成功', `设备ID: ${result.deviceId}`, [
