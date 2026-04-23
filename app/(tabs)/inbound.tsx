@@ -130,6 +130,11 @@ export default function InboundScreen() {
     setStep('scan');
   }, []);
 
+  React.useEffect(() => {
+    resetForm();
+    clearScanResults();
+  }, [storeId, resetForm, clearScanResults]);
+
   const handleSubmit = useCallback(async () => {
     if (!storeId || !organizationId) {
       Alert.alert('错误', '请先选择门店');
