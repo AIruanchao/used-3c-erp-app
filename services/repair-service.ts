@@ -52,8 +52,11 @@ export async function quoteRepair(
   return res.data;
 }
 
-export async function startRepair(repairId: string): Promise<{ ok: boolean }> {
-  const res = await api.post('/api/repair/start', { orderId: repairId });
+export async function startRepair(repairId: string, technicianId?: string): Promise<{ ok: boolean }> {
+  const res = await api.post('/api/repair/start', {
+    orderId: repairId,
+    technicianId: technicianId || undefined,
+  });
   return res.data;
 }
 

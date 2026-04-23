@@ -5,6 +5,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { REPAIR_STATUS_LABELS } from '../../lib/constants';
 import { quoteRepair, startRepair, completeRepair, qcRepair, deliverRepair } from '../../services/repair-service';
 import { getErrorMessage as getErr } from '../../lib/errors';
+import { useAuthStore } from '../../stores/auth-store';
 
 export default function RepairDetailScreen() {
   const params = useLocalSearchParams<{
@@ -16,6 +17,7 @@ export default function RepairDetailScreen() {
   }>();
 
   const { id } = params;
+  const userId = useAuthStore((s) => s.user?.id);
   const [currentStatus, setCurrentStatus] = useState(params.status ?? 'REGISTERED');
   const [laborCost, setLaborCost] = useState('');
   const [partName, setPartName] = useState('');
@@ -34,7 +36,7 @@ export default function RepairDetailScreen() {
           setShowQuoteDialog(true);
           return;
         case 'start':
-          result = await startRepair(id);
+          result = await startRepair(id, userId);
           if (result.ok) { Alert.alert('成功', '已开始维修'); setCurrentStatus('IN_REPAIR'); }
           else { Alert.alert('失败', '操作失败'); }
           break;

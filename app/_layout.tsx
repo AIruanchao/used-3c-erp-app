@@ -8,7 +8,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../stores/auth-store';
 import { useAppStore } from '../stores/app-store';
-import { setNavigationRef } from '../lib/api';
+import { setNavigationRef, setLogoutRef } from '../lib/api';
 import { ErrorBoundary } from '../components/common/ErrorBoundary';
 
 const queryClient = new QueryClient({
@@ -25,6 +25,7 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
   const theme = useAppStore((s) => s.theme);
   const hydrate = useAuthStore((s) => s.hydrate);
+  const logout = useAuthStore((s) => s.logout);
   const router = useRouter();
 
   useEffect(() => {
@@ -41,7 +42,8 @@ export default function RootLayout() {
 
   useEffect(() => {
     setNavigationRef(handleNavigate);
-  }, [handleNavigate]);
+    setLogoutRef(logout);
+  }, [handleNavigate, logout]);
 
   const isDark =
     theme === 'dark' || (theme === 'system' && colorScheme === 'dark');

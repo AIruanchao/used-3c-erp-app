@@ -22,11 +22,23 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   return config;
 });
 
+let globalNavigationRef: ((path: string) => void) | null = null;
+let globalLogoutRef: (() => void) | null = null;
+
+export function setNavigationRef(ref: (path: string) => void): void {
+  globalNavigationRef = ref;
+}
+
+export function setLogoutRef(ref: () => void): void {
+  globalLogoutRef = ref;
+}
+
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     if (error.response?.status === 401) {
       removeAuthToken();
+      globalLogoutRef?.();
       if (globalNavigationRef) {
         globalNavigationRef('(auth)/login');
       }
@@ -34,11 +46,5 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
-let globalNavigationRef: ((path: string) => void) | null = null;
-
-export function setNavigationRef(ref: (path: string) => void): void {
-  globalNavigationRef = ref;
-}
 
 export { API_BASE };

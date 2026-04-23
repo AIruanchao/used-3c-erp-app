@@ -10,8 +10,3 @@ export async function getDeviceById(
   });
   return res.data?.device ?? null;
 }
-
-export async function getDeviceLabel(deviceId: string): Promise<string> {
-  const res = await api.get(`/api/device/label/${deviceId}`);
-  return res.data?.label ?? res.data?.url ?? '';
-}

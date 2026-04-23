@@ -1,10 +1,6 @@
-import { api } from '../lib/api';
-
 /**
- * Outbound service - uses the cashier API for checkout,
- * and inventory/search for device lookup.
+ * Outbound operations are handled by:
+ * - Device search: inventory-service.searchDevice()
+ * - Checkout: cashier-service.cashierCheckout()
+ * This file is kept as a placeholder for future outbound-specific APIs.
  */
-export async function getOutboundPrint(orderId: string): Promise<string> {
-  const res = await api.get(`/api/outbound/print/${orderId}`);
-  return res.data;
-}

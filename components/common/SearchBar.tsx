@@ -1,4 +1,5 @@
 import React, { useCallback, useRef, useEffect } from 'react';
+import { StyleSheet } from 'react-native';
 import { Searchbar } from 'react-native-paper';
 
 interface SearchBarProps {
@@ -37,7 +38,14 @@ export const SearchBar = React.memo(function SearchBar({
       placeholder={placeholder}
       onChangeText={handleChange}
       value={query}
-      style={{ marginHorizontal: 16, marginVertical: 8 }}
+      style={styles.searchbar}
     />
   );
+});
+
+const styles = StyleSheet.create({
+  searchbar: {
+    marginHorizontal: 16,
+    marginVertical: 8,
+  },
 });
