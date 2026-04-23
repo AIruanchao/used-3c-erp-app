@@ -139,7 +139,7 @@ export default function InboundScreen() {
       Alert.alert('错误', '请先查询SKU（输入型号并点击查询）');
       return;
     }
-    if (!unitCost || parseFloat(unitCost) <= 0) {
+    if (!unitCost || Number.isNaN(parseFloat(unitCost)) || parseFloat(unitCost) <= 0) {
       Alert.alert('错误', '请输入有效的成本价');
       return;
     }
