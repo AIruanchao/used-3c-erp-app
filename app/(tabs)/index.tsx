@@ -32,7 +32,7 @@ export default function WorkspaceScreen() {
   const router = useRouter();
   const { storeId, organizationId, storeName, user } = useAuth();
 
-  const { data: report, isLoading, isError, refetch } = useQuery({
+  const { data: report, isLoading, isError, refetch, isRefetching } = useQuery({
     queryKey: ['dailyReport', storeId, organizationId],
     queryFn: () =>
       getDailyReport({
@@ -56,7 +56,7 @@ export default function WorkspaceScreen() {
     <ScrollView
       style={styles.container}
       refreshControl={
-        <RefreshControl refreshing={false} onRefresh={refetch} />
+        <RefreshControl refreshing={isRefetching ?? false} onRefresh={refetch} />
       }
     >
       <View style={styles.header}>
