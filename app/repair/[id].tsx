@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Alert, TextInput } from 'react-nati
 import { Card, Button, Dialog, Portal } from 'react-native-paper';
 import { useLocalSearchParams } from 'expo-router';
 import { REPAIR_STATUS_LABELS } from '../../lib/constants';
-import { quoteRepair, startRepair, completeRepair, qcRepair, deliverRepair } from '../../services/repair-service';
+import { quoteRepair, startRepair, completeRepair, qcRepair, deliverRepair, acceptRepairQuote } from '../../services/repair-service';
 import { getErrorMessage as getErr } from '../../lib/errors';
 import { useAuthStore } from '../../stores/auth-store';
 
@@ -36,6 +36,11 @@ export default function RepairDetailScreen() {
           setShowQuoteDialog(true);
           return;
         case 'start':
+          // If QUOTED, must accept first then start
+          if (currentStatus === 'QUOTED') {
+            const acceptRes = await acceptRepairQuote(id);
+            if (!acceptRes.ok) { Alert.alert('失败', '接受报价失败'); break; }
+          }
           result = await startRepair(id, userId);
           if (result.ok) { Alert.alert('成功', '已开始维修'); setCurrentStatus('IN_REPAIR'); }
           else { Alert.alert('失败', '操作失败'); }
@@ -52,7 +57,7 @@ export default function RepairDetailScreen() {
           break;
         case 'deliver':
           result = await deliverRepair(id);
-          if (result.ok) { Alert.alert('成功', '已交付'); setCurrentStatus('DELIVERED'); }
+          if (result.ok) { Alert.alert('成功', '已安排交付'); setCurrentStatus('DELIVERING'); }
           else { Alert.alert('失败', '操作失败'); }
           break;
       }

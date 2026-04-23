@@ -60,6 +60,11 @@ export async function startRepair(repairId: string, technicianId?: string): Prom
   return res.data;
 }
 
+export async function acceptRepairQuote(repairId: string): Promise<{ ok: boolean }> {
+  const res = await api.post('/api/repair/accept', { orderId: repairId });
+  return res.data;
+}
+
 export async function completeRepair(
   repairId: string,
   data?: { repairNotes?: string },
