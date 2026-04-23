@@ -214,7 +214,7 @@ export default function InboundScreen() {
             <BarcodeScannerView onBarcodeScanned={onScan} isActive={isScanning} />
             <Button
               mode="text"
-              onPress={() => setShowScanner(false)}
+              onPress={() => { setShowScanner(false); setScanLoading(false); }}
               style={styles.closeScannerBtn}
             >
               关闭相机
