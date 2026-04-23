@@ -141,7 +141,10 @@ export default function CashierScreen() {
                 style={styles.input}
                 placeholder="设备SN"
                 value={deviceSn}
-                onChangeText={setDeviceSn}
+                onChangeText={(text) => {
+                  setDeviceSn(text);
+                  setDeviceId('');
+                }}
                 autoCapitalize="none"
                 autoCorrect={false}
               />
