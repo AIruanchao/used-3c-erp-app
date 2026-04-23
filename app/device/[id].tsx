@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { Card, List, Button } from 'react-native-paper';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
@@ -18,7 +18,7 @@ export default function DeviceDetailScreen() {
   const { organizationId, storeName } = useAuth();
   const [printing, setPrinting] = useState(false);
 
-  const { data: device, isLoading, isError, refetch } = useQuery({
+  const { data: device, isLoading, isError, refetch, isRefetching } = useQuery({
     queryKey: ['device', id, organizationId],
     queryFn: () => getDeviceById(id, organizationId ?? ''),
     enabled: !!id && !!organizationId,
@@ -38,7 +38,10 @@ export default function DeviceDetailScreen() {
   const brandName = device.Sku?.Model?.Brand?.name ?? '';
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
+    >
       {/* Header */}
       <Card style={styles.card} mode="elevated">
         <Card.Content>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { Card, Divider } from 'react-native-paper';
 import { useLocalSearchParams } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
@@ -13,7 +13,7 @@ export default function CustomerDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { storeId, organizationId } = useAuth();
 
-  const { data: customer, isLoading, isError, refetch } = useQuery({
+  const { data: customer, isLoading, isError, refetch, isRefetching } = useQuery({
     queryKey: ['customer', id, storeId, organizationId],
     queryFn: () => getCustomerById(id, organizationId ?? '', storeId ?? ''),
     enabled: !!id && !!storeId && !!organizationId,
@@ -24,7 +24,10 @@ export default function CustomerDetailScreen() {
   if (!customer) return <View style={styles.center}><Text>客户不存在</Text></View>;
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
+    >
       <Card style={styles.card} mode="elevated">
         <Card.Content>
           <Text style={styles.name}>{customer.name}</Text>
