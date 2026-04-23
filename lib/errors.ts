@@ -10,8 +10,10 @@ export class AppError extends Error {
 }
 
 export class ValidationError extends AppError {
-  constructor(message: string, public details?: Record<string, unknown>) {
+  details?: Record<string, unknown>;
+  constructor(message: string, details?: Record<string, unknown>) {
     super(message, 400, 'VALIDATION_ERROR');
+    this.details = details;
   }
 }
 

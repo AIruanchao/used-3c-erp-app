@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Camera, useCameraDevice, useCameraPermission, useObjectOutput } from 'react-native-vision-camera';
 import { IconButton } from 'react-native-paper';
@@ -42,31 +42,32 @@ export const BarcodeScannerView = React.memo(function BarcodeScannerView({
   const device = useCameraDevice('back');
   const torchOn = useAppStore((s) => s.scannerTorchOn);
   const setScannerTorch = useAppStore((s) => s.setScannerTorch);
-  const [lastCode, setLastCode] = useState<string | null>(null);
-  const [lastScanTime, setLastScanTime] = useState(0);
+  const lastCodeRef = useRef<string | null>(null);
+  const lastScanTimeRef = useRef(0);
+  const [lastCodeDisplay, setLastCodeDisplay] = useState<string | null>(null);
 
   const handleObjectsScanned = useCallback(
     (objects: ScannedObject[]) => {
       if (!isActive) return;
       const now = Date.now();
-      if (now - lastScanTime < 500) return;
+      if (now - lastScanTimeRef.current < 500) return;
 
       for (const obj of objects) {
-        // Only process codes (not faces, etc.)
         if (!('value' in obj)) continue;
         const scannedCode = obj as ScannedCode;
         const value = scannedCode.value;
         if (!value) continue;
-        if (value === lastCode) continue;
+        if (value === lastCodeRef.current) continue;
 
-        setLastScanTime(now);
-        setLastCode(value);
+        lastScanTimeRef.current = now;
+        lastCodeRef.current = value;
+        setLastCodeDisplay(value);
         const format = FORMAT_MAP[obj.type] ?? obj.type;
         onBarcodeScanned(value, format);
         break;
       }
     },
-    [isActive, lastCode, lastScanTime, onBarcodeScanned],
+    [isActive, onBarcodeScanned],
   );
 
   const objectOutput = useObjectOutput({
@@ -119,10 +120,10 @@ export const BarcodeScannerView = React.memo(function BarcodeScannerView({
           />
         </TouchableOpacity>
       </View>
-      {lastCode ? (
+      {lastCodeDisplay ? (
         <View style={styles.lastCode}>
           <Text style={styles.lastCodeText} numberOfLines={1}>
-            上次扫码: {lastCode}
+            上次扫码: {lastCodeDisplay}
           </Text>
         </View>
       ) : null}

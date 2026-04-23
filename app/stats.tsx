@@ -6,19 +6,8 @@ import { useQuery } from '@tanstack/react-query';
 import { getDailyReport } from '../services/stats-service';
 import { LoadingScreen } from '../components/common/LoadingScreen';
 import { QueryError } from '../components/common/QueryError';
-import { formatDate } from '../lib/utils';
+import { formatDate, yuan } from '../lib/utils';
 import { COMPANY_NAME } from '../lib/constants';
-
-function formatMoney(value: number | string): string {
-  const num = typeof value === 'string' ? parseFloat(value) : value;
-  if (Number.isNaN(num)) return '¥0.00';
-  const fixed = num.toFixed(2);
-  const parts = fixed.split('.');
-  const intPart = parts[0] ?? '0';
-  const decPart = parts[1] ?? '00';
-  const withCommas = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  return `¥${withCommas}.${decPart}`;
-}
 
 export default function StatsScreen() {
   const { storeId, organizationId } = useAuth();
@@ -53,7 +42,7 @@ export default function StatsScreen() {
             <View style={styles.metric}>
               <Text style={styles.metricLabel}>销售额</Text>
               <Text style={[styles.metricValue, { color: '#2e7d32' }]}>
-                {formatMoney(report?.sales.amount ?? 0)}
+                {yuan(report?.sales.amount ?? 0)}
               </Text>
               <Text style={styles.metricCount}>
                 {report?.sales.count ?? 0} 台
@@ -62,7 +51,7 @@ export default function StatsScreen() {
             <View style={styles.metric}>
               <Text style={styles.metricLabel}>采购额</Text>
               <Text style={styles.metricValue}>
-                {formatMoney(report?.purchase.cost ?? 0)}
+                {yuan(report?.purchase.cost ?? 0)}
               </Text>
               <Text style={styles.metricCount}>
                 {report?.purchase.count ?? 0} 台
@@ -76,7 +65,7 @@ export default function StatsScreen() {
             <View style={styles.metric}>
               <Text style={styles.metricLabel}>净现金流</Text>
               <Text style={[styles.metricValue, { color: (report?.netCashFlow ?? 0) >= 0 ? '#2e7d32' : '#e53935' }]}>
-                {formatMoney(report?.netCashFlow ?? 0)}
+                {yuan(report?.netCashFlow ?? 0)}
               </Text>
             </View>
             <View style={styles.metric}>
@@ -108,7 +97,7 @@ export default function StatsScreen() {
                 <View key={idx} style={styles.profitRow}>
                   <Text style={styles.profitName}>{item.modelName}</Text>
                   <Text style={[styles.profitValue, { color: item.profit >= 0 ? '#2e7d32' : '#e53935' }]}>
-                    {formatMoney(item.profit)}
+                    {yuan(item.profit)}
                   </Text>
                 </View>
               ))}

@@ -7,17 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getDailyReport } from '../../services/stats-service';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
 import { QueryError } from '../../components/common/QueryError';
-
-function formatMoney(value: number | string): string {
-  const num = typeof value === 'string' ? parseFloat(value) : value;
-  if (Number.isNaN(num)) return '¥0.00';
-  const fixed = num.toFixed(2);
-  const parts = fixed.split('.');
-  const intPart = parts[0] ?? '0';
-  const decPart = parts[1] ?? '00';
-  const withCommas = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  return `¥${withCommas}.${decPart}`;
-}
+import { yuan } from '../../lib/utils';
 
 export default function FinanceIndexScreen() {
   const router = useRouter();
@@ -44,13 +34,13 @@ export default function FinanceIndexScreen() {
           <View style={styles.summaryRow}>
             <View style={styles.summaryItem}>
               <Text style={[styles.amountLarge, { color: '#2e7d32' }]}>
-                {formatMoney(report?.sales.amount ?? 0)}
+                {yuan(report?.sales.amount ?? 0)}
               </Text>
               <Text style={styles.summaryLabel}>销售额 ({report?.sales.count ?? 0}台)</Text>
             </View>
             <View style={styles.summaryItem}>
               <Text style={styles.amountLarge}>
-                {formatMoney(report?.purchase.cost ?? 0)}
+                {yuan(report?.purchase.cost ?? 0)}
               </Text>
               <Text style={styles.summaryLabel}>采购额 ({report?.purchase.count ?? 0}台)</Text>
             </View>
@@ -61,7 +51,7 @@ export default function FinanceIndexScreen() {
               title="净现金流"
               description={
                 <Text style={{ color: (report?.netCashFlow ?? 0) >= 0 ? '#2e7d32' : '#e53935', fontWeight: '600' }}>
-                  {formatMoney(report?.netCashFlow ?? 0)}
+                  {yuan(report?.netCashFlow ?? 0)}
                 </Text>
               }
             />

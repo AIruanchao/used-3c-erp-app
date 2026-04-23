@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, RefreshControl, ScrollView } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { FAB } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { EmptyState } from '../../components/common/EmptyState';
@@ -9,16 +9,11 @@ export default function RepairListScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.listContent}
-        refreshControl={<RefreshControl refreshing={false} onRefresh={() => {}} />}
-      >
-        <EmptyState
-          icon="wrench"
-          title="维修工单"
-          subtitle="后端暂无列表API。请点击右下角+创建新工单"
-        />
-      </ScrollView>
+      <EmptyState
+        icon="wrench"
+        title="维修工单"
+        subtitle="后端暂无列表API。请点击右下角+创建新工单"
+      />
 
       <FAB
         icon="plus"

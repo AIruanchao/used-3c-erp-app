@@ -7,14 +7,8 @@ import { getDailyReport } from '../../services/stats-service';
 import { printerService } from '../../services/printer-service';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
 import { QueryError } from '../../components/common/QueryError';
-import { formatDate } from '../../lib/utils';
+import { formatDate, yuan } from '../../lib/utils';
 import { COMPANY_NAME } from '../../lib/constants';
-
-function formatMoney(value: number | string): string {
-  const num = typeof value === 'string' ? parseFloat(value) : value;
-  if (Number.isNaN(num)) return '¥0.00';
-  return `¥${num.toFixed(2)}`;
-}
 
 export default function SettlementScreen() {
   const { storeId, organizationId, storeName } = useAuth();
@@ -37,8 +31,8 @@ export default function SettlementScreen() {
       await printerService.printDailySettlement({
         storeName: storeName ?? '',
         date: formatDate(new Date().toISOString()),
-        totalSales: formatMoney(report?.sales.amount ?? 0),
-        totalPurchases: formatMoney(report?.purchase.cost ?? 0),
+        totalSales: yuan(report?.sales.amount ?? 0),
+        totalPurchases: yuan(report?.purchase.cost ?? 0),
         deviceCount: report?.purchase.count ?? 0,
         repairCount: report?.sales.count ?? 0,
       });
@@ -69,13 +63,13 @@ export default function SettlementScreen() {
             <View style={styles.metric}>
               <Text style={styles.metricLabel}>销售额</Text>
               <Text style={[styles.metricValue, { color: '#2e7d32' }]}>
-                {formatMoney(report?.sales.amount ?? 0)}
+                {yuan(report?.sales.amount ?? 0)}
               </Text>
             </View>
             <View style={styles.metric}>
               <Text style={styles.metricLabel}>采购额</Text>
               <Text style={styles.metricValue}>
-                {formatMoney(report?.purchase.cost ?? 0)}
+                {yuan(report?.purchase.cost ?? 0)}
               </Text>
             </View>
           </View>
@@ -99,7 +93,7 @@ export default function SettlementScreen() {
             <View style={styles.metric}>
               <Text style={styles.metricLabel}>净现金流</Text>
               <Text style={[styles.metricValue, { color: (report?.netCashFlow ?? 0) >= 0 ? '#2e7d32' : '#e53935' }]}>
-                {formatMoney(report?.netCashFlow ?? 0)}
+                {yuan(report?.netCashFlow ?? 0)}
               </Text>
             </View>
             <View style={styles.metric}>

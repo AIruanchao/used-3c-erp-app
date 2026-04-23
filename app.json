@@ -47,18 +47,6 @@
         {
           "cameraPermissionText": "嫩叶ERP需要相机权限以扫描条码"
         }
-      ],
-      [
-        "expo-secure-store",
-        {
-          "faceIDPermission": "嫩叶ERP使用Face ID保护您的账户安全"
-        }
-      ],
-      [
-        "expo-updates",
-        {
-          "enabled": false
-        }
       ]
     ]
   }

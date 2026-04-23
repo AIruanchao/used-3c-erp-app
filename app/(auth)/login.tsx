@@ -94,6 +94,8 @@ export default function LoginScreen() {
             value={password}
             onChangeText={setPassword}
             secureTextEntry
+            autoCapitalize="none"
+            autoCorrect={false}
             editable={!loading}
           />
           {error ? <HelperText type="error">{error}</HelperText> : null}

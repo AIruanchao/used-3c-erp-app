@@ -15,6 +15,10 @@ export default function ProfileScreen() {
   const [showStorePicker, setShowStorePicker] = useState(false);
 
   const handleStoreSelect = useCallback(() => {
+    if (stores.length === 0) {
+      Alert.alert('提示', '当前没有可用的门店');
+      return;
+    }
     if (stores.length <= 5) {
       Alert.alert(
         '切换门店',

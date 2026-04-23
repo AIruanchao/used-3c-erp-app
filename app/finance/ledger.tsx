@@ -5,13 +5,9 @@ import { QueryError } from '../../components/common/QueryError';
 import { useAuth } from '../../hooks/useAuth';
 import { getDailyReport } from '../../services/stats-service';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
-import { formatDate } from '../../lib/utils';
+import { formatDate, yuan } from '../../lib/utils';
 import { Card, Text } from 'react-native-paper';
 import { useQuery } from '@tanstack/react-query';
-
-function formatMoney(value: number): string {
-  return `¥${value.toFixed(2)}`;
-}
 
 export default function LedgerScreen() {
   const { storeId, organizationId } = useAuth();
@@ -40,16 +36,16 @@ export default function LedgerScreen() {
           <Text style={styles.date}>{formatDate(new Date().toISOString())}</Text>
           <View style={styles.row}>
             <Text style={styles.label}>销售收入</Text>
-            <Text style={[styles.value, { color: '#2e7d32' }]}>{formatMoney(report?.sales.amount ?? 0)}</Text>
+            <Text style={[styles.value, { color: '#2e7d32' }]}>{yuan(report?.sales.amount ?? 0)}</Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.label}>采购成本</Text>
-            <Text style={styles.value}>{formatMoney(report?.purchase.cost ?? 0)}</Text>
+            <Text style={styles.value}>{yuan(report?.purchase.cost ?? 0)}</Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.label}>净现金流</Text>
             <Text style={[styles.value, { color: (report?.netCashFlow ?? 0) >= 0 ? '#2e7d32' : '#e53935' }]}>
-              {formatMoney(report?.netCashFlow ?? 0)}
+              {yuan(report?.netCashFlow ?? 0)}
             </Text>
           </View>
         </Card.Content>
