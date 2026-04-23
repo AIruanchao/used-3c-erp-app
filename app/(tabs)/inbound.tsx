@@ -357,7 +357,7 @@ export default function InboundScreen() {
                       <Chip
                         key={opt.value}
                         selected={condition === opt.value}
-                        onPress={() => setCondition(opt.value)}
+                        onPress={() => setCondition(condition === opt.value ? '' : opt.value)}
                         style={styles.chip}
                         compact
                       >
@@ -372,7 +372,7 @@ export default function InboundScreen() {
                       <Chip
                         key={opt}
                         selected={channel === opt}
-                        onPress={() => setChannel(opt)}
+                        onPress={() => setChannel(channel === opt ? '' : opt)}
                         style={styles.chip}
                         compact
                       >
