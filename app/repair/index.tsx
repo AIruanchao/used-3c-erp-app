@@ -3,7 +3,6 @@ import { View, StyleSheet, RefreshControl, ScrollView } from 'react-native';
 import { Card, SegmentedButtons, FAB, Text } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../hooks/useAuth';
-import { createRepair, type RepairItem } from '../../services/repair-service';
 import { EmptyState } from '../../components/common/EmptyState';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
 import { REPAIR_STATUS_LABELS } from '../../lib/constants';

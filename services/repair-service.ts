@@ -3,34 +3,29 @@ import { api } from '../lib/api';
 export interface RepairItem {
   id: string;
   status: string;
-  description: string;
-  sn: string | null;
-  estimatedCost: string | null;
-  actualCost: string | null;
+  faultDescription: string;
+  deviceSn: string | null;
+  customerName: string | null;
+  customerPhone: string | null;
+  deviceBrand: string | null;
+  deviceModel: string | null;
+  quoteAmount: number | null;
   createdAt: string;
   updatedAt: string;
-  Device?: {
-    id: string;
-    sn: string;
-    Sku?: {
-      id: string;
-      name: string;
-    };
-  };
-  Customer?: {
-    id: string;
-    name: string;
-    phone: string;
-  };
 }
 
 export async function createRepair(data: {
   storeId: string;
   organizationId: string;
   deviceId?: string | null;
-  sn?: string | null;
+  deviceSn?: string | null;
   customerId?: string | null;
-  description: string;
+  customerName?: string;
+  customerPhone?: string;
+  deviceBrand?: string;
+  deviceModel?: string;
+  faultCategory?: string;
+  faultDescription: string;
   estimatedCost?: number | null;
 }): Promise<{ ok: boolean; order: RepairItem }> {
   const res = await api.post('/api/repair/create', data);

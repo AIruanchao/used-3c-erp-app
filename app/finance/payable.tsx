@@ -18,7 +18,7 @@ export default function PayableScreen() {
         storeId: storeId ?? undefined,
         organizationId: organizationId ?? undefined,
       }),
-    enabled: !!storeId,
+    enabled: !!storeId && !!organizationId,
   });
 
   if (isLoading) return <LoadingScreen />;

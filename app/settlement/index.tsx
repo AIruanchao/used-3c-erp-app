@@ -25,7 +25,7 @@ export default function SettlementScreen() {
         storeId: storeId ?? undefined,
         organizationId: organizationId ?? undefined,
       }),
-    enabled: !!storeId,
+    enabled: !!storeId && !!organizationId,
   });
 
   const handlePrint = async () => {

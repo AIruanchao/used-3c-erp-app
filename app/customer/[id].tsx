@@ -6,14 +6,16 @@ import { useQuery } from '@tanstack/react-query';
 import { getCustomerById } from '../../services/finance-service';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
 import { AmountText } from '../../components/finance/AmountText';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function CustomerDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { storeId, organizationId } = useAuth();
 
   const { data: customer, isLoading } = useQuery({
-    queryKey: ['customer', id],
-    queryFn: () => getCustomerById(id),
-    enabled: !!id,
+    queryKey: ['customer', id, storeId],
+    queryFn: () => getCustomerById(id, organizationId ?? '', storeId ?? ''),
+    enabled: !!id && !!storeId && !!organizationId,
   });
 
   if (isLoading) return <LoadingScreen />;

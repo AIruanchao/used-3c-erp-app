@@ -90,15 +90,18 @@ export const PAYMENT_STATUS_LABELS: Record<string, string> = {
   OVERPAID: '多付',
 };
 
-/** Repair status labels */
+/** Repair status labels - matching backend Prisma enum */
 export const REPAIR_STATUS_LABELS: Record<string, string> = {
   REGISTERED: '已登记',
-  PENDING: '待处理',
+  DIAGNOSED: '已检测',
   QUOTED: '已报价',
-  IN_PROGRESS: '维修中',
-  COMPLETED: '已完成',
-  QC: '质检通过',
-  DELIVERED: '已交付',
+  ACCEPTED: '已接受报价',
+  REJECTED: '已拒绝报价',
+  IN_REPAIR: '维修中',
+  COMPLETED: '维修完成',
+  WAITING_PICKUP: '待取件',
+  DELIVERING: '配送中',
+  CLOSED: '已关闭',
   CANCELLED: '已取消',
 };
 

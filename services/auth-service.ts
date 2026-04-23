@@ -1,6 +1,4 @@
 import { api } from '../lib/api';
-import type { StoreMemberItem } from '../types/api';
-import { StoreMemberSchema, validateOrThrow } from '../types/schemas';
 
 /** Login using next-auth credentials provider */
 function extractTokenFromHeaders(headers: Record<string, unknown>): string {
@@ -59,11 +57,17 @@ export async function loginWithEmail(
   };
 }
 
-export async function getUserStores(): Promise<StoreMemberItem[]> {
-  const res = await api.get('/api/store-team');
-  const items = res.data as StoreMemberItem[];
-  for (const item of items) {
-    validateOrThrow(StoreMemberSchema, item);
-  }
-  return items;
+export interface UserStoreItem {
+  storeMemberId: string;
+  role: string;
+  storeId: string;
+  storeName: string;
+  organizationId: string;
+  orgName: string;
+}
+
+export async function getUserStores(): Promise<UserStoreItem[]> {
+  const res = await api.get('/api/user/stores');
+  const data = res.data as { items: UserStoreItem[] };
+  return data.items ?? [];
 }

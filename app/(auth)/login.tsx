@@ -41,12 +41,12 @@ export default function LoginScreen() {
 
       let stores: StoreInfo[] = [];
       try {
-        const storeMembers = await getUserStores();
-        stores = storeMembers.map((m) => ({
-          storeId: m.Store.id,
-          storeName: m.Store.name,
-          organizationId: m.Store.organizationId,
-          orgName: m.Store.Organization.name,
+        const userStores = await getUserStores();
+        stores = userStores.map((s) => ({
+          storeId: s.storeId,
+          storeName: s.storeName,
+          organizationId: s.organizationId,
+          orgName: s.orgName,
         }));
       } catch {
         // stores fetch might fail, continue anyway

@@ -1,5 +1,4 @@
 import { api } from '../lib/api';
-import type { Device } from '../types/device';
 
 export interface QuickInboundResult {
   success: string;
@@ -25,12 +24,12 @@ export async function quickInbound(data: {
   return res.data;
 }
 
-export async function getSkuInfo(barcode: string) {
-  const res = await api.get('/api/inbound/sku-info', { params: { barcode } });
+export async function getSkuInfo(modelId: string): Promise<{ skuId: string | null; category: string | null }> {
+  const res = await api.get('/api/inbound/sku-info', { params: { modelId } });
   return res.data;
 }
 
-export async function checkImei(sn: string, storeId?: string, organizationId?: string): Promise<{
+export async function checkImei(sn: string, storeId: string, organizationId: string): Promise<{
   sn: string;
   blocked: boolean;
   blacklistReason: string | null;
@@ -43,27 +42,5 @@ export async function checkImei(sn: string, storeId?: string, organizationId?: s
   const res = await api.get('/api/imei/check', {
     params: { sn, storeId, organizationId },
   });
-  return res.data;
-}
-
-export async function getInboundReceived(params: {
-  storeId?: string;
-  organizationId?: string;
-  page?: number;
-  pageSize?: number;
-}): Promise<{ items: Array<{
-  id: string;
-  status: string;
-  remark: string | null;
-  createdAt: string;
-  GoodsInboundLine?: Array<{
-    id: string;
-    sn?: string;
-    quantity: number;
-    unitCost: string;
-    Sku?: { name: string };
-  }>;
-}> }> {
-  const res = await api.get('/api/inbound/received', { params });
   return res.data;
 }

@@ -1,17 +1,15 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Card, Button } from 'react-native-paper';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { LoadingScreen } from '../../components/common/LoadingScreen';
+import { useLocalSearchParams } from 'expo-router';
 import { REPAIR_STATUS_LABELS } from '../../lib/constants';
-import { formatDate } from '../../lib/utils';
 import { quoteRepair, startRepair, completeRepair, qcRepair, deliverRepair } from '../../services/repair-service';
 import { getErrorMessage as getErr } from '../../lib/errors';
 
 /**
  * Repair detail screen.
- * Note: The backend doesn't have a GET /api/repair/[id] endpoint.
  * Repair details are passed via router params when navigating from the create result.
+ * Backend workflow: REGISTERED → DIAGNOSED → QUOTED → ACCEPTED → IN_REPAIR → COMPLETED → WAITING_PICKUP → DELIVERING → CLOSED
  */
 export default function RepairDetailScreen() {
   const params = useLocalSearchParams<{
@@ -21,11 +19,11 @@ export default function RepairDetailScreen() {
     sn?: string;
     estimatedCost?: string;
   }>();
-  const router = useRouter();
 
   const { id, status, description, sn, estimatedCost } = params;
 
   const handleAction = async (action: string) => {
+    if (!id) return;
     try {
       let result: { ok: boolean };
       switch (action) {
@@ -89,17 +87,17 @@ export default function RepairDetailScreen() {
       <Card style={styles.card}>
         <Card.Title title="操作" titleStyle={styles.cardTitle} />
         <Card.Content style={styles.actions}>
-          {(currentStatus === 'REGISTERED' || currentStatus === 'PENDING') && (
+          {(currentStatus === 'REGISTERED' || currentStatus === 'DIAGNOSED') && (
             <Button mode="contained" onPress={() => handleAction('quote')}>
               报价
             </Button>
           )}
           {currentStatus === 'QUOTED' && (
             <Button mode="contained" onPress={() => handleAction('start')}>
-              开始维修
+              接受报价并开始维修
             </Button>
           )}
-          {currentStatus === 'IN_PROGRESS' && (
+          {currentStatus === 'IN_REPAIR' && (
             <Button mode="contained" onPress={() => handleAction('complete')}>
               完成维修
             </Button>
@@ -109,9 +107,9 @@ export default function RepairDetailScreen() {
               质检通过
             </Button>
           )}
-          {currentStatus === 'QC' && (
+          {currentStatus === 'WAITING_PICKUP' && (
             <Button mode="contained" onPress={() => handleAction('deliver')}>
-              交付
+              安排交付
             </Button>
           )}
         </Card.Content>

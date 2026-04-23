@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { View, StyleSheet, TextInput, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import { Button, Card, HelperText } from 'react-native-paper';
+import { Button, Card } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../hooks/useAuth';
 import { createRepair } from '../../services/repair-service';
@@ -12,6 +12,8 @@ export default function NewRepairScreen() {
   const [sn, setSn] = useState('');
   const [description, setDescription] = useState('');
   const [estimatedCost, setEstimatedCost] = useState('');
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = useCallback(async () => {
@@ -29,8 +31,13 @@ export default function NewRepairScreen() {
       const result = await createRepair({
         storeId,
         organizationId,
-        sn: sn.trim() || undefined,
-        description: description.trim(),
+        deviceSn: sn.trim() || undefined,
+        faultDescription: description.trim(),
+        faultCategory: 'OTHER',
+        customerName: customerName.trim() || '散客',
+        customerPhone: customerPhone.trim() || '00000000000',
+        deviceBrand: '未知',
+        deviceModel: '未知',
         estimatedCost: estimatedCost ? parseFloat(estimatedCost) : null,
       });
       const order = result.order;
@@ -43,8 +50,8 @@ export default function NewRepairScreen() {
               params: {
                 id: order.id,
                 status: order.status,
-                description: order.description,
-                sn: order.sn ?? '',
+                description: order.faultDescription ?? description,
+                sn: order.deviceSn ?? sn,
               },
             } as never),
         },
@@ -55,7 +62,7 @@ export default function NewRepairScreen() {
     } finally {
       setLoading(false);
     }
-  }, [storeId, organizationId, sn, description, estimatedCost, router]);
+  }, [storeId, organizationId, sn, description, estimatedCost, customerName, customerPhone, router]);
 
   return (
     <KeyboardAvoidingView
@@ -65,6 +72,19 @@ export default function NewRepairScreen() {
       <ScrollView contentContainerStyle={styles.scroll}>
         <Card style={styles.card}>
           <Card.Content>
+            <TextInput
+              style={styles.input}
+              placeholder="客户姓名（可选，默认散客）"
+              value={customerName}
+              onChangeText={setCustomerName}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="客户手机号（可选）"
+              value={customerPhone}
+              onChangeText={setCustomerPhone}
+              keyboardType="phone-pad"
+            />
             <TextInput
               style={styles.input}
               placeholder="SN/IMEI（可选）"
