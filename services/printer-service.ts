@@ -1,11 +1,25 @@
 import { BleManager, type Device } from 'react-native-ble-plx';
 import { PermissionsAndroid, Platform } from 'react-native';
+import { mmkv } from '../lib/storage';
 
 const ESC = 0x1b;
+const PRINT_HISTORY_KEY = 'print_history';
+const MAX_HISTORY = 50;
+const MAX_RETRIES = 3;
+
+interface PrintHistoryEntry {
+  id: string;
+  type: string;
+  timestamp: number;
+  success: boolean;
+  printerName: string | null;
+  content: string;
+}
 
 class BluetoothPrinterService {
   private manager: BleManager;
   private connectedDevice: Device | null = null;
+  private lastDeviceId: string | null = null;
 
   private PRINTER_SERVICE_UUID = '0000ff00-0000-1000-8000-00805f9b34fb';
   private PRINTER_CHAR_UUID = '0000ff02-0000-1000-8000-00805f9b34fb';
@@ -65,17 +79,54 @@ class BluetoothPrinterService {
       const device = await this.manager.connectToDevice(deviceId);
       await device.discoverAllServicesAndCharacteristics();
       this.connectedDevice = device;
+      this.lastDeviceId = deviceId;
       return true;
     } catch {
+      this.connectedDevice = null;
       return false;
     }
   }
 
+  /** Reconnect to the last used printer */
+  async reconnect(): Promise<boolean> {
+    if (!this.lastDeviceId) return false;
+    return this.connect(this.lastDeviceId);
+  }
+
+  /** Check if connected, attempt reconnect if not */
+  private async ensureConnected(): Promise<boolean> {
+    if (this.connectedDevice) {
+      try {
+        const isConnected = await this.manager.isDeviceConnected(this.connectedDevice.id);
+        if (isConnected) return true;
+      } catch {
+        // Not connected, try reconnect
+      }
+    }
+
+    if (this.lastDeviceId) {
+      return await this.reconnect();
+    }
+    return false;
+  }
+
   async disconnect(): Promise<void> {
     if (this.connectedDevice) {
-      await this.manager.cancelDeviceConnection(this.connectedDevice.id);
+      try {
+        await this.manager.cancelDeviceConnection(this.connectedDevice.id);
+      } catch {
+        // Ignore disconnect errors
+      }
       this.connectedDevice = null;
     }
+  }
+
+  isConnected(): boolean {
+    return this.connectedDevice !== null;
+  }
+
+  getConnectedPrinterName(): string | null {
+    return this.connectedDevice?.name ?? null;
   }
 
   private async writeToPrinter(commands: number[]): Promise<void> {
@@ -97,13 +148,32 @@ class BluetoothPrinterService {
     await char.writeWithResponse(base64);
   }
 
+  /** Print with automatic retry on disconnection */
+  private async printWithRetry(commands: number[]): Promise<boolean> {
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      try {
+        if (attempt > 0) {
+          const reconnected = await this.ensureConnected();
+          if (!reconnected) continue;
+        }
+        await this.writeToPrinter(commands);
+        return true;
+      } catch (err) {
+        if (attempt === MAX_RETRIES - 1) {
+          throw err;
+        }
+        // Wait before retry
+        await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)));
+      }
+    }
+    return false;
+  }
+
   async printText(text: string): Promise<boolean> {
     const encoder = new TextEncoder();
     const commands: number[] = [];
 
-    // Initialize printer
     commands.push(ESC, 0x40);
-    // Set Chinese character set (GBK)
     commands.push(ESC, 0x74, 0x01);
 
     const textBytes = encoder.encode(text);
@@ -112,8 +182,7 @@ class BluetoothPrinterService {
     }
     commands.push(0x0a, 0x0a, 0x0a);
 
-    await this.writeToPrinter(commands);
-    return true;
+    return this.printWithRetry(commands);
   }
 
   async printInboundReceipt(data: {
@@ -139,7 +208,9 @@ class BluetoothPrinterService {
       '安徽嫩叶科技有限公司',
     ].join('\n');
 
-    return this.printText(receipt);
+    const success = await this.printText(receipt);
+    this.addHistory('inbound', success, receipt);
+    return success;
   }
 
   async printOutboundReceipt(data: {
@@ -167,7 +238,9 @@ class BluetoothPrinterService {
       '安徽嫩叶科技有限公司',
     ].join('\n');
 
-    return this.printText(receipt);
+    const success = await this.printText(receipt);
+    this.addHistory('outbound', success, receipt);
+    return success;
   }
 
   async printRepairReceipt(data: {
@@ -193,7 +266,9 @@ class BluetoothPrinterService {
       '安徽嫩叶科技有限公司',
     ].join('\n');
 
-    return this.printText(receipt);
+    const success = await this.printText(receipt);
+    this.addHistory('repair', success, receipt);
+    return success;
   }
 
   async printDailySettlement(data: {
@@ -210,16 +285,48 @@ class BluetoothPrinterService {
       `门店: ${data.storeName}`,
       `日期: ${data.date}`,
       '',
-      `销售额: ¥${data.totalSales}`,
-      `采购额: ¥${data.totalPurchases}`,
+      `销售额: ${data.totalSales}`,
+      `采购额: ${data.totalPurchases}`,
       `入库: ${data.deviceCount}台`,
-      `维修: ${data.repairCount}单`,
+      `出库: ${data.repairCount}台`,
       '',
       '==================',
       '安徽嫩叶科技有限公司',
     ].join('\n');
 
-    return this.printText(receipt);
+    const success = await this.printText(receipt);
+    this.addHistory('settlement', success, receipt);
+    return success;
+  }
+
+  /** Get print history */
+  getHistory(): PrintHistoryEntry[] {
+    const raw = mmkv.getString(PRINT_HISTORY_KEY);
+    if (!raw) return [];
+    try {
+      return JSON.parse(raw) as PrintHistoryEntry[];
+    } catch {
+      return [];
+    }
+  }
+
+  /** Clear print history */
+  clearHistory(): void {
+    mmkv.remove(PRINT_HISTORY_KEY);
+  }
+
+  private addHistory(type: string, success: boolean, content: string): void {
+    const history = this.getHistory();
+    history.unshift({
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+      type,
+      timestamp: Date.now(),
+      success,
+      printerName: this.getConnectedPrinterName(),
+      content: content.slice(0, 200),
+    });
+    const trimmed = history.slice(0, MAX_HISTORY);
+    mmkv.set(PRINT_HISTORY_KEY, JSON.stringify(trimmed));
   }
 
   destroy(): void {

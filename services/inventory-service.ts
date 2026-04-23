@@ -1,6 +1,5 @@
 import { api } from '../lib/api';
 import type { Device } from '../types/device';
-import type { PaginatedResponse } from '../types/api';
 
 /**
  * Search for a single device by SN, ID, or query.

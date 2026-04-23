@@ -57,7 +57,7 @@ export default function InboundScreen() {
       if (!storeId || !organizationId) return;
 
       try {
-        const imeiResult = await checkImei(code);
+        const imeiResult = await checkImei(code, storeId, organizationId);
 
         if (imeiResult.blocked) {
           Alert.alert('警告', `IMEI在黑名单中: ${imeiResult.blacklistReason ?? '未知原因'}`);
@@ -106,7 +106,7 @@ export default function InboundScreen() {
         channel: channel || undefined,
       });
 
-      Alert.alert('入库成功', `设备ID: ${result.id}`, [
+      Alert.alert('入库成功', `设备ID: ${result.deviceId}`, [
         { text: '继续入库', onPress: resetForm },
         { text: '查看库存', onPress: () => router.push('/(tabs)/inventory' as never) },
       ]);

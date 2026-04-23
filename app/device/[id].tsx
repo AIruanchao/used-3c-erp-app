@@ -3,21 +3,23 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Card, Divider, List, Button } from 'react-native-paper';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { getDeviceById, getDeviceLabel } from '../../services/device-service';
+import { getDeviceById } from '../../services/device-service';
+import { useAuth } from '../../hooks/useAuth';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
 import { DeviceStatusBadge } from '../../components/device/DeviceStatusBadge';
 import { AmountText } from '../../components/finance/AmountText';
-import { formatDate, decStr } from '../../lib/utils';
+import { formatDate } from '../../lib/utils';
 import { printerService } from '../../services/printer-service';
 
 export default function DeviceDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { organizationId } = useAuth();
 
   const { data: device, isLoading } = useQuery({
     queryKey: ['device', id],
-    queryFn: () => getDeviceById(id),
-    enabled: !!id,
+    queryFn: () => getDeviceById(id, organizationId ?? ''),
+    enabled: !!id && !!organizationId,
   });
 
   if (isLoading) return <LoadingScreen />;

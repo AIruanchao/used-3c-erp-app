@@ -26,15 +26,29 @@ export default function NewRepairScreen() {
 
     setLoading(true);
     try {
-      await createRepair({
+      const result = await createRepair({
         storeId,
         organizationId,
         sn: sn.trim() || undefined,
         description: description.trim(),
         estimatedCost: estimatedCost ? parseFloat(estimatedCost) : null,
       });
+      const order = result.order;
       Alert.alert('成功', '维修工单已创建', [
-        { text: '查看列表', onPress: () => router.back() },
+        {
+          text: '查看详情',
+          onPress: () =>
+            router.replace({
+              pathname: '/repair/[id]',
+              params: {
+                id: order.id,
+                status: order.status,
+                description: order.description,
+                sn: order.sn ?? '',
+              },
+            } as never),
+        },
+        { text: '返回', style: 'cancel', onPress: () => router.back() },
       ]);
     } catch (err) {
       Alert.alert('创建失败', getErrorMessage(err));
