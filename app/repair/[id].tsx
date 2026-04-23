@@ -78,14 +78,15 @@ export default function RepairDetailScreen() {
 
     setActionLoading(true);
     try {
+      const lines = partName ? [{
+        type: 'PART' as const,
+        sparePartName: partName,
+        quantity: 1,
+        unitCost: parseFloat(partCost) || 0,
+        unitPrice: parseFloat(partPrice) || 0,
+      }] : [];
       await quoteRepair(id, {
-        lines: partName ? [{
-          type: 'PART',
-          sparePartName: partName,
-          quantity: 1,
-          unitCost: parseFloat(partCost) || 0,
-          unitPrice: parseFloat(partPrice) || 0,
-        }] : [],
+        lines,
         laborCost: labor,
       });
       setShowQuoteDialog(false);
