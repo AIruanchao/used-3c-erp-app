@@ -2,29 +2,29 @@ import { api } from '../lib/api';
 import type { Device } from '../types/device';
 import type { PaginatedResponse } from '../types/api';
 
-export interface InventoryListParams {
-  page?: number;
-  pageSize?: number;
-  storeId?: string;
-  organizationId?: string;
-  inventoryStatus?: string;
-  search?: string;
-  skuCategory?: string;
-}
-
-export async function getInventory(
-  params: InventoryListParams,
-): Promise<PaginatedResponse<Device>> {
+/**
+ * Search for a single device by SN, ID, or query.
+ * Uses /api/inventory/search which is a single-device lookup.
+ */
+export async function searchDevice(params: {
+  id?: string;
+  sn?: string;
+  q?: string;
+  organizationId: string;
+}): Promise<Device | null> {
   const res = await api.get('/api/inventory/search', { params });
-  return res.data;
+  return res.data?.device ?? null;
 }
 
-export async function getStocktakeSessions(params?: {
-  storeId?: string;
-  organizationId?: string;
-  page?: number;
-  pageSize?: number;
-}): Promise<PaginatedResponse<{ id: string; description: string | null; status: string; createdAt: string }>> {
+/**
+ * Get stocktake sessions for a store.
+ * Backend returns { items: StocktakeSession[] } with a take: 30 limit.
+ */
+export async function getStocktakeSessions(params: {
+  storeId: string;
+  organizationId: string;
+  status?: string;
+}): Promise<{ items: Array<{ id: string; scope: string; status: string; createdAt: string }> }> {
   const res = await api.get('/api/stocktake-sessions', { params });
   return res.data;
 }
@@ -32,7 +32,7 @@ export async function getStocktakeSessions(params?: {
 export async function createStocktake(data: {
   storeId: string;
   organizationId: string;
-  description?: string;
+  scope?: string;
 }) {
   const res = await api.post('/api/stocktake-sessions', data);
   return res.data;

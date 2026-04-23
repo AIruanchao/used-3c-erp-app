@@ -1,59 +1,58 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
-import { Card, Button, Divider } from 'react-native-paper';
+import { Card, Button } from 'react-native-paper';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getRepairById, quoteRepair, startRepair, completeRepair, qcRepair, deliverRepair } from '../../services/repair-service';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
-import { AmountText } from '../../components/finance/AmountText';
 import { REPAIR_STATUS_LABELS } from '../../lib/constants';
 import { formatDate } from '../../lib/utils';
+import { quoteRepair, startRepair, completeRepair, qcRepair, deliverRepair } from '../../services/repair-service';
 import { getErrorMessage as getErr } from '../../lib/errors';
 
+/**
+ * Repair detail screen.
+ * Note: The backend doesn't have a GET /api/repair/[id] endpoint.
+ * Repair details are passed via router params when navigating from the create result.
+ */
 export default function RepairDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const params = useLocalSearchParams<{
+    id: string;
+    status?: string;
+    description?: string;
+    sn?: string;
+    estimatedCost?: string;
+  }>();
   const router = useRouter();
-  const queryClient = useQueryClient();
 
-  const { data: repair, isLoading } = useQuery({
-    queryKey: ['repair', id],
-    queryFn: () => getRepairById(id),
-    enabled: !!id,
-  });
-
-  const invalidateRepair = () => {
-    queryClient.invalidateQueries({ queryKey: ['repair', id] });
-    queryClient.invalidateQueries({ queryKey: ['repairs'] });
-  };
+  const { id, status, description, sn, estimatedCost } = params;
 
   const handleAction = async (action: string) => {
     try {
+      let result: { ok: boolean };
       switch (action) {
         case 'quote':
-          Alert.alert('报价', '请确认估价', [
+          Alert.alert('报价', '请确认估价 ¥100', [
             { text: '取消', style: 'cancel' },
-            { text: '确认报价 ¥100', onPress: async () => {
+            { text: '确认报价', onPress: async () => {
               await quoteRepair(id, { estimatedCost: 100 });
-              invalidateRepair();
+              Alert.alert('成功', '已报价');
             }},
           ]);
-          break;
+          return;
         case 'start':
-          await startRepair(id);
-          invalidateRepair();
+          result = await startRepair(id);
+          Alert.alert('成功', result.ok ? '已开始维修' : '操作失败');
           break;
         case 'complete':
-          await completeRepair(id);
-          invalidateRepair();
+          result = await completeRepair(id);
+          Alert.alert('成功', result.ok ? '维修完成' : '操作失败');
           break;
         case 'qc':
-          await qcRepair(id);
-          invalidateRepair();
+          result = await qcRepair(id);
+          Alert.alert('成功', result.ok ? '质检通过' : '操作失败');
           break;
         case 'deliver':
-          await deliverRepair(id);
-          invalidateRepair();
-          Alert.alert('成功', '已交付');
+          result = await deliverRepair(id);
+          Alert.alert('成功', result.ok ? '已交付' : '操作失败');
           break;
       }
     } catch (err) {
@@ -61,77 +60,56 @@ export default function RepairDetailScreen() {
     }
   };
 
-  if (isLoading) return <LoadingScreen />;
-  if (!repair) return <View style={styles.center}><Text>工单不存在</Text></View>;
+  if (!id) {
+    return (
+      <View style={styles.center}>
+        <Text>工单不存在</Text>
+      </View>
+    );
+  }
+
+  const currentStatus = status ?? 'REGISTERED';
 
   return (
     <ScrollView style={styles.container}>
       <Card style={styles.card} mode="elevated">
         <Card.Content>
           <Text style={styles.status}>
-            {REPAIR_STATUS_LABELS[repair.status] ?? repair.status}
+            {REPAIR_STATUS_LABELS[currentStatus] ?? currentStatus}
           </Text>
-          <Text style={styles.desc}>{repair.description}</Text>
-          {repair.sn && <Text style={styles.sn}>SN: {repair.sn}</Text>}
-          <Text style={styles.date}>
-            创建: {formatDate(repair.createdAt, 'YYYY-MM-DD HH:mm')}
-          </Text>
+          <Text style={styles.desc}>{description ?? '无描述'}</Text>
+          {sn && <Text style={styles.sn}>SN: {sn}</Text>}
+          <Text style={styles.date}>工单ID: {id}</Text>
+          {estimatedCost && (
+            <Text style={styles.cost}>估价: ¥{estimatedCost}</Text>
+          )}
         </Card.Content>
       </Card>
 
-      {repair.estimatedCost && (
-        <Card style={styles.card}>
-          <Card.Title title="费用" titleStyle={styles.cardTitle} />
-          <Card.Content>
-            <View style={styles.costRow}>
-              <Text style={styles.costLabel}>估价</Text>
-              <AmountText value={repair.estimatedCost} />
-            </View>
-            {repair.actualCost && (
-              <View style={styles.costRow}>
-                <Text style={styles.costLabel}>实际</Text>
-                <AmountText value={repair.actualCost} colorize />
-              </View>
-            )}
-          </Card.Content>
-        </Card>
-      )}
-
-      {repair.Customer && (
-        <Card style={styles.card}>
-          <Card.Title title="客户" titleStyle={styles.cardTitle} />
-          <Card.Content>
-            <Text>{repair.Customer.name}</Text>
-            <Text style={styles.phone}>{repair.Customer.phone}</Text>
-          </Card.Content>
-        </Card>
-      )}
-
-      {/* Status Actions */}
       <Card style={styles.card}>
         <Card.Title title="操作" titleStyle={styles.cardTitle} />
         <Card.Content style={styles.actions}>
-          {repair.status === 'PENDING' && (
+          {(currentStatus === 'REGISTERED' || currentStatus === 'PENDING') && (
             <Button mode="contained" onPress={() => handleAction('quote')}>
               报价
             </Button>
           )}
-          {repair.status === 'QUOTED' && (
+          {currentStatus === 'QUOTED' && (
             <Button mode="contained" onPress={() => handleAction('start')}>
               开始维修
             </Button>
           )}
-          {repair.status === 'IN_PROGRESS' && (
+          {currentStatus === 'IN_PROGRESS' && (
             <Button mode="contained" onPress={() => handleAction('complete')}>
               完成维修
             </Button>
           )}
-          {repair.status === 'COMPLETED' && (
+          {currentStatus === 'COMPLETED' && (
             <Button mode="contained" onPress={() => handleAction('qc')}>
               质检通过
             </Button>
           )}
-          {repair.status === 'QC' && (
+          {currentStatus === 'QC' && (
             <Button mode="contained" onPress={() => handleAction('deliver')}>
               交付
             </Button>
@@ -151,8 +129,6 @@ const styles = StyleSheet.create({
   desc: { fontSize: 15, color: '#212121', marginTop: 8 },
   sn: { fontSize: 14, color: '#757575', fontFamily: 'Courier', marginTop: 4 },
   date: { fontSize: 12, color: '#bdbdbd', marginTop: 4 },
-  costRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  costLabel: { fontSize: 14, color: '#757575' },
-  phone: { fontSize: 14, color: '#757575', marginTop: 2 },
+  cost: { fontSize: 14, color: '#616161', marginTop: 4 },
   actions: { gap: 8 },
 });

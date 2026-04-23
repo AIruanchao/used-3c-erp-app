@@ -13,7 +13,7 @@ import { Button, Card, Chip, Divider } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../hooks/useAuth';
 import { cashierCheckout } from '../services/cashier-service';
-import { getDevices } from '../services/device-service';
+import { searchDevice } from '../services/inventory-service';
 import { BarcodeScannerView } from '../components/scanner/BarcodeScannerView';
 import { AmountText } from '../components/finance/AmountText';
 import { PAYMENT_METHODS } from '../lib/constants';
@@ -33,17 +33,14 @@ export default function CashierScreen() {
     async (code: string) => {
       setDeviceSn(code);
       try {
-        const result = await getDevices({
-          search: code,
-          storeId: storeId ?? undefined,
-          organizationId: organizationId ?? undefined,
-          inventoryStatus: 'IN_STOCK',
+        const result = await searchDevice({
+          sn: code,
+          organizationId: organizationId ?? '',
         });
-        if (result.items.length > 0) {
-          const device = result.items[0]!;
-          setDeviceId(device.id);
-          if (device.DevicePricing?.retailPrice) {
-            setSalePrice(String(device.DevicePricing.retailPrice));
+        if (result) {
+          setDeviceId(result.id);
+          if (result.DevicePricing?.retailPrice) {
+            setSalePrice(String(result.DevicePricing.retailPrice));
           }
         }
       } catch {
@@ -51,7 +48,7 @@ export default function CashierScreen() {
       }
       setShowScanner(false);
     },
-    [storeId, organizationId],
+    [organizationId],
   );
 
   const handleCheckout = useCallback(async () => {

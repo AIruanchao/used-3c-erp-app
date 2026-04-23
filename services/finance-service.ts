@@ -6,17 +6,14 @@ import type {
   CustomerItem,
   SupplierItem,
 } from '../types/finance';
-import type { PaginatedResponse } from '../types/api';
 
 export async function getLedgerEntries(params: {
   storeId?: string;
   organizationId?: string;
   type?: string;
-  page?: number;
-  pageSize?: number;
-  startDate?: string;
-  endDate?: string;
-}): Promise<PaginatedResponse<LedgerEntry>> {
+  skip?: number;
+  take?: number;
+}): Promise<{ total: number; items: LedgerEntry[] }> {
   const res = await api.get('/api/ledger/entry', { params });
   return res.data;
 }
@@ -24,9 +21,7 @@ export async function getLedgerEntries(params: {
 export async function getPayables(params: {
   storeId?: string;
   organizationId?: string;
-  page?: number;
-  pageSize?: number;
-}): Promise<PaginatedResponse<PayableItem>> {
+}): Promise<{ items: PayableItem[] }> {
   const res = await api.get('/api/finance/payable', { params });
   return res.data;
 }
@@ -34,18 +29,18 @@ export async function getPayables(params: {
 export async function getReceivables(params: {
   storeId?: string;
   organizationId?: string;
-  page?: number;
-  pageSize?: number;
-}): Promise<PaginatedResponse<ReceivableItem>> {
+}): Promise<{ items: ReceivableItem[] }> {
   const res = await api.get('/api/finance/receivable', { params });
   return res.data;
 }
 
 export async function getCustomers(params: {
-  page?: number;
-  pageSize?: number;
-  search?: string;
-}): Promise<PaginatedResponse<CustomerItem>> {
+  storeId?: string;
+  organizationId?: string;
+  q?: string;
+  skip?: number;
+  take?: number;
+}): Promise<{ total: number; items: CustomerItem[] }> {
   const res = await api.get('/api/customers', { params });
   return res.data;
 }
@@ -56,10 +51,11 @@ export async function getCustomerById(id: string): Promise<CustomerItem> {
 }
 
 export async function getSuppliers(params: {
-  page?: number;
-  pageSize?: number;
-  search?: string;
-}): Promise<PaginatedResponse<SupplierItem>> {
+  organizationId?: string;
+  q?: string;
+  skip?: number;
+  take?: number;
+}): Promise<{ total: number; items: SupplierItem[] }> {
   const res = await api.get('/api/suppliers', { params });
   return res.data;
 }

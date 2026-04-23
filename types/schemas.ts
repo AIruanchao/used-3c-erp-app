@@ -108,8 +108,8 @@ export const RepairSchema = z.object({
   status: z.string(),
   description: z.string(),
   sn: z.string().nullable(),
-  estimatedCost: z.string().nullable(),
-  actualCost: z.string().nullable(),
+  estimatedCost: z.union([z.string(), z.number()]).nullable(),
+  actualCost: z.union([z.string(), z.number()]).nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -125,13 +125,23 @@ export const CashierResponseSchema = z.object({
 
 // Daily Report
 export const DailyReportSchema = z.object({
-  date: z.string().optional(),
-  totalSales: z.string(),
-  totalPurchases: z.string(),
-  totalDevicesIn: z.number(),
-  totalDevicesOut: z.number(),
-  totalRepairs: z.number(),
-  profit: z.string(),
+  date: z.string(),
+  purchase: z.object({
+    count: z.number(),
+    cost: z.number(),
+  }),
+  sales: z.object({
+    count: z.number(),
+    amount: z.number(),
+  }),
+  netCashFlow: z.number(),
+  profitTop5: z.array(z.object({
+    modelName: z.string(),
+    profit: z.number(),
+  })),
+  stockAgeWarning: z.number(),
+  receivableDue: z.number(),
+  payableDue: z.number(),
 });
 
 // Store

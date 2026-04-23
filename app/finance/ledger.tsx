@@ -1,148 +1,72 @@
-import React, { useState, useCallback, useMemo } from 'react';
-import { View, StyleSheet, RefreshControl } from 'react-native';
-import { SegmentedButtons, Card, Text } from 'react-native-paper';
-import { useAuth } from '../../hooks/useAuth';
-import { getLedgerEntries } from '../../services/finance-service';
-import { usePaginatedList } from '../../hooks/usePaginatedList';
-import { FlashList } from '../../components/ui/TypedFlashList';
-import { AmountText } from '../../components/finance/AmountText';
+import React from 'react';
+import { View, StyleSheet, RefreshControl, ScrollView } from 'react-native';
 import { EmptyState } from '../../components/common/EmptyState';
+import { useAuth } from '../../hooks/useAuth';
+import { getDailyReport } from '../../services/stats-service';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
-import { LEDGER_TYPE_LABELS } from '../../lib/constants';
 import { formatDate } from '../../lib/utils';
-import type { LedgerEntry } from '../../types/finance';
+import { Card, Text } from 'react-native-paper';
+import { useQuery } from '@tanstack/react-query';
 
-type LedgerParams = {
-  storeId?: string;
-  organizationId?: string;
-  type?: string;
-};
+function formatMoney(value: number): string {
+  return `¥${value.toFixed(2)}`;
+}
 
 export default function LedgerScreen() {
   const { storeId, organizationId } = useAuth();
-  const [typeFilter, setTypeFilter] = useState('');
 
-  const params = useMemo<LedgerParams>(
-    () => ({
-      storeId: storeId ?? undefined,
-      organizationId: organizationId ?? undefined,
-      type: typeFilter || undefined,
-    }),
-    [storeId, organizationId, typeFilter],
-  );
-
-  const { items, isLoading, isRefreshing, isFetchingNextPage, loadMore, refresh } =
-    usePaginatedList<LedgerEntry, LedgerParams>({
-      queryKey: ['ledger', storeId, typeFilter],
-      queryFn: getLedgerEntries,
-      params,
-      enabled: !!storeId,
-    });
-
-  const renderItem = useCallback(({ item: entry }: { item: LedgerEntry }) => {
-    const typeLabel = LEDGER_TYPE_LABELS[entry.type] ?? entry.type;
-
-    return (
-      <Card style={styles.entryCard} mode="outlined">
-        <Card.Content style={styles.entryContent}>
-          <View style={styles.entryLeft}>
-            <Text style={styles.entryType}>{typeLabel}</Text>
-            <Text style={styles.entryDesc} numberOfLines={1}>
-              {entry.description}
-            </Text>
-            <Text style={styles.entryDate}>
-              {formatDate(entry.createdAt, 'MM-DD HH:mm')}
-            </Text>
-          </View>
-          <AmountText
-            value={entry.amount}
-            showSign
-            colorize
-            style={styles.entryAmount}
-          />
-        </Card.Content>
-      </Card>
-    );
-  }, []);
-
-  const keyExtractor = useCallback((item: LedgerEntry) => item.id, []);
+  const { data: report, isLoading, refetch, isRefetching } = useQuery({
+    queryKey: ['ledgerSummary', storeId],
+    queryFn: () =>
+      getDailyReport({
+        storeId: storeId ?? undefined,
+        organizationId: organizationId ?? undefined,
+      }),
+    enabled: !!storeId,
+  });
 
   if (isLoading) return <LoadingScreen />;
 
   return (
-    <View style={styles.container}>
-      <SegmentedButtons
-        value={typeFilter}
-        onValueChange={setTypeFilter}
-        buttons={[
-          { value: '', label: '全部' },
-          { value: 'SALE_INCOME', label: '收入' },
-          { value: 'PURCHASE_COST', label: '支出' },
-        ]}
-        style={styles.filter}
+    <ScrollView
+      refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
+      contentContainerStyle={styles.listContent}
+    >
+      <Card style={styles.card} mode="outlined">
+        <Card.Content>
+          <Text style={styles.title}>今日记账概览</Text>
+          <Text style={styles.date}>{formatDate(new Date().toISOString())}</Text>
+          <View style={styles.row}>
+            <Text style={styles.label}>销售收入</Text>
+            <Text style={[styles.value, { color: '#2e7d32' }]}>{formatMoney(report?.sales.amount ?? 0)}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>采购成本</Text>
+            <Text style={styles.value}>{formatMoney(report?.purchase.cost ?? 0)}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>净现金流</Text>
+            <Text style={[styles.value, { color: (report?.netCashFlow ?? 0) >= 0 ? '#2e7d32' : '#e53935' }]}>
+              {formatMoney(report?.netCashFlow ?? 0)}
+            </Text>
+          </View>
+        </Card.Content>
+      </Card>
+      <EmptyState
+        icon="receipt"
+        title="记账明细"
+        subtitle="暂无独立API支持明细列表，请查看今日概览"
       />
-
-      <FlashList
-        data={items}
-        renderItem={renderItem}
-        estimatedItemSize={72}
-        keyExtractor={keyExtractor}
-        onEndReached={loadMore}
-        onEndReachedThreshold={0.5}
-        refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={refresh} />
-        }
-        ListEmptyComponent={<EmptyState icon="receipt" title="暂无记录" />}
-        ListFooterComponent={
-          isFetchingNextPage ? <LoadingScreen message="加载更多..." /> : null
-        }
-        contentContainerStyle={styles.listContent}
-      />
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fafafa',
-  },
-  filter: {
-    marginHorizontal: 16,
-    marginVertical: 8,
-  },
-  listContent: {
-    paddingBottom: 16,
-  },
-  entryCard: {
-    marginHorizontal: 16,
-    marginVertical: 2,
-  },
-  entryContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  entryLeft: {
-    flex: 1,
-  },
-  entryType: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#212121',
-  },
-  entryDesc: {
-    fontSize: 12,
-    color: '#757575',
-    marginTop: 2,
-  },
-  entryDate: {
-    fontSize: 11,
-    color: '#bdbdbd',
-    marginTop: 2,
-  },
-  entryAmount: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
+  listContent: { paddingBottom: 16 },
+  card: { marginHorizontal: 16, marginVertical: 8 },
+  title: { fontSize: 18, fontWeight: 'bold', color: '#212121' },
+  date: { fontSize: 13, color: '#9e9e9e', marginTop: 2, marginBottom: 12 },
+  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  label: { fontSize: 15, color: '#616161' },
+  value: { fontSize: 15, fontWeight: '600' },
 });

@@ -1,12 +1,11 @@
 import React, { useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
-import { Card, IconButton, Divider, useTheme } from 'react-native-paper';
+import { Card, IconButton, Divider } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { getDailyReport } from '../../services/stats-service';
 import { COMPANY_NAME } from '../../lib/constants';
-import { yuan, formatDate } from '../../lib/utils';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
 
 interface QuickAction {
@@ -27,10 +26,20 @@ const QUICK_ACTIONS: QuickAction[] = [
   { icon: 'account-group', label: '客户', route: '/customer/index', color: '#607d8b' },
 ];
 
+function formatMoney(value: number | string): string {
+  const num = typeof value === 'string' ? parseFloat(value) : value;
+  if (Number.isNaN(num)) return '¥0.00';
+  const fixed = num.toFixed(2);
+  const parts = fixed.split('.');
+  const intPart = parts[0] ?? '0';
+  const decPart = parts[1] ?? '00';
+  const withCommas = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return `¥${withCommas}.${decPart}`;
+}
+
 export default function WorkspaceScreen() {
   const router = useRouter();
   const { storeId, organizationId, storeName, user } = useAuth();
-  const theme = useTheme();
 
   const { data: report, isLoading, refetch } = useQuery({
     queryKey: ['dailyReport', storeId],
@@ -74,20 +83,20 @@ export default function WorkspaceScreen() {
           <View style={styles.summaryRow}>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryLabel}>销售额</Text>
-              <Text style={styles.summaryValue}>
-                {yuan(report?.totalSales ?? 0)}
+              <Text style={[styles.summaryValue, { color: '#2e7d32' }]}>
+                {formatMoney(report?.sales.amount ?? 0)}
               </Text>
             </View>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryLabel}>采购额</Text>
               <Text style={styles.summaryValue}>
-                {yuan(report?.totalPurchases ?? 0)}
+                {formatMoney(report?.purchase.cost ?? 0)}
               </Text>
             </View>
             <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>利润</Text>
-              <Text style={[styles.summaryValue, { color: '#2e7d32' }]}>
-                {yuan(report?.profit ?? 0)}
+              <Text style={styles.summaryLabel}>净现金流</Text>
+              <Text style={[styles.summaryValue, { color: (report?.netCashFlow ?? 0) >= 0 ? '#2e7d32' : '#e53935' }]}>
+                {formatMoney(report?.netCashFlow ?? 0)}
               </Text>
             </View>
           </View>
@@ -96,22 +105,36 @@ export default function WorkspaceScreen() {
             <View style={styles.summaryItem}>
               <Text style={styles.summaryLabel}>入库</Text>
               <Text style={styles.summaryCount}>
-                {report?.totalDevicesIn ?? 0} 台
+                {report?.purchase.count ?? 0} 台
               </Text>
             </View>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryLabel}>出库</Text>
               <Text style={styles.summaryCount}>
-                {report?.totalDevicesOut ?? 0} 台
+                {report?.sales.count ?? 0} 台
               </Text>
             </View>
             <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>维修</Text>
-              <Text style={styles.summaryCount}>
-                {report?.totalRepairs ?? 0} 单
+              <Text style={styles.summaryLabel}>库存预警</Text>
+              <Text style={[styles.summaryCount, { color: (report?.stockAgeWarning ?? 0) > 0 ? '#ff9800' : '#4caf50' }]}>
+                {report?.stockAgeWarning ?? 0}
               </Text>
             </View>
           </View>
+          {(report?.profitTop5?.length ?? 0) > 0 && (
+            <>
+              <Divider style={styles.divider} />
+              <Text style={styles.profitTitle}>利润TOP5</Text>
+              {report?.profitTop5.map((item, idx) => (
+                <View key={idx} style={styles.profitRow}>
+                  <Text style={styles.profitName}>{item.modelName}</Text>
+                  <Text style={[styles.profitValue, { color: item.profit >= 0 ? '#2e7d32' : '#e53935' }]}>
+                    {formatMoney(item.profit)}
+                  </Text>
+                </View>
+              ))}
+            </>
+          )}
         </Card.Content>
       </Card>
 
@@ -199,6 +222,26 @@ const styles = StyleSheet.create({
   },
   divider: {
     marginVertical: 12,
+  },
+  profitTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#424242',
+    marginBottom: 4,
+  },
+  profitRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 2,
+  },
+  profitName: {
+    fontSize: 13,
+    color: '#616161',
+  },
+  profitValue: {
+    fontSize: 13,
+    fontWeight: '600',
   },
   sectionTitle: {
     fontSize: 16,

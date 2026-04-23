@@ -1,10 +1,12 @@
 export type LedgerType =
   | 'PURCHASE_COST'
+  | 'OTHER_COST'
   | 'SALE_INCOME'
   | 'REPAIR_INCOME'
   | 'REFUND'
-  | 'OTHER_INCOME'
-  | 'OTHER_EXPENSE';
+  | 'EXPENSE'
+  | 'TRANSFER'
+  | 'OTHER';
 
 export type PaymentStatus = 'UNPAID' | 'PARTIAL' | 'PAID' | 'OVERPAID';
 export type PaymentMethod = 'WECHAT' | 'ALIPAY' | 'CASH' | 'BANK_TRANSFER' | 'OTHER';
@@ -55,14 +57,18 @@ export interface CustomerItem {
   id: string;
   name: string;
   phone: string;
-  level: string;
-  lifetimeValue: string;
+  tier?: string;
+  memberLevel?: string;
+  memberPoints?: number;
+  balance?: number;
+  lifetimeValue: number | string;
+  lastInteractionAt?: string | null;
   createdAt: string;
 }
 
 export interface SupplierItem {
   id: string;
   name: string;
-  phone: string;
-  contactName: string | null;
+  phone?: string;
+  contactName?: string | null;
 }

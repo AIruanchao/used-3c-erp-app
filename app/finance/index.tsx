@@ -1,12 +1,22 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Card, List, Divider } from 'react-native-paper';
+import { Card, List, Divider, Text } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { getDailyReport } from '../../services/stats-service';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
-import { AmountText } from '../../components/finance/AmountText';
+
+function formatMoney(value: number | string): string {
+  const num = typeof value === 'string' ? parseFloat(value) : value;
+  if (Number.isNaN(num)) return '¥0.00';
+  const fixed = num.toFixed(2);
+  const parts = fixed.split('.');
+  const intPart = parts[0] ?? '0';
+  const decPart = parts[1] ?? '00';
+  const withCommas = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return `¥${withCommas}.${decPart}`;
+}
 
 export default function FinanceIndexScreen() {
   const router = useRouter();
@@ -31,32 +41,26 @@ export default function FinanceIndexScreen() {
         <Card.Content>
           <View style={styles.summaryRow}>
             <View style={styles.summaryItem}>
-              <AmountText
-                value={report?.totalSales ?? 0}
-                style={styles.amountLarge}
-                colorize
-              />
-              <List.Item title="销售额" titleStyle={styles.summaryLabel} />
+              <Text style={[styles.amountLarge, { color: '#2e7d32' }]}>
+                {formatMoney(report?.sales.amount ?? 0)}
+              </Text>
+              <Text style={styles.summaryLabel}>销售额 ({report?.sales.count ?? 0}台)</Text>
             </View>
             <View style={styles.summaryItem}>
-              <AmountText
-                value={report?.totalPurchases ?? 0}
-                style={styles.amountLarge}
-                colorize
-              />
-              <List.Item title="采购额" titleStyle={styles.summaryLabel} />
+              <Text style={styles.amountLarge}>
+                {formatMoney(report?.purchase.cost ?? 0)}
+              </Text>
+              <Text style={styles.summaryLabel}>采购额 ({report?.purchase.count ?? 0}台)</Text>
             </View>
           </View>
           <Divider />
           <View style={styles.profitRow}>
             <List.Item
-              title="利润"
+              title="净现金流"
               description={
-                <AmountText
-                  value={report?.profit ?? 0}
-                  colorize
-                  showSign
-                />
+                <Text style={{ color: (report?.netCashFlow ?? 0) >= 0 ? '#2e7d32' : '#e53935', fontWeight: '600' }}>
+                  {formatMoney(report?.netCashFlow ?? 0)}
+                </Text>
               }
             />
           </View>
@@ -74,6 +78,7 @@ export default function FinanceIndexScreen() {
         <Divider />
         <List.Item
           title="应付账款"
+          description={report?.payableDue ? `${report.payableDue}笔待付` : undefined}
           left={(props) => <List.Icon {...props} icon="cash-minus" />}
           right={(props) => <List.Icon {...props} icon="chevron-right" />}
           onPress={() => router.push('/finance/payable' as never)}
@@ -81,6 +86,7 @@ export default function FinanceIndexScreen() {
         <Divider />
         <List.Item
           title="应收账款"
+          description={report?.receivableDue ? `${report.receivableDue}笔待收` : undefined}
           left={(props) => <List.Icon {...props} icon="cash-plus" />}
           right={(props) => <List.Icon {...props} icon="chevron-right" />}
           onPress={() => router.push('/finance/receivable' as never)}
@@ -115,6 +121,7 @@ const styles = StyleSheet.create({
   amountLarge: {
     fontSize: 22,
     fontWeight: 'bold',
+    color: '#212121',
   },
   summaryLabel: {
     fontSize: 12,

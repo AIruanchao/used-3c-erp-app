@@ -1,40 +1,30 @@
-import React, { useState, useCallback, useMemo } from 'react';
-import { View, StyleSheet, RefreshControl } from 'react-native';
-import { SegmentedButtons } from 'react-native-paper';
-import { useRouter } from 'expo-router';
+import React, { useState, useCallback } from 'react';
+import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
+import { SegmentedButtons, Text } from 'react-native-paper';
+import { searchDevice } from '../../services/inventory-service';
 import { useAuth } from '../../hooks/useAuth';
-import { getInventory, type InventoryListParams } from '../../services/inventory-service';
-import { usePaginatedList } from '../../hooks/usePaginatedList';
-import { FlashList } from '../../components/ui/TypedFlashList';
 import { SearchBar } from '../../components/common/SearchBar';
 import { DeviceCard } from '../../components/device/DeviceCard';
 import { EmptyState } from '../../components/common/EmptyState';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
 import type { Device } from '../../types/device';
+import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
 
 export default function InventoryScreen() {
   const router = useRouter();
   const { storeId, organizationId } = useAuth();
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('IN_STOCK');
 
-  const params = useMemo<InventoryListParams>(
-    () => ({
-      storeId: storeId ?? undefined,
-      organizationId: organizationId ?? undefined,
-      inventoryStatus: statusFilter || undefined,
-      search: search || undefined,
-    }),
-    [storeId, organizationId, statusFilter, search],
-  );
-
-  const { items, isLoading, isRefreshing, isFetchingNextPage, loadMore, refresh } =
-    usePaginatedList<Device, InventoryListParams>({
-      queryKey: ['inventory', storeId, search, statusFilter],
-      queryFn: getInventory,
-      params,
-      enabled: !!storeId && !!organizationId,
-    });
+  const { data: device, isLoading, refetch, isRefetching } = useQuery({
+    queryKey: ['inventorySearch', organizationId, search],
+    queryFn: () =>
+      searchDevice({
+        q: search,
+        organizationId: organizationId ?? '',
+      }),
+    enabled: !!search && !!organizationId,
+  });
 
   const handleDevicePress = useCallback(
     (id: string) => {
@@ -43,57 +33,42 @@ export default function InventoryScreen() {
     [router],
   );
 
-  const renderItem = useCallback(
-    ({ item }: { item: Device }) => (
-      <DeviceCard device={item} onPress={handleDevicePress} />
-    ),
-    [handleDevicePress],
-  );
-
-  const keyExtractor = useCallback((item: Device) => item.id, []);
-
-  if (isLoading) return <LoadingScreen />;
+  const handleSearch = useCallback((q: string) => {
+    setSearch(q);
+  }, []);
 
   return (
     <View style={styles.container}>
-      <SearchBar onSearch={setSearch} placeholder="搜索SN/型号/品牌..." />
+      <SearchBar onSearch={handleSearch} placeholder="搜索SN/型号/IMEI..." />
 
-      <View style={styles.filterRow}>
-        <SegmentedButtons
-          value={statusFilter}
-          onValueChange={setStatusFilter}
-          buttons={[
-            { value: '', label: '全部' },
-            { value: 'IN_STOCK', label: '在库' },
-            { value: 'SOLD', label: '已售' },
-            { value: 'RETURNED_OUT', label: '已退' },
-          ]}
-          style={styles.filterButtons}
-        />
-      </View>
-
-      <FlashList
-        data={items}
-        renderItem={renderItem}
-        estimatedItemSize={96}
-        keyExtractor={keyExtractor}
-        onEndReached={loadMore}
-        onEndReachedThreshold={0.5}
+      <ScrollView
+        style={styles.scroll}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={refresh} />
+          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
         }
-        ListEmptyComponent={
+        contentContainerStyle={styles.scrollContent}
+      >
+        {isLoading && search ? (
+          <LoadingScreen message="搜索中..." />
+        ) : search && !device ? (
           <EmptyState
-            icon="archive"
-            title="暂无库存"
-            subtitle="入库设备后会显示在这里"
+            icon="magnify-close"
+            title="未找到设备"
+            subtitle={`没有匹配 "${search}" 的在库设备`}
           />
-        }
-        ListFooterComponent={
-          isFetchingNextPage ? <LoadingScreen message="加载更多..." /> : null
-        }
-        contentContainerStyle={styles.listContent}
-      />
+        ) : device ? (
+          <View style={styles.resultSection}>
+            <Text style={styles.resultTitle}>搜索结果</Text>
+            <DeviceCard device={device} onPress={handleDevicePress} />
+          </View>
+        ) : (
+          <EmptyState
+            icon="magnify"
+            title="搜索库存"
+            subtitle="输入SN、型号或关键词搜索在库设备"
+          />
+        )}
+      </ScrollView>
     </View>
   );
 }
@@ -103,14 +78,20 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fafafa',
   },
-  filterRow: {
-    paddingHorizontal: 16,
-    marginBottom: 8,
+  scroll: {
+    flex: 1,
   },
-  filterButtons: {
-    marginBottom: 4,
-  },
-  listContent: {
+  scrollContent: {
     paddingBottom: 16,
+  },
+  resultSection: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
+  resultTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#616161',
+    marginBottom: 8,
   },
 });

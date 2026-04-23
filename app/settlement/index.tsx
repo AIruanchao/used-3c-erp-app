@@ -6,9 +6,14 @@ import { useQuery } from '@tanstack/react-query';
 import { getDailyReport } from '../../services/stats-service';
 import { printerService } from '../../services/printer-service';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
-import { AmountText } from '../../components/finance/AmountText';
 import { formatDate } from '../../lib/utils';
 import { COMPANY_NAME } from '../../lib/constants';
+
+function formatMoney(value: number | string): string {
+  const num = typeof value === 'string' ? parseFloat(value) : value;
+  if (Number.isNaN(num)) return '¥0.00';
+  return `¥${num.toFixed(2)}`;
+}
 
 export default function SettlementScreen() {
   const { storeId, organizationId, storeName } = useAuth();
@@ -28,10 +33,10 @@ export default function SettlementScreen() {
       await printerService.printDailySettlement({
         storeName: storeName ?? '',
         date: formatDate(new Date().toISOString()),
-        totalSales: report?.totalSales ?? '0',
-        totalPurchases: report?.totalPurchases ?? '0',
-        deviceCount: report?.totalDevicesIn ?? 0,
-        repairCount: report?.totalRepairs ?? 0,
+        totalSales: formatMoney(report?.sales.amount ?? 0),
+        totalPurchases: formatMoney(report?.purchase.cost ?? 0),
+        deviceCount: report?.purchase.count ?? 0,
+        repairCount: report?.sales.count ?? 0,
       });
     } catch {
       // Print failure handled by printer service
@@ -56,11 +61,15 @@ export default function SettlementScreen() {
           <View style={styles.metricRow}>
             <View style={styles.metric}>
               <Text style={styles.metricLabel}>销售额</Text>
-              <AmountText value={report?.totalSales ?? 0} style={styles.metricValue} colorize />
+              <Text style={[styles.metricValue, { color: '#2e7d32' }]}>
+                {formatMoney(report?.sales.amount ?? 0)}
+              </Text>
             </View>
             <View style={styles.metric}>
               <Text style={styles.metricLabel}>采购额</Text>
-              <AmountText value={report?.totalPurchases ?? 0} style={styles.metricValue} />
+              <Text style={styles.metricValue}>
+                {formatMoney(report?.purchase.cost ?? 0)}
+              </Text>
             </View>
           </View>
 
@@ -69,11 +78,11 @@ export default function SettlementScreen() {
           <View style={styles.metricRow}>
             <View style={styles.metric}>
               <Text style={styles.metricLabel}>入库</Text>
-              <Text style={styles.countValue}>{report?.totalDevicesIn ?? 0} 台</Text>
+              <Text style={styles.countValue}>{report?.purchase.count ?? 0} 台</Text>
             </View>
             <View style={styles.metric}>
               <Text style={styles.metricLabel}>出库</Text>
-              <Text style={styles.countValue}>{report?.totalDevicesOut ?? 0} 台</Text>
+              <Text style={styles.countValue}>{report?.sales.count ?? 0} 台</Text>
             </View>
           </View>
 
@@ -81,12 +90,14 @@ export default function SettlementScreen() {
 
           <View style={styles.metricRow}>
             <View style={styles.metric}>
-              <Text style={styles.metricLabel}>维修</Text>
-              <Text style={styles.countValue}>{report?.totalRepairs ?? 0} 单</Text>
+              <Text style={styles.metricLabel}>净现金流</Text>
+              <Text style={[styles.metricValue, { color: (report?.netCashFlow ?? 0) >= 0 ? '#2e7d32' : '#e53935' }]}>
+                {formatMoney(report?.netCashFlow ?? 0)}
+              </Text>
             </View>
             <View style={styles.metric}>
-              <Text style={styles.metricLabel}>利润</Text>
-              <AmountText value={report?.profit ?? 0} style={styles.metricValue} colorize showSign />
+              <Text style={styles.metricLabel}>库存预警</Text>
+              <Text style={styles.countValue}>{report?.stockAgeWarning ?? 0}</Text>
             </View>
           </View>
         </Card.Content>

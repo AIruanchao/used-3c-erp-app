@@ -1,91 +1,58 @@
-import React, { useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, RefreshControl } from 'react-native';
-import { Card } from 'react-native-paper';
+import React from 'react';
+import { View, StyleSheet, RefreshControl, ScrollView } from 'react-native';
+import { Card, Text } from 'react-native-paper';
 import { useAuth } from '../../hooks/useAuth';
-import { getPayables } from '../../services/finance-service';
-import { usePaginatedList } from '../../hooks/usePaginatedList';
-import { FlashList } from '../../components/ui/TypedFlashList';
-import { AmountText } from '../../components/finance/AmountText';
+import { getDailyReport } from '../../services/stats-service';
 import { EmptyState } from '../../components/common/EmptyState';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
-import { PAYMENT_STATUS_LABELS } from '../../lib/constants';
 import { formatDate } from '../../lib/utils';
-import type { PayableItem } from '../../types/finance';
-
-type PayableParams = { storeId?: string; organizationId?: string };
+import { useQuery } from '@tanstack/react-query';
 
 export default function PayableScreen() {
   const { storeId, organizationId } = useAuth();
 
-  const params = useMemo<PayableParams>(
-    () => ({
-      storeId: storeId ?? undefined,
-      organizationId: organizationId ?? undefined,
-    }),
-    [storeId, organizationId],
-  );
-
-  const { items, isLoading, isRefreshing, isFetchingNextPage, loadMore, refresh } =
-    usePaginatedList<PayableItem, PayableParams>({
-      queryKey: ['payables', storeId],
-      queryFn: getPayables,
-      params,
-      enabled: !!storeId,
-    });
-
-  const renderItem = useCallback(({ item }: { item: PayableItem }) => (
-    <Card style={styles.card} mode="outlined">
-      <Card.Content>
-        <View style={styles.row}>
-          <Text style={styles.name}>{item.Supplier?.name ?? '未知供应商'}</Text>
-          <Text style={styles.status}>
-            {PAYMENT_STATUS_LABELS[item.paymentStatus] ?? item.paymentStatus}
-          </Text>
-        </View>
-        <View style={styles.amountRow}>
-          <View>
-            <Text style={styles.label}>总金额</Text>
-            <AmountText value={item.totalAmount} />
-          </View>
-          <View>
-            <Text style={styles.label}>已付</Text>
-            <AmountText value={item.paidAmount} colorize />
-          </View>
-        </View>
-        {item.dueDate && (
-          <Text style={styles.dueDate}>到期日: {formatDate(item.dueDate)}</Text>
-        )}
-      </Card.Content>
-    </Card>
-  ), []);
-
-  const keyExtractor = useCallback((item: PayableItem) => item.id, []);
+  const { data: report, isLoading, refetch, isRefetching } = useQuery({
+    queryKey: ['payables', storeId],
+    queryFn: () =>
+      getDailyReport({
+        storeId: storeId ?? undefined,
+        organizationId: organizationId ?? undefined,
+      }),
+    enabled: !!storeId,
+  });
 
   if (isLoading) return <LoadingScreen />;
 
   return (
-    <FlashList
-      data={items}
-      renderItem={renderItem}
-      estimatedItemSize={96}
-      keyExtractor={keyExtractor}
-      onEndReached={loadMore}
-      onEndReachedThreshold={0.5}
-      refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={refresh} />}
-      ListEmptyComponent={<EmptyState icon="cash-minus" title="暂无应付账款" />}
-      ListFooterComponent={isFetchingNextPage ? <LoadingScreen message="加载更多..." /> : null}
+    <ScrollView
+      refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
       contentContainerStyle={styles.list}
-    />
+    >
+      <Card style={styles.card} mode="outlined">
+        <Card.Content>
+          <Text style={styles.title}>应付账款概览</Text>
+          <Text style={styles.date}>截至 {formatDate(new Date().toISOString())}</Text>
+          <View style={styles.row}>
+            <Text style={styles.label}>待付款</Text>
+            <Text style={[styles.value, { color: '#e53935' }]}>{report?.payableDue ?? 0} 笔</Text>
+          </View>
+        </Card.Content>
+      </Card>
+      <EmptyState
+        icon="cash-minus"
+        title="详细应付列表"
+        subtitle="暂无独立API支持，请联系管理员"
+      />
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   list: { paddingBottom: 16 },
-  card: { marginHorizontal: 16, marginVertical: 4 },
+  card: { marginHorizontal: 16, marginVertical: 8 },
+  title: { fontSize: 18, fontWeight: 'bold', color: '#212121' },
+  date: { fontSize: 13, color: '#9e9e9e', marginTop: 2, marginBottom: 12 },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  name: { fontSize: 15, fontWeight: '600', color: '#212121' },
-  status: { fontSize: 12, color: '#757575' },
-  amountRow: { flexDirection: 'row', gap: 32, marginTop: 8 },
-  label: { fontSize: 12, color: '#9e9e9e', marginBottom: 2 },
-  dueDate: { fontSize: 12, color: '#bdbdbd', marginTop: 4 },
+  label: { fontSize: 15, color: '#616161' },
+  value: { fontSize: 18, fontWeight: '600' },
 });

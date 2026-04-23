@@ -29,7 +29,7 @@ export default function CustomerDetailScreen() {
           <View style={styles.statsRow}>
             <View style={styles.stat}>
               <Text style={styles.statLabel}>等级</Text>
-              <Text style={styles.statValue}>{customer.level}</Text>
+              <Text style={styles.statValue}>{customer.memberLevel ?? customer.tier ?? ''}</Text>
             </View>
             <View style={styles.stat}>
               <Text style={styles.statLabel}>累计消费</Text>

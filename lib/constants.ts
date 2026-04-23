@@ -92,11 +92,12 @@ export const PAYMENT_STATUS_LABELS: Record<string, string> = {
 
 /** Repair status labels */
 export const REPAIR_STATUS_LABELS: Record<string, string> = {
+  REGISTERED: '已登记',
   PENDING: '待处理',
   QUOTED: '已报价',
   IN_PROGRESS: '维修中',
-  QC: '质检中',
   COMPLETED: '已完成',
+  QC: '质检通过',
   DELIVERED: '已交付',
   CANCELLED: '已取消',
 };
@@ -104,11 +105,13 @@ export const REPAIR_STATUS_LABELS: Record<string, string> = {
 /** Ledger type labels */
 export const LEDGER_TYPE_LABELS: Record<string, string> = {
   PURCHASE_COST: '采购成本',
+  OTHER_COST: '其他成本',
   SALE_INCOME: '销售收入',
   REPAIR_INCOME: '维修收入',
   REFUND: '退款',
-  OTHER_INCOME: '其他收入',
-  OTHER_EXPENSE: '其他支出',
+  EXPENSE: '费用支出',
+  TRANSFER: '转账',
+  OTHER: '其他',
 };
 
 /** Payment methods for payment */
