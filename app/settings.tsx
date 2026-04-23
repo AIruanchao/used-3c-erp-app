@@ -10,6 +10,7 @@ export default function SettingsScreen() {
   const setTheme = useAppStore((s) => s.setTheme);
   const [scanning, setScanning] = useState(false);
   const [printers, setPrinters] = useState<Array<{ id: string; name: string | null }>>([]);
+  const [connected, setConnected] = useState(printerService.isConnected());
 
   const handleScanPrinters = useCallback(async () => {
     setScanning(true);
@@ -29,10 +30,17 @@ export default function SettingsScreen() {
   const handleConnectPrinter = useCallback(async (id: string) => {
     try {
       const ok = await printerService.connect(id);
+      setConnected(ok);
       Alert.alert(ok ? '成功' : '失败', ok ? '已连接打印机' : '连接失败，请重试');
     } catch (err) {
       Alert.alert('连接失败', err instanceof Error ? err.message : '未知错误');
     }
+  }, []);
+
+  const handleDisconnectPrinter = useCallback(async () => {
+    await printerService.disconnect();
+    setConnected(false);
+    Alert.alert('提示', '已断开打印机连接');
   }, []);
 
   return (
@@ -77,6 +85,18 @@ export default function SettingsScreen() {
           >
             搜索打印机
           </Button>
+          {connected && (
+            <List.Item
+              title={printerService.getConnectedPrinterName() ?? '已连接'}
+              description="当前打印机"
+              left={(props) => <List.Icon {...props} icon="printer-check" />}
+              right={() => (
+                <Button mode="text" onPress={handleDisconnectPrinter} textColor="#e53935">
+                  断开
+                </Button>
+              )}
+            />
+          )}
           {printers.map((printer) => (
             <List.Item
               key={printer.id}
