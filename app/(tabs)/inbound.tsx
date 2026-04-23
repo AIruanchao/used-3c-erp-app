@@ -83,6 +83,7 @@ export default function InboundScreen() {
       setSn(code);
 
       if (!storeId || !organizationId) {
+        setShowScanner(false);
         setScanLoading(false);
         return;
       }
@@ -92,12 +93,14 @@ export default function InboundScreen() {
 
         if (imeiResult.blocked) {
           Alert.alert('警告', `IMEI在黑名单中: ${imeiResult.blacklistReason ?? '未知原因'}`);
+          setShowScanner(false);
           setScanLoading(false);
           return;
         }
 
         if (imeiResult.inThisStore && imeiResult.inventoryStatus === 'IN_STOCK') {
           Alert.alert('提示', '该设备已在本门店库中');
+          setShowScanner(false);
           setScanLoading(false);
           return;
         }
