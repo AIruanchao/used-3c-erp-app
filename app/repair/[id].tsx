@@ -40,6 +40,7 @@ export default function RepairDetailScreen() {
           if (currentStatus === 'QUOTED') {
             const acceptRes = await acceptRepairQuote(id);
             if (!acceptRes.ok) { Alert.alert('失败', '接受报价失败'); break; }
+            setCurrentStatus('ACCEPTED');
           }
           result = await startRepair(id, userId);
           if (result.ok) { Alert.alert('成功', '已开始维修'); setCurrentStatus('IN_REPAIR'); }

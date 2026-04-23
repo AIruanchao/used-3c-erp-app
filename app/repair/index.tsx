@@ -26,6 +26,5 @@ export default function RepairListScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fafafa' },
-  listContent: { paddingBottom: 80 },
   fab: { position: 'absolute', bottom: 16, right: 16 },
 });

@@ -1,7 +1,7 @@
 export interface CustomerItem {
   id: string;
   name: string;
-  phone: string;
+  phone: string | null;
   tier?: string;
   memberLevel?: string;
   memberPoints?: number;

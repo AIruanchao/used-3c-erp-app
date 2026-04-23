@@ -1,5 +1,5 @@
 import { useInfiniteQuery, type InfiniteData, type QueryKey } from '@tanstack/react-query';
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useMemo } from 'react';
 import type { AxiosError } from 'axios';
 
 interface PageResult<T> {
@@ -12,7 +12,7 @@ interface PageResult<T> {
 
 interface UsePaginatedListOptions<T, P> {
   queryKey: QueryKey;
-  queryFn: (params: P & { page: number; pageSize: number }) => Promise<PageResult<T>>;
+  queryFn: (params: P & { page: number; pageSize: number; signal?: AbortSignal }) => Promise<PageResult<T>>;
   params: P;
   enabled?: boolean;
   pageSize?: number;
@@ -27,15 +27,10 @@ export function usePaginatedList<T, P extends object>({
   pageSize = 20,
   staleTime = 30_000,
 }: UsePaginatedListOptions<T, P>) {
-  const abortRef = useRef<AbortController | null>(null);
-
   const query = useInfiniteQuery<PageResult<T>, AxiosError, InfiniteData<PageResult<T>>, QueryKey, number>({
     queryKey,
-    queryFn: async ({ pageParam }) => {
-      abortRef.current?.abort();
-      const controller = new AbortController();
-      abortRef.current = controller;
-      return queryFn({ ...params, page: pageParam, pageSize });
+    queryFn: async ({ pageParam, signal }) => {
+      return queryFn({ ...params, page: pageParam, pageSize, signal });
     },
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
@@ -69,7 +64,6 @@ export function usePaginatedList<T, P extends object>({
   }, [query.hasNextPage, query.isFetchingNextPage, query.fetchNextPage]);
 
   const refresh = useCallback(() => {
-    abortRef.current?.abort();
     query.refetch();
   }, [query]);
 

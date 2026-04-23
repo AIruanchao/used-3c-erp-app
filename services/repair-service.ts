@@ -21,7 +21,7 @@ export async function createRepair(data: {
   deviceId?: string | null;
   deviceSn?: string | null;
   customerName: string;
-  customerPhone: string;
+  customerPhone?: string;
   deviceBrand: string;
   deviceModel: string;
   faultCategory?: string;

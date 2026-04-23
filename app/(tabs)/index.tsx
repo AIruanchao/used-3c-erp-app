@@ -56,7 +56,7 @@ export default function WorkspaceScreen() {
     <ScrollView
       style={styles.container}
       refreshControl={
-        <RefreshControl refreshing={isRefetching ?? false} onRefresh={refetch} />
+        <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
       }
     >
       <View style={styles.header}>

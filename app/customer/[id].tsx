@@ -31,7 +31,7 @@ export default function CustomerDetailScreen() {
       <Card style={styles.card} mode="elevated">
         <Card.Content>
           <Text style={styles.name}>{customer.name}</Text>
-          <Text style={styles.phone}>{customer.phone}</Text>
+          <Text style={styles.phone}>{customer.phone || '未留电话'}</Text>
           <Divider style={styles.divider} />
           <View style={styles.statsRow}>
             <View style={styles.stat}>

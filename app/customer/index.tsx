@@ -43,7 +43,7 @@ export default function CustomerListScreen() {
           <View style={styles.row}>
             <View>
               <Text style={styles.name} numberOfLines={1}>{customer.name}</Text>
-              <Text style={styles.phone}>{customer.phone}</Text>
+              <Text style={styles.phone}>{customer.phone || '未留电话'}</Text>
             </View>
             <View style={styles.right}>
               <Text style={styles.level}>{customer.memberLevel ?? customer.tier ?? ''}</Text>

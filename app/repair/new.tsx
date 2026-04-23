@@ -49,7 +49,7 @@ export default function NewRepairScreen() {
         faultDescription: description.trim(),
         faultCategory: 'OTHER',
         customerName: name,
-        customerPhone: phone || '13800000000',
+        customerPhone: phone || undefined,
         deviceBrand: '未知',
         deviceModel: '未知',
       });
