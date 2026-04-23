@@ -13,7 +13,7 @@ import { useRouter } from 'expo-router';
 
 export default function InventoryScreen() {
   const router = useRouter();
-  const { storeId, organizationId } = useAuth();
+  const { organizationId } = useAuth();
   const [search, setSearch] = useState('');
 
   const { data: device, isLoading, isError, refetch, isRefetching } = useQuery({

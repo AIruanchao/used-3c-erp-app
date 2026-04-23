@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import { Text, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Card, List, Switch, Divider, Button } from 'react-native-paper';
 import { useAppStore } from '../stores/app-store';
 import { COMPANY_NAME } from '../lib/constants';

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { Card, Divider, List, Button } from 'react-native-paper';
+import { Card, List, Button } from 'react-native-paper';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { getDeviceById } from '../../services/device-service';
@@ -36,7 +36,6 @@ export default function DeviceDetailScreen() {
 
   const skuName = device.Sku?.name ?? device.Sku?.Model?.name ?? '未知型号';
   const brandName = device.Sku?.Model?.Brand?.name ?? '';
-  const categoryName = device.Sku?.Model?.ProductCategory?.name ?? '';
 
   return (
     <ScrollView style={styles.container}>

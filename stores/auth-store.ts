@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import {
   setAuthToken,
-  removeAuthToken,
   setUserData,
   getUserData,
   getAuthToken,

@@ -4,7 +4,6 @@ import { decStr } from '../../lib/utils';
 
 interface AmountTextProps {
   value: string | number | null | undefined;
-  showSign?: boolean;
   prefix?: string;
   style?: object;
   colorize?: boolean;
@@ -12,7 +11,6 @@ interface AmountTextProps {
 
 export const AmountText = React.memo(function AmountText({
   value,
-  showSign = false,
   prefix = '¥',
   style,
   colorize = false,

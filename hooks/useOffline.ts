@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { AppState } from 'react-native';
 import { useAppStore } from '../stores/app-store';
 import { api } from '../lib/api';

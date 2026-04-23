@@ -13,7 +13,7 @@ import { useQuery } from '@tanstack/react-query';
 
 export default function OutboundScreen() {
   const router = useRouter();
-  const { storeId, organizationId } = useAuth();
+  const { organizationId } = useAuth();
   const [search, setSearch] = useState('');
 
   const { data: device, isLoading, isError, refetch, isRefetching } = useQuery({

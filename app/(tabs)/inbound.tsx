@@ -25,7 +25,7 @@ type InboundStep = 'scan' | 'info' | 'confirm';
 export default function InboundScreen() {
   const router = useRouter();
   const { storeId, organizationId } = useAuth();
-  const { handleBarcodeScanned, isScanning, toggleScanning } = useScanner();
+  const { handleBarcodeScanned, isScanning } = useScanner();
   const scanResults = useInboundStore((s) => s.scanResults);
   const loadOfflineCache = useInboundStore((s) => s.loadOfflineCache);
   const clearScanResults = useInboundStore((s) => s.clearScanResults);

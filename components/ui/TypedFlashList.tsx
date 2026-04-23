@@ -1,4 +1,4 @@
-import React, { forwardRef, useCallback } from 'react';
+import React, { forwardRef } from 'react';
 import { FlashList as FlashListOriginal, type FlashListProps } from '@shopify/flash-list';
 import type { ViewToken } from '@shopify/flash-list';
 

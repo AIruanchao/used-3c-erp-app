@@ -4,10 +4,8 @@ import {
   Text,
   TextInput,
   StyleSheet,
-  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  Alert,
 } from 'react-native';
 import { Button, HelperText } from 'react-native-paper';
 import { useRouter } from 'expo-router';
