@@ -11,6 +11,8 @@ import {
   setSelectedOrg,
   setStoresData,
   getStoresData,
+  mmkv,
+  STORAGE_KEYS,
 } from '../lib/storage';
 
 export interface UserInfo {
@@ -83,7 +85,14 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   logout: () => {
-    removeAuthToken();
+    // Clear all auth-related MMKV keys
+    mmkv.remove(STORAGE_KEYS.AUTH_TOKEN);
+    mmkv.remove(STORAGE_KEYS.REFRESH_TOKEN);
+    mmkv.remove(STORAGE_KEYS.USER_DATA);
+    mmkv.remove(STORAGE_KEYS.STORES_DATA);
+    mmkv.remove(STORAGE_KEYS.SELECTED_STORE);
+    mmkv.remove(STORAGE_KEYS.SELECTED_ORG);
+
     set({
       isAuthenticated: false,
       user: null,

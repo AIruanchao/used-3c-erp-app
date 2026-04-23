@@ -14,7 +14,7 @@ import { printerService } from '../../services/printer-service';
 export default function DeviceDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { organizationId } = useAuth();
+  const { organizationId, storeName } = useAuth();
 
   const { data: device, isLoading } = useQuery({
     queryKey: ['device', id],
@@ -162,7 +162,7 @@ export default function DeviceDetailScreen() {
                   sn: device.sn,
                   skuName: device.Sku?.name ?? '未知',
                   unitCost: device.DevicePricing?.unitCost ?? '0',
-                  storeName: device.Store?.name ?? '',
+                  storeName: storeName ?? device.Store?.name ?? '',
                   operatorName: '',
                   date: formatDate(new Date().toISOString()),
                 });

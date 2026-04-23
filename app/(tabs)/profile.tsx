@@ -1,6 +1,6 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
-import { Card, List, Switch, Divider, Button } from 'react-native-paper';
+import { Card, List, Switch, Divider, Button, Portal, Modal, RadioButton } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppStore } from '../../stores/app-store';
@@ -12,16 +12,21 @@ export default function ProfileScreen() {
   const theme = useAppStore((s) => s.theme);
   const setTheme = useAppStore((s) => s.setTheme);
   const isOffline = useAppStore((s) => s.isOffline);
+  const [showStorePicker, setShowStorePicker] = useState(false);
 
   const handleStoreSelect = useCallback(() => {
-    Alert.alert(
-      '切换门店',
-      '请选择门店',
-      stores.map((s) => ({
-        text: `${s.storeName} (${s.orgName})`,
-        onPress: () => selectStore(s),
-      })),
-    );
+    if (stores.length <= 5) {
+      Alert.alert(
+        '切换门店',
+        '请选择门店',
+        stores.map((s) => ({
+          text: `${s.storeName} (${s.orgName})`,
+          onPress: () => selectStore(s),
+        })),
+      );
+    } else {
+      setShowStorePicker(true);
+    }
   }, [stores, selectStore]);
 
   const handleLogout = useCallback(() => {
@@ -169,6 +174,33 @@ export default function ProfileScreen() {
 
       <Text style={styles.footer}>{COMPANY_NAME}</Text>
       <Text style={styles.version}>v1.0.0</Text>
+
+      <Portal>
+        <Modal visible={showStorePicker} onDismiss={() => setShowStorePicker(false)} contentContainerStyle={styles.modal}>
+          <Text style={styles.modalTitle}>选择门店</Text>
+          <RadioButton.Group
+            value={currentStore?.storeId ?? ''}
+            onValueChange={(value) => {
+              const found = stores.find((s) => s.storeId === value);
+              if (found) selectStore(found);
+              setShowStorePicker(false);
+            }}
+          >
+            <ScrollView style={styles.storeList}>
+              {stores.map((s) => (
+                <RadioButton.Item
+                  key={s.storeId}
+                  label={`${s.storeName} (${s.orgName})`}
+                  value={s.storeId}
+                />
+              ))}
+            </ScrollView>
+          </RadioButton.Group>
+          <Button onPress={() => setShowStorePicker(false)} style={styles.modalClose}>
+            关闭
+          </Button>
+        </Modal>
+      </Portal>
     </ScrollView>
   );
 }
@@ -235,5 +267,24 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#e0e0e0',
     marginBottom: 24,
+  },
+  modal: {
+    backgroundColor: '#fff',
+    marginHorizontal: 24,
+    borderRadius: 12,
+    padding: 16,
+    maxHeight: '80%',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#212121',
+    marginBottom: 12,
+  },
+  storeList: {
+    maxHeight: 400,
+  },
+  modalClose: {
+    marginTop: 12,
   },
 });

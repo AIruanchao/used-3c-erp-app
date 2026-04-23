@@ -9,12 +9,12 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { Button, Card, HelperText, Chip, SegmentedButtons } from 'react-native-paper';
+import { Button, Card, Chip, SegmentedButtons } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../hooks/useAuth';
 import { useScanner } from '../../hooks/useScanner';
 import { useInboundStore } from '../../stores/inbound-store';
-import { quickInbound, checkImei } from '../../services/inbound-service';
+import { quickInbound, checkImei, getSkuInfo } from '../../services/inbound-service';
 import { CONDITION_OPTIONS, CHANNEL_OPTIONS, SOURCE_CHANNELS } from '../../lib/constants';
 import { getErrorMessage } from '../../lib/errors';
 import { BarcodeScannerView } from '../../components/scanner/BarcodeScannerView';
@@ -34,6 +34,7 @@ export default function InboundScreen() {
   const [sn, setSn] = useState('');
   const [skuId, setSkuId] = useState('');
   const [skuName, setSkuName] = useState('');
+  const [modelId, setModelId] = useState('');
   const [unitCost, setUnitCost] = useState('');
   const [peerPrice, setPeerPrice] = useState('');
   const [retailPrice, setRetailPrice] = useState('');
@@ -42,11 +43,34 @@ export default function InboundScreen() {
   const [sourceType, setSourceType] = useState('TRADE_IN');
   const [batteryHealth, setBatteryHealth] = useState('');
   const [loading, setLoading] = useState(false);
+  const [skuLoading, setSkuLoading] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
 
   React.useEffect(() => {
     loadOfflineCache();
   }, [loadOfflineCache]);
+
+  const handleLookupSku = useCallback(async () => {
+    if (!modelId.trim()) {
+      Alert.alert('提示', '请输入机型ID或型号');
+      return;
+    }
+    setSkuLoading(true);
+    try {
+      const info = await getSkuInfo(modelId.trim());
+      if (info.skuId) {
+        setSkuId(info.skuId);
+        setSkuName(info.category ?? 'SKU已找到');
+        Alert.alert('成功', `已匹配SKU: ${info.skuId.slice(0, 8)}...`);
+      } else {
+        Alert.alert('未找到', '该型号没有对应的SKU，请联系管理员创建');
+      }
+    } catch (err) {
+      Alert.alert('查询失败', getErrorMessage(err));
+    } finally {
+      setSkuLoading(false);
+    }
+  }, [modelId]);
 
   const onScan = useCallback(
     async (code: string, format: string) => {
@@ -86,6 +110,10 @@ export default function InboundScreen() {
       Alert.alert('错误', '请输入或扫描SN');
       return;
     }
+    if (!skuId.trim()) {
+      Alert.alert('错误', '请先查询SKU（输入型号并点击查询）');
+      return;
+    }
     if (!unitCost || parseFloat(unitCost) <= 0) {
       Alert.alert('错误', '请输入有效的成本价');
       return;
@@ -96,7 +124,7 @@ export default function InboundScreen() {
       const result = await quickInbound({
         storeId,
         organizationId,
-        skuId: skuId || 'unknown',
+        skuId: skuId,
         sn: sn.trim(),
         unitCost: unitCost,
         peerPrice: peerPrice || undefined,
@@ -135,6 +163,7 @@ export default function InboundScreen() {
     setSn('');
     setSkuId('');
     setSkuName('');
+    setModelId('');
     setUnitCost('');
     setPeerPrice('');
     setRetailPrice('');
@@ -233,6 +262,31 @@ export default function InboundScreen() {
                 <Card.Content>
                   <Text style={styles.label}>SN: {sn}</Text>
 
+                  {/* SKU lookup */}
+                  <Text style={styles.sectionTitle}>SKU查询 *</Text>
+                  <View style={styles.skuRow}>
+                    <TextInput
+                      style={[styles.input, { flex: 1 }]}
+                      placeholder="输入型号ID/名称"
+                      value={modelId}
+                      onChangeText={setModelId}
+                    />
+                    <Button
+                      mode="contained"
+                      onPress={handleLookupSku}
+                      loading={skuLoading}
+                      disabled={skuLoading || !modelId.trim()}
+                      compact
+                    >
+                      查询
+                    </Button>
+                  </View>
+                  {skuId ? (
+                    <Text style={styles.skuFound}>
+                      SKU: {skuName || skuId.slice(0, 8)}...
+                    </Text>
+                  ) : null}
+
                   <TextInput
                     style={styles.input}
                     placeholder="成本价 *"
@@ -308,7 +362,7 @@ export default function InboundScreen() {
                     mode="contained"
                     onPress={handleSubmit}
                     loading={loading}
-                    disabled={loading || !unitCost}
+                    disabled={loading || !unitCost || !skuId}
                     style={styles.submitBtn}
                   >
                     确认入库
@@ -393,5 +447,17 @@ const styles = StyleSheet.create({
   },
   submitBtn: {
     marginTop: 16,
+  },
+  skuRow: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  skuFound: {
+    fontSize: 13,
+    color: '#2e7d32',
+    fontWeight: '500',
+    marginBottom: 8,
   },
 });
