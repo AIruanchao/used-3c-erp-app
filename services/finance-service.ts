@@ -29,7 +29,7 @@ export async function findOrCreateCustomer(params: {
   name: string;
   phone?: string;
 }): Promise<{ id: string }> {
-  // Try to find existing customer by phone
+  // Try to find existing customer by phone or name
   if (params.phone) {
     const existing = await getCustomers({
       storeId: params.storeId,
@@ -38,6 +38,15 @@ export async function findOrCreateCustomer(params: {
       take: 5,
     });
     const match = existing.items.find((c) => c.phone === params.phone);
+    if (match) return { id: match.id };
+  } else if (params.name) {
+    const existing = await getCustomers({
+      storeId: params.storeId,
+      organizationId: params.organizationId,
+      q: params.name,
+      take: 5,
+    });
+    const match = existing.items.find((c) => c.name === params.name && !c.phone);
     if (match) return { id: match.id };
   }
 
