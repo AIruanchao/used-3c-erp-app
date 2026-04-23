@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, Alert } from 'react-native';
 import { Card, List, Button } from 'react-native-paper';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
@@ -174,8 +174,8 @@ export default function DeviceDetailScreen() {
                   operatorName: '',
                   date: formatDate(new Date().toISOString()),
                 });
-              } catch {
-                // Print failure is non-blocking
+              } catch (err) {
+                Alert.alert('打印失败', err instanceof Error ? err.message : '请检查打印机连接');
               } finally {
                 setPrinting(false);
               }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, Alert } from 'react-native';
 import { Card, Divider, Button } from 'react-native-paper';
 import { useAuth } from '../../hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
@@ -36,8 +36,8 @@ export default function SettlementScreen() {
         deviceCount: report?.purchase.count ?? 0,
         repairCount: report?.sales.count ?? 0,
       });
-    } catch {
-      // Print failure handled by printer service
+    } catch (err) {
+      Alert.alert('打印失败', err instanceof Error ? err.message : '请检查打印机连接');
     } finally {
       setPrinting(false);
     }
