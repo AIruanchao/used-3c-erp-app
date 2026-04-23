@@ -95,7 +95,7 @@ export default function CashierScreen() {
         salePrice: price,
         Payment: [{ method: paymentMethod, amount: price }],
       });
-      Alert.alert('收银成功', `订单号: ${result.saleOrderId}\n利润: ¥${result.profit}`, [
+      Alert.alert('收银成功', `订单号: ${result.saleOrderId}\n利润: ¥${typeof result.profit === 'number' ? result.profit.toFixed(2) : result.profit}`, [
         { text: '好的', onPress: () => router.back() },
       ]);
     } catch (err) {
