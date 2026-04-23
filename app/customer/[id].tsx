@@ -13,7 +13,7 @@ export default function CustomerDetailScreen() {
   const { storeId, organizationId } = useAuth();
 
   const { data: customer, isLoading } = useQuery({
-    queryKey: ['customer', id, storeId],
+    queryKey: ['customer', id, storeId, organizationId],
     queryFn: () => getCustomerById(id, organizationId ?? '', storeId ?? ''),
     enabled: !!id && !!storeId && !!organizationId,
   });

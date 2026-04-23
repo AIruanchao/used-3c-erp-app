@@ -12,7 +12,7 @@ export default function PayableScreen() {
   const { storeId, organizationId } = useAuth();
 
   const { data: report, isLoading, refetch, isRefetching } = useQuery({
-    queryKey: ['payables', storeId],
+    queryKey: ['payables', storeId, organizationId],
     queryFn: () =>
       getDailyReport({
         storeId: storeId ?? undefined,

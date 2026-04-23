@@ -42,7 +42,7 @@ export default function WorkspaceScreen() {
   const { storeId, organizationId, storeName, user } = useAuth();
 
   const { data: report, isLoading, refetch } = useQuery({
-    queryKey: ['dailyReport', storeId],
+    queryKey: ['dailyReport', storeId, organizationId],
     queryFn: () =>
       getDailyReport({
         storeId: storeId ?? undefined,

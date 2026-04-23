@@ -23,7 +23,7 @@ export default function StatsScreen() {
   const { storeId, organizationId } = useAuth();
 
   const { data: report, isLoading, refetch, isRefetching } = useQuery({
-    queryKey: ['stats', storeId],
+    queryKey: ['stats', storeId, organizationId],
     queryFn: () =>
       getDailyReport({
         storeId: storeId ?? undefined,

@@ -30,14 +30,14 @@ export default function NewRepairScreen() {
     setLoading(true);
     try {
       const name = customerName.trim() || '散客';
-      const phone = customerPhone.trim() || '00000000000';
+      const phone = customerPhone.trim();
 
       // Ensure customer exists (find by phone or create)
       const customer = await findOrCreateCustomer({
         storeId,
         organizationId,
         name,
-        phone,
+        phone: phone || undefined,
       });
 
       const result = await createRepair({
@@ -48,7 +48,7 @@ export default function NewRepairScreen() {
         faultDescription: description.trim(),
         faultCategory: 'OTHER',
         customerName: name,
-        customerPhone: phone,
+        customerPhone: phone || '13800000000',
         deviceBrand: '未知',
         deviceModel: '未知',
       });
@@ -74,7 +74,7 @@ export default function NewRepairScreen() {
     } finally {
       setLoading(false);
     }
-  }, [storeId, organizationId, sn, description, estimatedCost, customerName, customerPhone, router]);
+  }, [storeId, organizationId, sn, description, customerName, customerPhone, router]);
 
   return (
     <KeyboardAvoidingView

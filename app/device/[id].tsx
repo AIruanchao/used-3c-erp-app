@@ -17,7 +17,7 @@ export default function DeviceDetailScreen() {
   const { organizationId, storeName } = useAuth();
 
   const { data: device, isLoading } = useQuery({
-    queryKey: ['device', id],
+    queryKey: ['device', id, organizationId],
     queryFn: () => getDeviceById(id, organizationId ?? ''),
     enabled: !!id && !!organizationId,
   });

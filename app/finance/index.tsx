@@ -23,7 +23,7 @@ export default function FinanceIndexScreen() {
   const { storeId, organizationId } = useAuth();
 
   const { data: report, isLoading } = useQuery({
-    queryKey: ['financeSummary', storeId],
+    queryKey: ['financeSummary', storeId, organizationId],
     queryFn: () =>
       getDailyReport({
         storeId: storeId ?? undefined,

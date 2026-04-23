@@ -9,6 +9,7 @@ import { useRouter } from 'expo-router';
 import { useAuthStore } from '../stores/auth-store';
 import { useAppStore } from '../stores/app-store';
 import { setNavigationRef } from '../lib/api';
+import { ErrorBoundary } from '../components/common/ErrorBoundary';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -47,6 +48,7 @@ export default function RootLayout() {
   const paperTheme = isDark ? MD3DarkTheme : DefaultTheme;
 
   return (
+    <ErrorBoundary>
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
         <PaperProvider theme={paperTheme}>
@@ -127,5 +129,6 @@ export default function RootLayout() {
         </PaperProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 }

@@ -19,7 +19,7 @@ export default function SettlementScreen() {
   const { storeId, organizationId, storeName } = useAuth();
 
   const { data: report, isLoading, refetch, isRefetching } = useQuery({
-    queryKey: ['settlement', storeId],
+    queryKey: ['settlement', storeId, organizationId],
     queryFn: () =>
       getDailyReport({
         storeId: storeId ?? undefined,

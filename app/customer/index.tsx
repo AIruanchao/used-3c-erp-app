@@ -17,7 +17,7 @@ export default function CustomerListScreen() {
   const [search, setSearch] = useState('');
 
   const { data, isLoading, refetch, isRefetching } = useQuery({
-    queryKey: ['customers', storeId, search],
+    queryKey: ['customers', storeId, organizationId, search],
     queryFn: () =>
       getCustomers({
         storeId: storeId ?? undefined,

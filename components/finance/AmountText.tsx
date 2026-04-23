@@ -24,7 +24,7 @@ export const AmountText = React.memo(function AmountText({
   const formatted = absStr.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
   let display = `${prefix}${formatted}`;
-  if (showSign && isNegative) {
+  if (isNegative) {
     display = `-${prefix}${formatted}`;
   }
 

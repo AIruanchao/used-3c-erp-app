@@ -21,7 +21,7 @@ export default function StocktakeScreen() {
   const [scope, setScope] = useState('FULL');
 
   const { data, isLoading, refetch, isRefetching } = useQuery({
-    queryKey: ['stocktake', storeId],
+    queryKey: ['stocktake', storeId, organizationId],
     queryFn: () =>
       getStocktakeSessions({
         storeId: storeId ?? '',
