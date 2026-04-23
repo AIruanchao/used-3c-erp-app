@@ -145,9 +145,7 @@ export default function RepairDetailScreen() {
             </Button>
           )}
           {currentStatus === 'REJECTED' && (
-            <Button mode="contained" onPress={() => handleAction('quote')} loading={actionLoading} disabled={actionLoading}>
-              重新报价
-            </Button>
+            <Text style={styles.rejectedHint}>客户已拒绝报价，请在Web端处理</Text>
           )}
           {currentStatus === 'ACCEPTED' && (
             <Button mode="contained" onPress={() => handleAction('start')} loading={actionLoading} disabled={actionLoading}>
@@ -233,6 +231,7 @@ const styles = StyleSheet.create({
   date: { fontSize: 12, color: '#bdbdbd', marginTop: 4 },
   cost: { fontSize: 14, color: '#616161', marginTop: 4 },
   actions: { gap: 8 },
+  rejectedHint: { fontSize: 14, color: '#e53935', textAlign: 'center', paddingVertical: 8 },
   quoteInput: {
     borderWidth: 1,
     borderColor: '#e0e0e0',
