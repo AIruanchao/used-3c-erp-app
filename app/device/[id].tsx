@@ -1,0 +1,220 @@
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { Card, Divider, List, Button } from 'react-native-paper';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useQuery } from '@tanstack/react-query';
+import { getDeviceById } from '../../services/device-service';
+import { LoadingScreen } from '../../components/common/LoadingScreen';
+import { DeviceStatusBadge } from '../../components/device/DeviceStatusBadge';
+import { AmountText } from '../../components/finance/AmountText';
+import { formatDate, decStr } from '../../lib/utils';
+
+export default function DeviceDetailScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
+
+  const { data: device, isLoading } = useQuery({
+    queryKey: ['device', id],
+    queryFn: () => getDeviceById(id),
+    enabled: !!id,
+  });
+
+  if (isLoading) return <LoadingScreen />;
+  if (!device) {
+    return (
+      <View style={styles.error}>
+        <Text>设备不存在</Text>
+      </View>
+    );
+  }
+
+  const skuName = device.Sku?.name ?? device.Sku?.Model?.name ?? '未知型号';
+  const brandName = device.Sku?.Model?.Brand?.name ?? '';
+  const categoryName = device.Sku?.Model?.ProductCategory?.name ?? '';
+
+  return (
+    <ScrollView style={styles.container}>
+      {/* Header */}
+      <Card style={styles.card} mode="elevated">
+        <Card.Content>
+          <View style={styles.header}>
+            <View style={styles.titleSection}>
+              <Text style={styles.brand}>{brandName}</Text>
+              <Text style={styles.model}>{skuName}</Text>
+              <Text style={styles.sn}>SN: {device.sn}</Text>
+            </View>
+            <DeviceStatusBadge status={device.inventoryStatus} />
+          </View>
+        </Card.Content>
+      </Card>
+
+      {/* Pricing */}
+      {device.DevicePricing && (
+        <Card style={styles.card}>
+          <Card.Title title="定价信息" titleStyle={styles.cardTitle} />
+          <Card.Content>
+            <View style={styles.priceGrid}>
+              <View style={styles.priceItem}>
+                <Text style={styles.priceLabel}>成本价</Text>
+                <AmountText
+                  value={device.DevicePricing.unitCost}
+                  style={styles.priceValue}
+                />
+              </View>
+              {device.DevicePricing.peerPrice && (
+                <View style={styles.priceItem}>
+                  <Text style={styles.priceLabel}>同行价</Text>
+                  <AmountText
+                    value={device.DevicePricing.peerPrice}
+                    style={styles.priceValue}
+                  />
+                </View>
+              )}
+              {device.DevicePricing.retailPrice && (
+                <View style={styles.priceItem}>
+                  <Text style={styles.priceLabel}>零售价</Text>
+                  <AmountText
+                    value={device.DevicePricing.retailPrice}
+                    style={styles.priceValue}
+                  />
+                </View>
+              )}
+            </View>
+          </Card.Content>
+        </Card>
+      )}
+
+      {/* Specs */}
+      {device.DeviceSpec && (
+        <Card style={styles.card}>
+          <Card.Title title="规格信息" titleStyle={styles.cardTitle} />
+          <Card.Content>
+            {device.DeviceSpec.condition && (
+              <List.Item title="成色" description={device.DeviceSpec.condition} />
+            )}
+            {device.DeviceSpec.channel && (
+              <List.Item title="渠道" description={device.DeviceSpec.channel} />
+            )}
+            {device.DeviceSpec.systemVersion && (
+              <List.Item
+                title="系统版本"
+                description={device.DeviceSpec.systemVersion}
+              />
+            )}
+            <List.Item
+              title="锁状态"
+              description={device.DeviceSpec.lockStatus}
+            />
+          </Card.Content>
+        </Card>
+      )}
+
+      {/* Other Info */}
+      <Card style={styles.card}>
+        <Card.Title title="其他信息" titleStyle={styles.cardTitle} />
+        <Card.Content>
+          {device.inboundAt && (
+            <List.Item
+              title="入库时间"
+              description={formatDate(device.inboundAt, 'YYYY-MM-DD HH:mm')}
+            />
+          )}
+          {device.batteryHealthPercent && (
+            <List.Item
+              title="电池健康"
+              description={`${device.batteryHealthPercent}%`}
+            />
+          )}
+          {device.warrantyDays && (
+            <List.Item
+              title="保修天数"
+              description={`${device.warrantyDays}天`}
+            />
+          )}
+        </Card.Content>
+      </Card>
+
+      {/* Actions */}
+      {device.inventoryStatus === 'IN_STOCK' && (
+        <View style={styles.actions}>
+          <Button
+            mode="contained"
+            icon="cash-register"
+            onPress={() => router.push('/cashier' as never)}
+            style={styles.actionBtn}
+          >
+            前往收银
+          </Button>
+        </View>
+      )}
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fafafa',
+  },
+  card: {
+    marginHorizontal: 16,
+    marginTop: 8,
+  },
+  cardTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  titleSection: {
+    flex: 1,
+  },
+  brand: {
+    fontSize: 13,
+    color: '#9e9e9e',
+  },
+  model: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#212121',
+    marginTop: 2,
+  },
+  sn: {
+    fontSize: 14,
+    color: '#616161',
+    fontFamily: 'Courier',
+    marginTop: 4,
+  },
+  priceGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 16,
+  },
+  priceItem: {
+    flex: 1,
+    minWidth: 80,
+  },
+  priceLabel: {
+    fontSize: 12,
+    color: '#9e9e9e',
+    marginBottom: 4,
+  },
+  priceValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  error: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  actions: {
+    padding: 16,
+  },
+  actionBtn: {
+    marginBottom: 8,
+  },
+});
