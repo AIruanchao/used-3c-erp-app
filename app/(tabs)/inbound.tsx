@@ -282,6 +282,8 @@ export default function InboundScreen() {
                       placeholder="输入型号ID/名称"
                       value={modelId}
                       onChangeText={setModelId}
+                      autoCapitalize="none"
+                      autoCorrect={false}
                     />
                     <Button
                       mode="contained"

@@ -22,6 +22,13 @@ export const SearchBar = React.memo(function SearchBar({
     onSearchRef.current = onSearch;
   }, [onSearch]);
 
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
+
   const handleChange = useCallback(
     (text: string) => {
       setQuery(text);
