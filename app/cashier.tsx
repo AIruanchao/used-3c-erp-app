@@ -35,6 +35,7 @@ export default function CashierScreen() {
   const onScan = useCallback(
     async (code: string) => {
       setDeviceSn(code);
+      setDeviceId('');
       try {
         const result = await searchDevice({
           sn: code,
