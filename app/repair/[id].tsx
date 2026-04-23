@@ -144,6 +144,11 @@ export default function RepairDetailScreen() {
               接受报价并开始维修
             </Button>
           )}
+          {currentStatus === 'REJECTED' && (
+            <Button mode="contained" onPress={() => handleAction('quote')} loading={actionLoading} disabled={actionLoading}>
+              重新报价
+            </Button>
+          )}
           {currentStatus === 'ACCEPTED' && (
             <Button mode="contained" onPress={() => handleAction('start')} loading={actionLoading} disabled={actionLoading}>
               开始维修

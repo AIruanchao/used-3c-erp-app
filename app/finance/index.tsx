@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { Card, List, Divider, Text } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../hooks/useAuth';
@@ -13,7 +13,7 @@ export default function FinanceIndexScreen() {
   const router = useRouter();
   const { storeId, organizationId } = useAuth();
 
-  const { data: report, isLoading, isError, refetch } = useQuery({
+  const { data: report, isLoading, isError, refetch, isRefetching } = useQuery({
     queryKey: ['dailyReport', storeId, organizationId],
     queryFn: () =>
       getDailyReport({
@@ -27,7 +27,10 @@ export default function FinanceIndexScreen() {
   if (isError) return <QueryError onRetry={() => refetch()} />;
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
+    >
       <Card style={styles.card} mode="elevated">
         <Card.Title title="今日财务" titleStyle={styles.cardTitle} />
         <Card.Content>
@@ -84,7 +87,7 @@ export default function FinanceIndexScreen() {
           onPress={() => router.push('/finance/receivable' as never)}
         />
       </Card>
-    </View>
+    </ScrollView>
   );
 }
 

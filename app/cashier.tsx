@@ -47,7 +47,7 @@ export default function CashierScreen() {
           }
         }
       } catch {
-        // Device not found, continue manually
+        // Device lookup failed - user can still proceed manually
       }
       setShowScanner(false);
     },
