@@ -13,6 +13,7 @@ import {
   mmkv,
   STORAGE_KEYS,
 } from '../lib/storage';
+import { useInboundStore } from './inbound-store';
 
 export interface UserInfo {
   id: string;
@@ -91,6 +92,11 @@ export const useAuthStore = create<AuthState>((set) => ({
     mmkv.remove(STORAGE_KEYS.STORES_DATA);
     mmkv.remove(STORAGE_KEYS.SELECTED_STORE);
     mmkv.remove(STORAGE_KEYS.SELECTED_ORG);
+    mmkv.remove(STORAGE_KEYS.SCAN_HISTORY);
+    mmkv.remove(STORAGE_KEYS.OFFLINE_QUEUE);
+
+    // Clear Zustand stores from other modules
+    useInboundStore.getState().clearScanResults();
 
     set({
       isAuthenticated: false,

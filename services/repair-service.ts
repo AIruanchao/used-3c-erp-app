@@ -20,10 +20,10 @@ export async function createRepair(data: {
   customerId: string;
   deviceId?: string | null;
   deviceSn?: string | null;
-  customerName?: string;
-  customerPhone?: string;
-  deviceBrand?: string;
-  deviceModel?: string;
+  customerName: string;
+  customerPhone: string;
+  deviceBrand: string;
+  deviceModel: string;
   faultCategory?: string;
   faultDescription: string;
   estimatedCost?: number | null;
