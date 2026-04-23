@@ -4,6 +4,7 @@ import {
   Text,
   TextInput,
   StyleSheet,
+  Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
@@ -52,6 +53,10 @@ export default function LoginScreen() {
         }));
       } catch {
         // stores fetch might fail, continue anyway
+      }
+
+      if (stores.length === 0) {
+        Alert.alert('提示', '未能获取门店信息，部分功能可能受限');
       }
 
       setAuth(result.user, result.token, stores);

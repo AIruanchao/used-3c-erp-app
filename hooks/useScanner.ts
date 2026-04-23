@@ -43,13 +43,8 @@ export function useScanner(options: UseScannerOptions = {}) {
     [debounceMs, onScan, addScanResult, enableHaptic],
   );
 
-  const toggleScanning = useCallback(() => {
-    setIsScanning((prev) => !prev);
-  }, []);
-
   return {
     isScanning,
     handleBarcodeScanned,
-    toggleScanning,
   };
 }
