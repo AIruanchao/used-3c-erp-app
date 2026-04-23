@@ -110,6 +110,20 @@ export default function InboundScreen() {
     [handleBarcodeScanned, storeId, organizationId, scanLoading],
   );
 
+  const resetForm = useCallback(() => {
+    setSn('');
+    setSkuId('');
+    setSkuName('');
+    setModelId('');
+    setUnitCost('');
+    setPeerPrice('');
+    setRetailPrice('');
+    setCondition('');
+    setChannel('');
+    setBatteryHealth('');
+    setStep('scan');
+  }, []);
+
   const handleSubmit = useCallback(async () => {
     if (!storeId || !organizationId) {
       Alert.alert('错误', '请先选择门店');
@@ -166,21 +180,8 @@ export default function InboundScreen() {
     sourceType,
     batteryHealth,
     router,
+    resetForm,
   ]);
-
-  const resetForm = () => {
-    setSn('');
-    setSkuId('');
-    setSkuName('');
-    setModelId('');
-    setUnitCost('');
-    setPeerPrice('');
-    setRetailPrice('');
-    setCondition('');
-    setChannel('');
-    setBatteryHealth('');
-    setStep('scan');
-  };
 
   return (
     <KeyboardAvoidingView

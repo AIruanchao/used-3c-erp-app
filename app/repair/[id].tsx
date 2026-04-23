@@ -143,6 +143,11 @@ export default function RepairDetailScreen() {
               接受报价并开始维修
             </Button>
           )}
+          {currentStatus === 'ACCEPTED' && (
+            <Button mode="contained" onPress={() => handleAction('start')} loading={actionLoading} disabled={actionLoading}>
+              开始维修
+            </Button>
+          )}
           {currentStatus === 'IN_REPAIR' && (
             <Button mode="contained" onPress={() => handleAction('complete')} loading={actionLoading} disabled={actionLoading}>
               完成维修
@@ -202,7 +207,7 @@ export default function RepairDetailScreen() {
             ) : null}
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={() => setShowQuoteDialog(false)}>取消</Button>
+            <Button onPress={() => { setShowQuoteDialog(false); setLaborCost(''); setPartName(''); setPartCost(''); setPartPrice(''); }}>取消</Button>
             <Button onPress={submitQuote} disabled={!laborCost || actionLoading} loading={actionLoading}>确认报价</Button>
           </Dialog.Actions>
         </Dialog>
