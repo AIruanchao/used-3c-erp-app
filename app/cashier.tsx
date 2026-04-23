@@ -85,9 +85,6 @@ export default function CashierScreen() {
         }
         resolvedDeviceId = found.id;
         setDeviceId(found.id);
-        if (!salePrice && found.DevicePricing?.retailPrice) {
-          setSalePrice(String(found.DevicePricing.retailPrice));
-        }
       }
 
       const result = await cashierCheckout({
