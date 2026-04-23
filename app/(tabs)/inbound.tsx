@@ -101,6 +101,10 @@ export default function InboundScreen() {
           setScanLoading(false);
           return;
         }
+
+        if (imeiResult.inOtherStore) {
+          Alert.alert('提示', `该设备在其他门店(${imeiResult.otherStoreName ?? '未知'})库中，请确认后再入库`);
+        }
       } catch {
         // IMEI check failure is non-blocking
       }
@@ -281,7 +285,7 @@ export default function InboundScreen() {
               <Card style={styles.card} mode="outlined">
                 <Card.Title title="入库信息" />
                 <Card.Content>
-                  <Text style={styles.label}>SN: {sn}</Text>
+                  <Text style={styles.label} numberOfLines={1}>SN: {sn}</Text>
 
                   {/* SKU lookup */}
                   <Text style={styles.sectionTitle}>SKU查询 *</Text>

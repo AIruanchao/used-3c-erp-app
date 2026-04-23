@@ -122,7 +122,7 @@ export default function RepairDetailScreen() {
             {REPAIR_STATUS_LABELS[currentStatus] ?? currentStatus}
           </Text>
           <Text style={styles.desc}>{description ?? '无描述'}</Text>
-          {sn && <Text style={styles.sn}>SN: {sn}</Text>}
+          {sn && <Text style={styles.sn} numberOfLines={1}>SN: {sn}</Text>}
           <Text style={styles.date}>工单ID: {id}</Text>
           {estimatedCost && (
             <Text style={styles.cost}>估价: ¥{estimatedCost}</Text>

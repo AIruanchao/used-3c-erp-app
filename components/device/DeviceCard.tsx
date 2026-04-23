@@ -32,7 +32,7 @@ export const DeviceCard = React.memo(function DeviceCard({
             <DeviceStatusBadge status={device.inventoryStatus} />
           </View>
           <View style={styles.details}>
-            <Text style={styles.sn}>SN: {device.sn}</Text>
+            <Text style={styles.sn} numberOfLines={1}>SN: {device.sn}</Text>
             {device.DevicePricing && (
               <View style={styles.priceRow}>
                 {device.DevicePricing.retailPrice && (

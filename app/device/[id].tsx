@@ -46,7 +46,7 @@ export default function DeviceDetailScreen() {
             <View style={styles.titleSection}>
               <Text style={styles.brand}>{brandName}</Text>
               <Text style={styles.model}>{skuName}</Text>
-              <Text style={styles.sn}>SN: {device.sn}</Text>
+              <Text style={styles.sn} numberOfLines={1}>SN: {device.sn}</Text>
             </View>
             <DeviceStatusBadge status={device.inventoryStatus} />
           </View>

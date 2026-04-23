@@ -42,7 +42,7 @@ export default function CustomerListScreen() {
         <Card.Content>
           <View style={styles.row}>
             <View>
-              <Text style={styles.name}>{customer.name}</Text>
+              <Text style={styles.name} numberOfLines={1}>{customer.name}</Text>
               <Text style={styles.phone}>{customer.phone}</Text>
             </View>
             <View style={styles.right}>
