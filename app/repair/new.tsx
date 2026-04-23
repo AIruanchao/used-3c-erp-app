@@ -96,12 +96,16 @@ export default function NewRepairScreen() {
               value={customerPhone}
               onChangeText={setCustomerPhone}
               keyboardType="phone-pad"
+              autoCapitalize="none"
+              autoCorrect={false}
             />
             <TextInput
               style={styles.input}
               placeholder="SN/IMEI（可选）"
               value={sn}
               onChangeText={setSn}
+              autoCapitalize="none"
+              autoCorrect={false}
             />
             <TextInput
               style={[styles.input, styles.textArea]}

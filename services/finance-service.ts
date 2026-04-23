@@ -48,5 +48,9 @@ export async function findOrCreateCustomer(params: {
     name: params.name,
     phone: params.phone || undefined,
   });
-  return { id: res.data?.id ?? res.data?.customer?.id };
+  const customerId = res.data?.id ?? res.data?.customer?.id;
+  if (!customerId) {
+    throw new Error('创建客户失败：未返回客户ID');
+  }
+  return { id: customerId };
 }

@@ -138,6 +138,8 @@ export default function CashierScreen() {
                 placeholder="设备SN"
                 value={deviceSn}
                 onChangeText={setDeviceSn}
+                autoCapitalize="none"
+                autoCorrect={false}
               />
               <TextInput
                 style={styles.input}

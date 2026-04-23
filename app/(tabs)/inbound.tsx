@@ -223,6 +223,8 @@ export default function InboundScreen() {
                     placeholder="或手动输入SN/IMEI"
                     value={sn}
                     onChangeText={setSn}
+                    autoCapitalize="none"
+                    autoCorrect={false}
                   />
                   <Button
                     mode="outlined"

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { Card, Divider, Button } from 'react-native-paper';
 import { useAuth } from '../../hooks/useAuth';
@@ -18,6 +18,7 @@ function formatMoney(value: number | string): string {
 
 export default function SettlementScreen() {
   const { storeId, organizationId, storeName } = useAuth();
+  const [printing, setPrinting] = useState(false);
 
   const { data: report, isLoading, isError, refetch, isRefetching } = useQuery({
     queryKey: ['settlement', storeId, organizationId],
@@ -30,6 +31,8 @@ export default function SettlementScreen() {
   });
 
   const handlePrint = async () => {
+    if (printing) return;
+    setPrinting(true);
     try {
       await printerService.printDailySettlement({
         storeName: storeName ?? '',
@@ -41,6 +44,8 @@ export default function SettlementScreen() {
       });
     } catch {
       // Print failure handled by printer service
+    } finally {
+      setPrinting(false);
     }
   };
 
@@ -105,7 +110,7 @@ export default function SettlementScreen() {
         </Card.Content>
       </Card>
 
-      <Button mode="contained" icon="printer" onPress={handlePrint} style={styles.printBtn}>
+      <Button mode="contained" icon="printer" onPress={handlePrint} style={styles.printBtn} loading={printing} disabled={printing}>
         打印日结单
       </Button>
 

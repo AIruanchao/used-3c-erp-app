@@ -20,6 +20,7 @@ export default function StocktakeScreen() {
   const { storeId, organizationId } = useAuth();
   const [showNew, setShowNew] = useState(false);
   const [scope, setScope] = useState('FULL');
+  const [creating, setCreating] = useState(false);
 
   const { data, isLoading, isError, refetch, isRefetching } = useQuery({
     queryKey: ['stocktake', storeId, organizationId],
@@ -34,7 +35,8 @@ export default function StocktakeScreen() {
   const items: StocktakeSession[] = data?.items ?? [];
 
   const handleCreate = useCallback(async () => {
-    if (!storeId || !organizationId) return;
+    if (!storeId || !organizationId || creating) return;
+    setCreating(true);
     try {
       await createStocktake({
         storeId,
@@ -46,8 +48,10 @@ export default function StocktakeScreen() {
       Alert.alert('成功', '盘点会话已创建');
     } catch (err) {
       Alert.alert('创建失败', err instanceof Error ? err.message : '未知错误');
+    } finally {
+      setCreating(false);
     }
-  }, [storeId, organizationId, scope, refetch]);
+  }, [storeId, organizationId, scope, refetch, creating]);
 
   if (isLoading) return <LoadingScreen />;
   if (isError) return <QueryError onRetry={() => refetch()} />;
@@ -91,7 +95,7 @@ export default function StocktakeScreen() {
           </Dialog.Content>
           <Dialog.Actions>
             <Button onPress={() => setShowNew(false)}>取消</Button>
-            <Button onPress={handleCreate}>创建</Button>
+            <Button onPress={handleCreate} loading={creating} disabled={creating}>创建</Button>
           </Dialog.Actions>
         </Dialog>
       </Portal>
