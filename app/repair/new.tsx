@@ -81,7 +81,7 @@ export default function NewRepairScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <Card style={styles.card}>
           <Card.Content>
             <TextInput

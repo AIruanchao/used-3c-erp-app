@@ -7,6 +7,7 @@ import { searchDevice } from '../../services/inventory-service';
 import { SearchBar } from '../../components/common/SearchBar';
 import { DeviceCard } from '../../components/device/DeviceCard';
 import { EmptyState } from '../../components/common/EmptyState';
+import { QueryError } from '../../components/common/QueryError';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
 import { useQuery } from '@tanstack/react-query';
 
@@ -15,7 +16,7 @@ export default function OutboundScreen() {
   const { storeId, organizationId } = useAuth();
   const [search, setSearch] = useState('');
 
-  const { data: device, isLoading, refetch, isRefetching } = useQuery({
+  const { data: device, isLoading, isError, refetch, isRefetching } = useQuery({
     queryKey: ['outboundSearch', organizationId, search],
     queryFn: () =>
       searchDevice({
@@ -45,6 +46,8 @@ export default function OutboundScreen() {
       >
         {isLoading && search ? (
           <LoadingScreen message="搜索中..." />
+        ) : isError ? (
+          <QueryError message="搜索失败" onRetry={() => refetch()} />
         ) : search && !device ? (
           <EmptyState
             icon="magnify-close"

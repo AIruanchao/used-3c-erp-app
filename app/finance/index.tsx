@@ -6,6 +6,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { getDailyReport } from '../../services/stats-service';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
+import { QueryError } from '../../components/common/QueryError';
 
 function formatMoney(value: number | string): string {
   const num = typeof value === 'string' ? parseFloat(value) : value;
@@ -22,7 +23,7 @@ export default function FinanceIndexScreen() {
   const router = useRouter();
   const { storeId, organizationId } = useAuth();
 
-  const { data: report, isLoading } = useQuery({
+  const { data: report, isLoading, isError, refetch } = useQuery({
     queryKey: ['financeSummary', storeId, organizationId],
     queryFn: () =>
       getDailyReport({
@@ -33,6 +34,7 @@ export default function FinanceIndexScreen() {
   });
 
   if (isLoading) return <LoadingScreen />;
+  if (isError) return <QueryError onRetry={() => refetch()} />;
 
   return (
     <View style={styles.container}>

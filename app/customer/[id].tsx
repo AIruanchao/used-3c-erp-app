@@ -5,6 +5,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { getCustomerById } from '../../services/finance-service';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
+import { QueryError } from '../../components/common/QueryError';
 import { AmountText } from '../../components/finance/AmountText';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -12,13 +13,14 @@ export default function CustomerDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { storeId, organizationId } = useAuth();
 
-  const { data: customer, isLoading } = useQuery({
+  const { data: customer, isLoading, isError, refetch } = useQuery({
     queryKey: ['customer', id, storeId, organizationId],
     queryFn: () => getCustomerById(id, organizationId ?? '', storeId ?? ''),
     enabled: !!id && !!storeId && !!organizationId,
   });
 
   if (isLoading) return <LoadingScreen />;
+  if (isError) return <QueryError onRetry={() => refetch()} />;
   if (!customer) return <View style={styles.center}><Text>客户不存在</Text></View>;
 
   return (

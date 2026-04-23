@@ -121,7 +121,7 @@ export default function CashierScreen() {
           </Button>
         </View>
       ) : (
-        <ScrollView contentContainerStyle={styles.scroll}>
+        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <Card style={styles.card}>
             <Card.Title title="设备信息" titleStyle={styles.cardTitle} />
             <Card.Content>

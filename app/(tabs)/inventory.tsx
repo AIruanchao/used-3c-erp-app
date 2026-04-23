@@ -6,6 +6,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { SearchBar } from '../../components/common/SearchBar';
 import { DeviceCard } from '../../components/device/DeviceCard';
 import { EmptyState } from '../../components/common/EmptyState';
+import { QueryError } from '../../components/common/QueryError';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
@@ -15,7 +16,7 @@ export default function InventoryScreen() {
   const { storeId, organizationId } = useAuth();
   const [search, setSearch] = useState('');
 
-  const { data: device, isLoading, refetch, isRefetching } = useQuery({
+  const { data: device, isLoading, isError, refetch, isRefetching } = useQuery({
     queryKey: ['inventorySearch', organizationId, search],
     queryFn: () =>
       searchDevice({
@@ -49,6 +50,8 @@ export default function InventoryScreen() {
       >
         {isLoading && search ? (
           <LoadingScreen message="搜索中..." />
+        ) : isError ? (
+          <QueryError message="搜索失败" onRetry={() => refetch()} />
         ) : search && !device ? (
           <EmptyState
             icon="magnify-close"

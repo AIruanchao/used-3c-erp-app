@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { getDailyReport } from '../services/stats-service';
 import { LoadingScreen } from '../components/common/LoadingScreen';
+import { QueryError } from '../components/common/QueryError';
 import { formatDate } from '../lib/utils';
 import { COMPANY_NAME } from '../lib/constants';
 
@@ -22,7 +23,7 @@ function formatMoney(value: number | string): string {
 export default function StatsScreen() {
   const { storeId, organizationId } = useAuth();
 
-  const { data: report, isLoading, refetch, isRefetching } = useQuery({
+  const { data: report, isLoading, isError, refetch, isRefetching } = useQuery({
     queryKey: ['stats', storeId, organizationId],
     queryFn: () =>
       getDailyReport({
@@ -33,6 +34,7 @@ export default function StatsScreen() {
   });
 
   if (isLoading) return <LoadingScreen />;
+  if (isError) return <QueryError onRetry={() => refetch()} />;
 
   return (
     <ScrollView

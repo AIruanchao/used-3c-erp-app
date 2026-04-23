@@ -6,6 +6,7 @@ import { getCustomers } from '../../services/finance-service';
 import { SearchBar } from '../../components/common/SearchBar';
 import { AmountText } from '../../components/finance/AmountText';
 import { EmptyState } from '../../components/common/EmptyState';
+import { QueryError } from '../../components/common/QueryError';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
 import type { CustomerItem } from '../../types/finance';
 import { useQuery } from '@tanstack/react-query';
@@ -16,7 +17,7 @@ export default function CustomerListScreen() {
   const { storeId, organizationId } = useAuth();
   const [search, setSearch] = useState('');
 
-  const { data, isLoading, refetch, isRefetching } = useQuery({
+  const { data, isLoading, isError, refetch, isRefetching } = useQuery({
     queryKey: ['customers', storeId, organizationId, search],
     queryFn: () =>
       getCustomers({
@@ -56,6 +57,7 @@ export default function CustomerListScreen() {
   );
 
   if (isLoading) return <LoadingScreen />;
+  if (isError) return <QueryError onRetry={() => refetch()} />;
 
   return (
     <View style={styles.container}>

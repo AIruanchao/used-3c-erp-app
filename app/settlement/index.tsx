@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getDailyReport } from '../../services/stats-service';
 import { printerService } from '../../services/printer-service';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
+import { QueryError } from '../../components/common/QueryError';
 import { formatDate } from '../../lib/utils';
 import { COMPANY_NAME } from '../../lib/constants';
 
@@ -18,7 +19,7 @@ function formatMoney(value: number | string): string {
 export default function SettlementScreen() {
   const { storeId, organizationId, storeName } = useAuth();
 
-  const { data: report, isLoading, refetch, isRefetching } = useQuery({
+  const { data: report, isLoading, isError, refetch, isRefetching } = useQuery({
     queryKey: ['settlement', storeId, organizationId],
     queryFn: () =>
       getDailyReport({
@@ -44,6 +45,7 @@ export default function SettlementScreen() {
   };
 
   if (isLoading) return <LoadingScreen />;
+  if (isError) return <QueryError onRetry={() => refetch()} />;
 
   const today = formatDate(new Date().toISOString());
 

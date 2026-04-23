@@ -15,15 +15,18 @@ export default function RepairDetailScreen() {
     estimatedCost?: string;
   }>();
 
-  const { id, status, description, sn, estimatedCost } = params;
+  const { id } = params;
+  const [currentStatus, setCurrentStatus] = useState(params.status ?? 'REGISTERED');
   const [laborCost, setLaborCost] = useState('');
   const [partName, setPartName] = useState('');
   const [partCost, setPartCost] = useState('');
   const [partPrice, setPartPrice] = useState('');
   const [showQuoteDialog, setShowQuoteDialog] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const handleAction = async (action: string) => {
-    if (!id) return;
+    if (!id || actionLoading) return;
+    setActionLoading(true);
     try {
       let result: { ok: boolean };
       switch (action) {
@@ -32,34 +35,41 @@ export default function RepairDetailScreen() {
           return;
         case 'start':
           result = await startRepair(id);
-          Alert.alert('成功', result.ok ? '已开始维修' : '操作失败');
+          if (result.ok) { Alert.alert('成功', '已开始维修'); setCurrentStatus('IN_REPAIR'); }
+          else { Alert.alert('失败', '操作失败'); }
           break;
         case 'complete':
           result = await completeRepair(id);
-          Alert.alert('成功', result.ok ? '维修完成' : '操作失败');
+          if (result.ok) { Alert.alert('成功', '维修完成'); setCurrentStatus('COMPLETED'); }
+          else { Alert.alert('失败', '操作失败'); }
           break;
         case 'qc':
           result = await qcRepair(id);
-          Alert.alert('成功', result.ok ? '质检通过' : '操作失败');
+          if (result.ok) { Alert.alert('成功', '质检通过'); setCurrentStatus('WAITING_PICKUP'); }
+          else { Alert.alert('失败', '操作失败'); }
           break;
         case 'deliver':
           result = await deliverRepair(id);
-          Alert.alert('成功', result.ok ? '已交付' : '操作失败');
+          if (result.ok) { Alert.alert('成功', '已交付'); setCurrentStatus('DELIVERED'); }
+          else { Alert.alert('失败', '操作失败'); }
           break;
       }
     } catch (err) {
       Alert.alert('操作失败', getErr(err));
+    } finally {
+      setActionLoading(false);
     }
   };
 
   const submitQuote = async () => {
-    if (!id) return;
+    if (!id || actionLoading) return;
     const labor = parseFloat(laborCost);
     if (Number.isNaN(labor) || labor < 0) {
       Alert.alert('提示', '请输入有效的人工费');
       return;
     }
 
+    setActionLoading(true);
     try {
       await quoteRepair(id, {
         lines: partName ? [{
@@ -72,9 +82,12 @@ export default function RepairDetailScreen() {
         laborCost: labor,
       });
       setShowQuoteDialog(false);
+      setCurrentStatus('QUOTED');
       Alert.alert('成功', '已报价');
     } catch (err) {
       Alert.alert('报价失败', getErr(err));
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -86,10 +99,12 @@ export default function RepairDetailScreen() {
     );
   }
 
-  const currentStatus = status ?? 'REGISTERED';
+  const description = params.description;
+  const sn = params.sn;
+  const estimatedCost = params.estimatedCost;
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
       <Card style={styles.card} mode="elevated">
         <Card.Content>
           <Text style={styles.status}>
@@ -108,27 +123,27 @@ export default function RepairDetailScreen() {
         <Card.Title title="操作" titleStyle={styles.cardTitle} />
         <Card.Content style={styles.actions}>
           {(currentStatus === 'REGISTERED' || currentStatus === 'DIAGNOSED') && (
-            <Button mode="contained" onPress={() => handleAction('quote')}>
+            <Button mode="contained" onPress={() => handleAction('quote')} loading={actionLoading} disabled={actionLoading}>
               报价
             </Button>
           )}
           {currentStatus === 'QUOTED' && (
-            <Button mode="contained" onPress={() => handleAction('start')}>
+            <Button mode="contained" onPress={() => handleAction('start')} loading={actionLoading} disabled={actionLoading}>
               接受报价并开始维修
             </Button>
           )}
           {currentStatus === 'IN_REPAIR' && (
-            <Button mode="contained" onPress={() => handleAction('complete')}>
+            <Button mode="contained" onPress={() => handleAction('complete')} loading={actionLoading} disabled={actionLoading}>
               完成维修
             </Button>
           )}
           {currentStatus === 'COMPLETED' && (
-            <Button mode="contained" onPress={() => handleAction('qc')}>
+            <Button mode="contained" onPress={() => handleAction('qc')} loading={actionLoading} disabled={actionLoading}>
               质检通过
             </Button>
           )}
           {currentStatus === 'WAITING_PICKUP' && (
-            <Button mode="contained" onPress={() => handleAction('deliver')}>
+            <Button mode="contained" onPress={() => handleAction('deliver')} loading={actionLoading} disabled={actionLoading}>
               安排交付
             </Button>
           )}
@@ -174,7 +189,7 @@ export default function RepairDetailScreen() {
           </Dialog.Content>
           <Dialog.Actions>
             <Button onPress={() => setShowQuoteDialog(false)}>取消</Button>
-            <Button onPress={submitQuote} disabled={!laborCost}>确认报价</Button>
+            <Button onPress={submitQuote} disabled={!laborCost || actionLoading} loading={actionLoading}>确认报价</Button>
           </Dialog.Actions>
         </Dialog>
       </Portal>

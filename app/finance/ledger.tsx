@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, RefreshControl, ScrollView } from 'react-native';
 import { EmptyState } from '../../components/common/EmptyState';
+import { QueryError } from '../../components/common/QueryError';
 import { useAuth } from '../../hooks/useAuth';
 import { getDailyReport } from '../../services/stats-service';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
@@ -15,7 +16,7 @@ function formatMoney(value: number): string {
 export default function LedgerScreen() {
   const { storeId, organizationId } = useAuth();
 
-  const { data: report, isLoading, refetch, isRefetching } = useQuery({
+  const { data: report, isLoading, isError, refetch, isRefetching } = useQuery({
     queryKey: ['ledgerSummary', storeId, organizationId],
     queryFn: () =>
       getDailyReport({
@@ -26,6 +27,7 @@ export default function LedgerScreen() {
   });
 
   if (isLoading) return <LoadingScreen />;
+  if (isError) return <QueryError onRetry={() => refetch()} />;
 
   return (
     <ScrollView

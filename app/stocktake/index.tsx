@@ -4,6 +4,7 @@ import { Card, Text, Button, FAB, Dialog, Portal, TextInput } from 'react-native
 import { useAuth } from '../../hooks/useAuth';
 import { getStocktakeSessions, createStocktake } from '../../services/inventory-service';
 import { EmptyState } from '../../components/common/EmptyState';
+import { QueryError } from '../../components/common/QueryError';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
 import { formatDate } from '../../lib/utils';
 import { useQuery } from '@tanstack/react-query';
@@ -20,7 +21,7 @@ export default function StocktakeScreen() {
   const [showNew, setShowNew] = useState(false);
   const [scope, setScope] = useState('FULL');
 
-  const { data, isLoading, refetch, isRefetching } = useQuery({
+  const { data, isLoading, isError, refetch, isRefetching } = useQuery({
     queryKey: ['stocktake', storeId, organizationId],
     queryFn: () =>
       getStocktakeSessions({
@@ -49,10 +50,12 @@ export default function StocktakeScreen() {
   }, [storeId, organizationId, scope, refetch]);
 
   if (isLoading) return <LoadingScreen />;
+  if (isError) return <QueryError onRetry={() => refetch()} />;
 
   return (
     <View style={styles.container}>
       <ScrollView
+        keyboardShouldPersistTaps="handled"
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
         contentContainerStyle={styles.scrollContent}
       >

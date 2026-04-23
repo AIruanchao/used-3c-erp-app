@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getDailyReport } from '../../services/stats-service';
 import { COMPANY_NAME } from '../../lib/constants';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
+import { QueryError } from '../../components/common/QueryError';
 
 interface QuickAction {
   icon: string;
@@ -41,7 +42,7 @@ export default function WorkspaceScreen() {
   const router = useRouter();
   const { storeId, organizationId, storeName, user } = useAuth();
 
-  const { data: report, isLoading, refetch } = useQuery({
+  const { data: report, isLoading, isError, refetch } = useQuery({
     queryKey: ['dailyReport', storeId, organizationId],
     queryFn: () =>
       getDailyReport({
@@ -59,6 +60,7 @@ export default function WorkspaceScreen() {
   );
 
   if (isLoading) return <LoadingScreen />;
+  if (isError) return <QueryError onRetry={() => refetch()} />;
 
   return (
     <ScrollView

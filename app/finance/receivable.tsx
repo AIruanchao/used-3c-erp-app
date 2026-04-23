@@ -4,6 +4,7 @@ import { Card, Text } from 'react-native-paper';
 import { useAuth } from '../../hooks/useAuth';
 import { getDailyReport } from '../../services/stats-service';
 import { EmptyState } from '../../components/common/EmptyState';
+import { QueryError } from '../../components/common/QueryError';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
 import { formatDate } from '../../lib/utils';
 import { useQuery } from '@tanstack/react-query';
@@ -11,7 +12,7 @@ import { useQuery } from '@tanstack/react-query';
 export default function ReceivableScreen() {
   const { storeId, organizationId } = useAuth();
 
-  const { data: report, isLoading, refetch, isRefetching } = useQuery({
+  const { data: report, isLoading, isError, refetch, isRefetching } = useQuery({
     queryKey: ['receivables', storeId, organizationId],
     queryFn: () =>
       getDailyReport({
@@ -22,6 +23,7 @@ export default function ReceivableScreen() {
   });
 
   if (isLoading) return <LoadingScreen />;
+  if (isError) return <QueryError onRetry={() => refetch()} />;
 
   return (
     <ScrollView

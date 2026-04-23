@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getDeviceById } from '../../services/device-service';
 import { useAuth } from '../../hooks/useAuth';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
+import { QueryError } from '../../components/common/QueryError';
 import { DeviceStatusBadge } from '../../components/device/DeviceStatusBadge';
 import { AmountText } from '../../components/finance/AmountText';
 import { formatDate } from '../../lib/utils';
@@ -16,13 +17,14 @@ export default function DeviceDetailScreen() {
   const router = useRouter();
   const { organizationId, storeName } = useAuth();
 
-  const { data: device, isLoading } = useQuery({
+  const { data: device, isLoading, isError, refetch } = useQuery({
     queryKey: ['device', id, organizationId],
     queryFn: () => getDeviceById(id, organizationId ?? ''),
     enabled: !!id && !!organizationId,
   });
 
   if (isLoading) return <LoadingScreen />;
+  if (isError) return <QueryError onRetry={() => refetch()} />;
   if (!device) {
     return (
       <View style={styles.error}>

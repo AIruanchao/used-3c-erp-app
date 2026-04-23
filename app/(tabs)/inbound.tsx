@@ -44,6 +44,7 @@ export default function InboundScreen() {
   const [batteryHealth, setBatteryHealth] = useState('');
   const [loading, setLoading] = useState(false);
   const [skuLoading, setSkuLoading] = useState(false);
+  const [scanLoading, setScanLoading] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
 
   React.useEffect(() => {
@@ -74,21 +75,28 @@ export default function InboundScreen() {
 
   const onScan = useCallback(
     async (code: string, format: string) => {
+      if (scanLoading) return;
+      setScanLoading(true);
       handleBarcodeScanned(code, format);
       setSn(code);
 
-      if (!storeId || !organizationId) return;
+      if (!storeId || !organizationId) {
+        setScanLoading(false);
+        return;
+      }
 
       try {
         const imeiResult = await checkImei(code, storeId, organizationId);
 
         if (imeiResult.blocked) {
           Alert.alert('警告', `IMEI在黑名单中: ${imeiResult.blacklistReason ?? '未知原因'}`);
+          setScanLoading(false);
           return;
         }
 
         if (imeiResult.inThisStore && imeiResult.inventoryStatus === 'IN_STOCK') {
           Alert.alert('提示', '该设备已在本门店库中');
+          setScanLoading(false);
           return;
         }
       } catch {
@@ -97,8 +105,9 @@ export default function InboundScreen() {
 
       setStep('info');
       setShowScanner(false);
+      setScanLoading(false);
     },
-    [handleBarcodeScanned, storeId, organizationId],
+    [handleBarcodeScanned, storeId, organizationId, scanLoading],
   );
 
   const handleSubmit = useCallback(async () => {
