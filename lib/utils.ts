@@ -61,6 +61,7 @@ export function debounce<T extends (...args: never[]) => void>(
 /** Format date with dayjs-friendly pattern */
 export function formatDate(date: string | Date, format = 'YYYY-MM-DD'): string {
   const d = typeof date === 'string' ? new Date(date) : date;
+  if (isNaN(d.getTime())) return '-';
   const yyyy = d.getFullYear().toString();
   const mm = String(d.getMonth() + 1).padStart(2, '0');
   const dd = String(d.getDate()).padStart(2, '0');

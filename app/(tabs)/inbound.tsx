@@ -15,7 +15,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useScanner } from '../../hooks/useScanner';
 import { useInboundStore } from '../../stores/inbound-store';
 import { quickInbound, checkImei, getSkuInfo } from '../../services/inbound-service';
-import { CONDITION_OPTIONS, CHANNEL_OPTIONS, SOURCE_CHANNELS } from '../../lib/constants';
+import { CONDITION_OPTIONS, CHANNEL_OPTIONS } from '../../lib/constants';
 import { getErrorMessage } from '../../lib/errors';
 import { BarcodeScannerView } from '../../components/scanner/BarcodeScannerView';
 import { ScanResultCard } from '../../components/scanner/ScanResultCard';
