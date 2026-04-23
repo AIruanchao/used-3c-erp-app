@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Card, Divider, List, Button } from 'react-native-paper';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -16,6 +16,7 @@ export default function DeviceDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { organizationId, storeName } = useAuth();
+  const [printing, setPrinting] = useState(false);
 
   const { data: device, isLoading, isError, refetch } = useQuery({
     queryKey: ['device', id, organizationId],
@@ -158,7 +159,10 @@ export default function DeviceDetailScreen() {
           <Button
             mode="outlined"
             icon="printer"
+            loading={printing}
+            disabled={printing}
             onPress={async () => {
+              setPrinting(true);
               try {
                 await printerService.printInboundReceipt({
                   sn: device.sn,
@@ -170,6 +174,8 @@ export default function DeviceDetailScreen() {
                 });
               } catch {
                 // Print failure is non-blocking
+              } finally {
+                setPrinting(false);
               }
             }}
             style={styles.actionBtn}
