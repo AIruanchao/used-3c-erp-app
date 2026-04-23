@@ -93,8 +93,8 @@ export default function StatsScreen() {
             <>
               <Divider style={styles.divider} />
               <Text style={styles.profitTitle}>利润TOP5型号</Text>
-              {report?.profitTop5.map((item, idx) => (
-                <View key={idx} style={styles.profitRow}>
+              {report?.profitTop5.map((item) => (
+                <View key={item.modelName} style={styles.profitRow}>
                   <Text style={styles.profitName}>{item.modelName}</Text>
                   <Text style={[styles.profitValue, { color: item.profit >= 0 ? '#2e7d32' : '#e53935' }]}>
                     {yuan(item.profit)}
