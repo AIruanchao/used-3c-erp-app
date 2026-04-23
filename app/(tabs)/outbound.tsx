@@ -1,39 +1,39 @@
-import React, { useCallback, useState } from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
-import { Button, Card, Text } from 'react-native-paper';
+import React, { useCallback, useState, useMemo } from 'react';
+import { View, StyleSheet, RefreshControl } from 'react-native';
+import { FAB } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../hooks/useAuth';
-import { useQuery } from '@tanstack/react-query';
-import { getInventory } from '../../services/inventory-service';
-import { getDevices } from '../../services/device-service';
+import { getDevices, type DeviceListParams } from '../../services/device-service';
+import { usePaginatedList } from '../../hooks/usePaginatedList';
+import { FlashList } from '../../components/ui/TypedFlashList';
 import { SearchBar } from '../../components/common/SearchBar';
 import { DeviceCard } from '../../components/device/DeviceCard';
 import { EmptyState } from '../../components/common/EmptyState';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
-import { BarcodeScannerView } from '../../components/scanner/BarcodeScannerView';
-import { cashierCheckout } from '../../services/cashier-service';
-import { getErrorMessage } from '../../lib/errors';
-import { INVENTORY_STATUS_LABELS } from '../../lib/constants';
+import type { Device } from '../../types/device';
 
 export default function OutboundScreen() {
   const router = useRouter();
   const { storeId, organizationId } = useAuth();
   const [search, setSearch] = useState('');
-  const [showScanner, setShowScanner] = useState(false);
-  const [filterStatus, setFilterStatus] = useState('IN_STOCK');
 
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: ['outboundDevices', storeId, search, filterStatus],
-    queryFn: () =>
-      getDevices({
-        storeId: storeId ?? undefined,
-        organizationId: organizationId ?? undefined,
-        inventoryStatus: filterStatus,
-        search: search || undefined,
-      }),
-    enabled: !!storeId && !!organizationId,
-  });
+  const params = useMemo<DeviceListParams>(
+    () => ({
+      storeId: storeId ?? undefined,
+      organizationId: organizationId ?? undefined,
+      inventoryStatus: 'IN_STOCK',
+      search: search || undefined,
+    }),
+    [storeId, organizationId, search],
+  );
+
+  const { items, isLoading, isRefreshing, isFetchingNextPage, loadMore, refresh } =
+    usePaginatedList<Device, DeviceListParams>({
+      queryKey: ['outboundDevices', storeId, search],
+      queryFn: getDevices,
+      params,
+      enabled: !!storeId && !!organizationId,
+    });
 
   const handleDevicePress = useCallback(
     (id: string) => {
@@ -42,63 +42,50 @@ export default function OutboundScreen() {
     [router],
   );
 
-  const handleSale = useCallback(
-    async (deviceId: string, salePrice: number) => {
-      if (!storeId || !organizationId) return;
-      try {
-        await cashierCheckout({
-          storeId,
-          organizationId,
-          deviceId,
-          salePrice,
-          Payment: [{ method: 'CASH', amount: salePrice }],
-        });
-        Alert.alert('出库成功', '设备已成功出售');
-        refetch();
-      } catch (err) {
-        Alert.alert('出库失败', getErrorMessage(err));
-      }
-    },
-    [storeId, organizationId, refetch],
+  const renderItem = useCallback(
+    ({ item }: { item: Device }) => (
+      <DeviceCard device={item} onPress={handleDevicePress} />
+    ),
+    [handleDevicePress],
   );
 
-  if (isLoading) return <LoadingScreen />;
+  const keyExtractor = useCallback((item: Device) => item.id, []);
 
-  const devices = data?.items ?? [];
+  if (isLoading) return <LoadingScreen />;
 
   return (
     <View style={styles.container}>
       <SearchBar onSearch={setSearch} placeholder="搜索SN/型号..." />
 
-      <ScrollView
-        contentContainerStyle={styles.list}
-        showsVerticalScrollIndicator={false}
-      >
-        {devices.length === 0 ? (
+      <FlashList
+        data={items}
+        renderItem={renderItem}
+        estimatedItemSize={96}
+        keyExtractor={keyExtractor}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={refresh} />
+        }
+        ListEmptyComponent={
           <EmptyState
             icon="package-up"
             title="暂无在库设备"
             subtitle="入库设备后会显示在这里"
           />
-        ) : (
-          devices.map((device) => (
-            <DeviceCard
-              key={device.id}
-              device={device}
-              onPress={handleDevicePress}
-            />
-          ))
-        )}
-      </ScrollView>
+        }
+        ListFooterComponent={
+          isFetchingNextPage ? <LoadingScreen message="加载更多..." /> : null
+        }
+        contentContainerStyle={styles.listContent}
+      />
 
-      <Button
-        mode="contained"
+      <FAB
         icon="barcode-scan"
-        onPress={() => setShowScanner(true)}
-        style={styles.scanBtn}
-      >
-        扫码出库
-      </Button>
+        label="扫码出库"
+        style={styles.fab}
+        onPress={() => router.push('/cashier' as never)}
+      />
     </View>
   );
 }
@@ -108,13 +95,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fafafa',
   },
-  list: {
+  listContent: {
     paddingBottom: 80,
   },
-  scanBtn: {
+  fab: {
     position: 'absolute',
     bottom: 16,
     right: 16,
-    borderRadius: 24,
   },
 });

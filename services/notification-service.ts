@@ -1,4 +1,4 @@
-import { Platform } from 'react-native';
+import { mmkv, STORAGE_KEYS } from '../lib/storage';
 
 interface NotificationPayload {
   title: string;
@@ -6,18 +6,32 @@ interface NotificationPayload {
   data?: Record<string, string>;
 }
 
+interface NotificationLog {
+  id: string;
+  title: string;
+  body: string;
+  timestamp: number;
+  read: boolean;
+}
+
+const MAX_LOG_SIZE = 50;
+
+// Navigation callback - set by root layout
+let navigationCallback: ((path: string) => void) | null = null;
+
+export function setNotificationNavigation(cb: (path: string) => void): void {
+  navigationCallback = cb;
+}
+
 class PushNotificationService {
   private token: string | null = null;
+  private enabled: boolean = true;
 
   async requestPermission(): Promise<boolean> {
-    // FCM notification permission is handled at native level
-    // For Expo, this is configured in app.json
     return true;
   }
 
   async getToken(): Promise<string | null> {
-    // In a production app, this would use expo-notifications or @react-native-firebase/messaging
-    // For now, return a placeholder
     return this.token;
   }
 
@@ -25,34 +39,72 @@ class PushNotificationService {
     this.token = token;
   }
 
+  isEnabled(): boolean {
+    return this.enabled;
+  }
+
+  setEnabled(on: boolean): void {
+    this.enabled = on;
+    mmkv.set('push_enabled', on);
+  }
+
+  hydrate(): void {
+    this.enabled = mmkv.getBoolean('push_enabled') ?? true;
+  }
+
   async handleForegroundMessage(message: NotificationPayload): Promise<void> {
-    // Display in-app notification or update badge
-    console.info('[Push] Foreground:', message.title);
+    if (!this.enabled) return;
+    this.addLog(message);
   }
 
   async handleBackgroundMessage(message: NotificationPayload): Promise<void> {
-    console.info('[Push] Background:', message.title);
+    if (!this.enabled) return;
+    this.addLog(message);
   }
 
   async navigateToScreen(data: Record<string, string>): Promise<void> {
     const type = data['type'];
     const id = data['id'];
+    if (!type || !id || !navigationCallback) return;
 
-    if (!type || !id) return;
-
-    // Navigate based on notification type
-    const router = require('expo-router');
     switch (type) {
       case 'new_order':
-        router.router.push(`/device/${id}` as never);
+        navigationCallback(`/device/${id}`);
         break;
       case 'repair_complete':
-        router.router.push(`/repair/${id}` as never);
+        navigationCallback(`/repair/${id}`);
         break;
       case 'inventory_alert':
-        router.router.push('/(tabs)/inventory' as never);
+        navigationCallback('/(tabs)/inventory');
         break;
     }
+  }
+
+  getLogs(): NotificationLog[] {
+    const raw = mmkv.getString(STORAGE_KEYS.OFFLINE_QUEUE + '_notif_log');
+    if (!raw) return [];
+    try {
+      return JSON.parse(raw) as NotificationLog[];
+    } catch {
+      return [];
+    }
+  }
+
+  clearLogs(): void {
+    mmkv.remove(STORAGE_KEYS.OFFLINE_QUEUE + '_notif_log');
+  }
+
+  private addLog(message: NotificationPayload): void {
+    const logs = this.getLogs();
+    logs.unshift({
+      id: Date.now().toString(36),
+      title: message.title,
+      body: message.body,
+      timestamp: Date.now(),
+      read: false,
+    });
+    const trimmed = logs.slice(0, MAX_LOG_SIZE);
+    mmkv.set(STORAGE_KEYS.OFFLINE_QUEUE + '_notif_log', JSON.stringify(trimmed));
   }
 }
 

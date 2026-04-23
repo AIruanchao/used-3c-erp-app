@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, RefreshControl } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
-import { SegmentedButtons, Card } from 'react-native-paper';
+import React, { useState, useCallback, useMemo } from 'react';
+import { View, StyleSheet, RefreshControl } from 'react-native';
+import { SegmentedButtons, Card, Text } from 'react-native-paper';
 import { useAuth } from '../../hooks/useAuth';
-import { useQuery } from '@tanstack/react-query';
 import { getLedgerEntries } from '../../services/finance-service';
-import { SearchBar } from '../../components/common/SearchBar';
+import { usePaginatedList } from '../../hooks/usePaginatedList';
+import { FlashList } from '../../components/ui/TypedFlashList';
 import { AmountText } from '../../components/finance/AmountText';
 import { EmptyState } from '../../components/common/EmptyState';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
@@ -13,32 +12,38 @@ import { LEDGER_TYPE_LABELS } from '../../lib/constants';
 import { formatDate } from '../../lib/utils';
 import type { LedgerEntry } from '../../types/finance';
 
+type LedgerParams = {
+  storeId?: string;
+  organizationId?: string;
+  type?: string;
+};
+
 export default function LedgerScreen() {
   const { storeId, organizationId } = useAuth();
   const [typeFilter, setTypeFilter] = useState('');
 
-  const { data, isLoading, refetch, isRefetching } = useQuery({
-    queryKey: ['ledger', storeId, typeFilter],
-    queryFn: () =>
-      getLedgerEntries({
-        storeId: storeId ?? undefined,
-        organizationId: organizationId ?? undefined,
-        type: typeFilter || undefined,
-      }),
-    enabled: !!storeId,
-  });
+  const params = useMemo<LedgerParams>(
+    () => ({
+      storeId: storeId ?? undefined,
+      organizationId: organizationId ?? undefined,
+      type: typeFilter || undefined,
+    }),
+    [storeId, organizationId, typeFilter],
+  );
 
-  if (isLoading) return <LoadingScreen />;
+  const { items, isLoading, isRefreshing, isFetchingNextPage, loadMore, refresh } =
+    usePaginatedList<LedgerEntry, LedgerParams>({
+      queryKey: ['ledger', storeId, typeFilter],
+      queryFn: getLedgerEntries,
+      params,
+      enabled: !!storeId,
+    });
 
-  const entries = data?.items ?? [];
-
-  const renderEntry = (entry: LedgerEntry) => {
-    const amount = parseFloat(entry.amount);
-    const isExpense = amount < 0;
+  const renderItem = useCallback(({ item: entry }: { item: LedgerEntry }) => {
     const typeLabel = LEDGER_TYPE_LABELS[entry.type] ?? entry.type;
 
     return (
-      <Card key={entry.id} style={styles.entryCard} mode="outlined">
+      <Card style={styles.entryCard} mode="outlined">
         <Card.Content style={styles.entryContent}>
           <View style={styles.entryLeft}>
             <Text style={styles.entryType}>{typeLabel}</Text>
@@ -58,7 +63,11 @@ export default function LedgerScreen() {
         </Card.Content>
       </Card>
     );
-  };
+  }, []);
+
+  const keyExtractor = useCallback((item: LedgerEntry) => item.id, []);
+
+  if (isLoading) return <LoadingScreen />;
 
   return (
     <View style={styles.container}>
@@ -73,18 +82,22 @@ export default function LedgerScreen() {
         style={styles.filter}
       />
 
-      <ScrollView
-        contentContainerStyle={styles.list}
+      <FlashList
+        data={items}
+        renderItem={renderItem}
+        estimatedItemSize={72}
+        keyExtractor={keyExtractor}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
         refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+          <RefreshControl refreshing={isRefreshing} onRefresh={refresh} />
         }
-      >
-        {entries.length === 0 ? (
-          <EmptyState icon="receipt" title="暂无记录" />
-        ) : (
-          entries.map(renderEntry)
-        )}
-      </ScrollView>
+        ListEmptyComponent={<EmptyState icon="receipt" title="暂无记录" />}
+        ListFooterComponent={
+          isFetchingNextPage ? <LoadingScreen message="加载更多..." /> : null
+        }
+        contentContainerStyle={styles.listContent}
+      />
     </View>
   );
 }
@@ -98,7 +111,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginVertical: 8,
   },
-  list: {
+  listContent: {
     paddingBottom: 16,
   },
   entryCard: {

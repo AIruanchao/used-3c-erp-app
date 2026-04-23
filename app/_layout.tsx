@@ -1,12 +1,14 @@
 import { Stack } from 'expo-router';
 import { PaperProvider, DefaultTheme, MD3DarkTheme } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useColorScheme } from 'react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { useRouter } from 'expo-router';
 import { useAuthStore } from '../stores/auth-store';
 import { useAppStore } from '../stores/app-store';
+import { setNavigationRef } from '../lib/api';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -22,10 +24,23 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
   const theme = useAppStore((s) => s.theme);
   const hydrate = useAuthStore((s) => s.hydrate);
+  const router = useRouter();
 
   useEffect(() => {
     hydrate();
   }, [hydrate]);
+
+  // Register navigation ref for 401 redirect
+  const handleNavigate = useCallback(
+    (path: string) => {
+      router.replace(path as never);
+    },
+    [router],
+  );
+
+  useEffect(() => {
+    setNavigationRef(handleNavigate);
+  }, [handleNavigate]);
 
   const isDark =
     theme === 'dark' || (theme === 'system' && colorScheme === 'dark');
@@ -95,6 +110,18 @@ export default function RootLayout() {
             <Stack.Screen
               name="settings"
               options={{ headerShown: true, title: '设置' }}
+            />
+            <Stack.Screen
+              name="inbound/received"
+              options={{ headerShown: true, title: '入库记录' }}
+            />
+            <Stack.Screen
+              name="stocktake/index"
+              options={{ headerShown: true, title: '盘点' }}
+            />
+            <Stack.Screen
+              name="settlement/index"
+              options={{ headerShown: true, title: '日结' }}
             />
           </Stack>
         </PaperProvider>

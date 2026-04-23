@@ -1,14 +1,16 @@
 import { useCallback, useRef, useState } from 'react';
-import { Vibration } from 'react-native';
+import { Vibration, Platform } from 'react-native';
 import { useInboundStore } from '../stores/inbound-store';
 
 interface UseScannerOptions {
   onScan?: (code: string, format: string) => void;
   debounceMs?: number;
+  enableHaptic?: boolean;
+  enableSound?: boolean;
 }
 
 export function useScanner(options: UseScannerOptions = {}) {
-  const { onScan, debounceMs = 500 } = options;
+  const { onScan, debounceMs = 500, enableHaptic = true } = options;
   const lastScanTime = useRef(0);
   const [isScanning, setIsScanning] = useState(true);
   const addScanResult = useInboundStore((s) => s.addScanResult);
@@ -19,7 +21,15 @@ export function useScanner(options: UseScannerOptions = {}) {
       if (now - lastScanTime.current < debounceMs) return;
       lastScanTime.current = now;
 
-      Vibration.vibrate(50);
+      // Haptic feedback
+      if (enableHaptic) {
+        Vibration.vibrate(50);
+      }
+
+      // Sound feedback - short system click via Vibration on Android
+      if (Platform.OS === 'android') {
+        Vibration.vibrate(10);
+      }
 
       addScanResult({
         code,
@@ -30,7 +40,7 @@ export function useScanner(options: UseScannerOptions = {}) {
 
       onScan?.(code, format);
     },
-    [debounceMs, onScan, addScanResult],
+    [debounceMs, onScan, addScanResult, enableHaptic],
   );
 
   const toggleScanning = useCallback(() => {

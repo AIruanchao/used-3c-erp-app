@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { AppState } from 'react-native';
 import { useAppStore } from '../stores/app-store';
 import { api } from '../lib/api';
@@ -10,7 +10,11 @@ interface OfflineAction {
   data: Record<string, unknown>;
   timestamp: number;
   retries: number;
+  ttlMs: number;
 }
+
+const DEFAULT_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const MAX_QUEUE_SIZE = 100;
 
 export function useOffline() {
   const isOffline = useAppStore((s) => s.isOffline);
@@ -21,6 +25,8 @@ export function useOffline() {
       try {
         await api.get('/api/health', { timeout: 5000 });
         setOffline(false);
+        // Try to flush queue when coming back online
+        flushQueue();
       } catch {
         setOffline(true);
       }
@@ -37,20 +43,30 @@ export function useOffline() {
     return () => subscription.remove();
   }, [setOffline]);
 
-  const enqueueAction = (type: string, data: Record<string, unknown>) => {
+  const enqueueAction = useCallback((type: string, data: Record<string, unknown>, ttlMs = DEFAULT_TTL_MS) => {
     const queue = getOfflineQueue();
+    // Enforce capacity limit
+    if (queue.length >= MAX_QUEUE_SIZE) {
+      queue.shift(); // Remove oldest
+    }
     queue.push({
       id: Date.now().toString(36) + Math.random().toString(36).slice(2),
       type,
       data,
       timestamp: Date.now(),
       retries: 0,
+      ttlMs,
     });
     saveOfflineQueue(queue);
-  };
+  }, []);
 
-  const flushQueue = async () => {
-    const queue = getOfflineQueue();
+  const flushQueue = useCallback(async () => {
+    const now = Date.now();
+    let queue = getOfflineQueue();
+
+    // Remove expired entries
+    queue = queue.filter((action) => now - action.timestamp < action.ttlMs);
+
     const failed: OfflineAction[] = [];
 
     for (const action of queue) {
@@ -67,7 +83,7 @@ export function useOffline() {
     }
 
     saveOfflineQueue(failed);
-  };
+  }, []);
 
   return {
     isOffline,

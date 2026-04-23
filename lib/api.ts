@@ -24,11 +24,20 @@ api.interceptors.response.use(
   async (error: AxiosError) => {
     if (error.response?.status === 401) {
       removeAuthToken();
-      const router = require('expo-router');
-      router.router.replace('/(auth)/login');
+      // Use a global navigation ref to avoid require() at runtime
+      if (globalNavigationRef) {
+        globalNavigationRef('(auth)/login');
+      }
     }
     return Promise.reject(error);
   }
 );
+
+// Global navigation callback - set by root layout
+let globalNavigationRef: ((path: string) => void) | null = null;
+
+export function setNavigationRef(ref: (path: string) => void): void {
+  globalNavigationRef = ref;
+}
 
 export { API_BASE };

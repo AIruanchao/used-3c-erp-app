@@ -1,5 +1,5 @@
 import { api } from '../lib/api';
-import type { Device, DevicePricing } from '../types/device';
+import type { Device } from '../types/device';
 import type { PaginatedResponse } from '../types/api';
 
 export interface DeviceListParams {

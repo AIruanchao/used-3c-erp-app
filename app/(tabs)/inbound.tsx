@@ -57,14 +57,10 @@ export default function InboundScreen() {
       if (!storeId || !organizationId) return;
 
       try {
-        const imeiResult = await checkImei({
-          sn: code,
-          storeId,
-          organizationId,
-        });
+        const imeiResult = await checkImei(code);
 
         if (imeiResult.blocked) {
-          Alert.alert('警告', `IMEI在黑名单中: ${imeiResult.blacklistReason}`);
+          Alert.alert('警告', `IMEI在黑名单中: ${imeiResult.blacklistReason ?? '未知原因'}`);
           return;
         }
 
@@ -103,17 +99,14 @@ export default function InboundScreen() {
         organizationId,
         skuId: skuId || 'unknown',
         sn: sn.trim(),
-        unitCost: parseFloat(unitCost),
-        peerPrice: peerPrice ? parseFloat(peerPrice) : null,
-        retailPrice: retailPrice ? parseFloat(retailPrice) : null,
-        condition: condition || null,
-        channel: channel || null,
-        sourceType,
-        batteryHealth: batteryHealth ? parseInt(batteryHealth, 10) : null,
-        lockStatus: 'NONE',
+        unitCost: unitCost,
+        peerPrice: peerPrice || undefined,
+        retailPrice: retailPrice || undefined,
+        condition: condition || undefined,
+        channel: channel || undefined,
       });
 
-      Alert.alert('入库成功', `设备ID: ${result.deviceId}`, [
+      Alert.alert('入库成功', `设备ID: ${result.id}`, [
         { text: '继续入库', onPress: resetForm },
         { text: '查看库存', onPress: () => router.push('/(tabs)/inventory' as never) },
       ]);

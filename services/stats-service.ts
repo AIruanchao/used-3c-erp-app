@@ -1,7 +1,8 @@
 import { api } from '../lib/api';
+import { DailyReportSchema, validateOrThrow } from '../types/schemas';
 
 export interface DailyReport {
-  date: string;
+  date?: string;
   totalSales: string;
   totalPurchases: string;
   totalDevicesIn: number;
@@ -16,7 +17,7 @@ export async function getDailyReport(params: {
   date?: string;
 }): Promise<DailyReport> {
   const res = await api.get('/api/dashboard/daily-report', { params });
-  return res.data;
+  return validateOrThrow(DailyReportSchema, res.data);
 }
 
 export async function getSalesStats(params: {

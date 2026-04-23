@@ -3,11 +3,12 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Card, Divider, List, Button } from 'react-native-paper';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { getDeviceById } from '../../services/device-service';
+import { getDeviceById, getDeviceLabel } from '../../services/device-service';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
 import { DeviceStatusBadge } from '../../components/device/DeviceStatusBadge';
 import { AmountText } from '../../components/finance/AmountText';
 import { formatDate, decStr } from '../../lib/utils';
+import { printerService } from '../../services/printer-service';
 
 export default function DeviceDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -144,6 +145,27 @@ export default function DeviceDetailScreen() {
             style={styles.actionBtn}
           >
             前往收银
+          </Button>
+          <Button
+            mode="outlined"
+            icon="printer"
+            onPress={async () => {
+              try {
+                await printerService.printInboundReceipt({
+                  sn: device.sn,
+                  skuName: device.Sku?.name ?? '未知',
+                  unitCost: device.DevicePricing?.unitCost ?? '0',
+                  storeName: device.Store?.name ?? '',
+                  operatorName: '',
+                  date: formatDate(new Date().toISOString()),
+                });
+              } catch {
+                // Print failure is non-blocking
+              }
+            }}
+            style={styles.actionBtn}
+          >
+            打印标签
           </Button>
         </View>
       )}

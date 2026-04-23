@@ -25,14 +25,19 @@
       "edgeToEdgeEnabled": true,
       "package": "com.nenie.erp",
       "versionCode": 1,
+      "allowBackup": false,
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.BLUETOOTH",
         "android.permission.BLUETOOTH_ADMIN",
         "android.permission.BLUETOOTH_CONNECT",
         "android.permission.BLUETOOTH_SCAN",
+        "android.permission.BLUETOOTH_ADVERTISE",
         "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.INTERNET"
+        "android.permission.INTERNET",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.VIBRATE",
+        "android.permission.WAKE_LOCK"
       ]
     },
     "plugins": [
@@ -47,6 +52,12 @@
         "expo-secure-store",
         {
           "faceIDPermission": "嫩叶ERP使用Face ID保护您的账户安全"
+        }
+      ],
+      [
+        "expo-updates",
+        {
+          "enabled": false
         }
       ]
     ]

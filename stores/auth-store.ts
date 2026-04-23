@@ -4,6 +4,7 @@ import {
   removeAuthToken,
   setUserData,
   getUserData,
+  getAuthToken,
   getSelectedStore,
   setSelectedStore,
   getSelectedOrg,
@@ -111,12 +112,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       if (found) currentStore = found;
     }
 
-    const { getAuthToken: getToken } = require('../lib/storage') as { getAuthToken: () => string | undefined };
-
     set({
       isAuthenticated: true,
       user,
-      token: getToken() ?? null,
+      token: getAuthToken() ?? null,
       stores,
       currentStore,
     });

@@ -22,7 +22,9 @@ export async function getInventory(
 export async function getStocktakeSessions(params?: {
   storeId?: string;
   organizationId?: string;
-}) {
+  page?: number;
+  pageSize?: number;
+}): Promise<PaginatedResponse<{ id: string; description: string | null; status: string; createdAt: string }>> {
   const res = await api.get('/api/stocktake-sessions', { params });
   return res.data;
 }

@@ -1,15 +1,16 @@
-import React, { useCallback, useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { View, StyleSheet, RefreshControl } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
-import { Chip, SegmentedButtons } from 'react-native-paper';
+import { SegmentedButtons } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../hooks/useAuth';
-import { useQuery } from '@tanstack/react-query';
-import { getInventory } from '../../services/inventory-service';
+import { getInventory, type InventoryListParams } from '../../services/inventory-service';
+import { usePaginatedList } from '../../hooks/usePaginatedList';
+import { FlashList } from '../../components/ui/TypedFlashList';
 import { SearchBar } from '../../components/common/SearchBar';
 import { DeviceCard } from '../../components/device/DeviceCard';
 import { EmptyState } from '../../components/common/EmptyState';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
+import type { Device } from '../../types/device';
 
 export default function InventoryScreen() {
   const router = useRouter();
@@ -17,17 +18,23 @@ export default function InventoryScreen() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('IN_STOCK');
 
-  const { data, isLoading, refetch, isRefetching } = useQuery({
-    queryKey: ['inventory', storeId, search, statusFilter],
-    queryFn: () =>
-      getInventory({
-        storeId: storeId ?? undefined,
-        organizationId: organizationId ?? undefined,
-        inventoryStatus: statusFilter || undefined,
-        search: search || undefined,
-      }),
-    enabled: !!storeId && !!organizationId,
-  });
+  const params = useMemo<InventoryListParams>(
+    () => ({
+      storeId: storeId ?? undefined,
+      organizationId: organizationId ?? undefined,
+      inventoryStatus: statusFilter || undefined,
+      search: search || undefined,
+    }),
+    [storeId, organizationId, statusFilter, search],
+  );
+
+  const { items, isLoading, isRefreshing, isFetchingNextPage, loadMore, refresh } =
+    usePaginatedList<Device, InventoryListParams>({
+      queryKey: ['inventory', storeId, search, statusFilter],
+      queryFn: getInventory,
+      params,
+      enabled: !!storeId && !!organizationId,
+    });
 
   const handleDevicePress = useCallback(
     (id: string) => {
@@ -36,9 +43,16 @@ export default function InventoryScreen() {
     [router],
   );
 
-  if (isLoading) return <LoadingScreen />;
+  const renderItem = useCallback(
+    ({ item }: { item: Device }) => (
+      <DeviceCard device={item} onPress={handleDevicePress} />
+    ),
+    [handleDevicePress],
+  );
 
-  const devices = data?.items ?? [];
+  const keyExtractor = useCallback((item: Device) => item.id, []);
+
+  if (isLoading) return <LoadingScreen />;
 
   return (
     <View style={styles.container}>
@@ -58,28 +72,28 @@ export default function InventoryScreen() {
         />
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.list}
+      <FlashList
+        data={items}
+        renderItem={renderItem}
+        estimatedItemSize={96}
+        keyExtractor={keyExtractor}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
         refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+          <RefreshControl refreshing={isRefreshing} onRefresh={refresh} />
         }
-      >
-        {devices.length === 0 ? (
+        ListEmptyComponent={
           <EmptyState
             icon="archive"
             title="暂无库存"
             subtitle="入库设备后会显示在这里"
           />
-        ) : (
-          devices.map((device) => (
-            <DeviceCard
-              key={device.id}
-              device={device}
-              onPress={handleDevicePress}
-            />
-          ))
-        )}
-      </ScrollView>
+        }
+        ListFooterComponent={
+          isFetchingNextPage ? <LoadingScreen message="加载更多..." /> : null
+        }
+        contentContainerStyle={styles.listContent}
+      />
     </View>
   );
 }
@@ -96,7 +110,7 @@ const styles = StyleSheet.create({
   filterButtons: {
     marginBottom: 4,
   },
-  list: {
+  listContent: {
     paddingBottom: 16,
   },
 });

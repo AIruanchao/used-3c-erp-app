@@ -104,6 +104,27 @@ export default function ProfileScreen() {
           right={(props) => <List.Icon {...props} icon="chevron-right" />}
           onPress={() => router.push('/cashier' as never)}
         />
+        <Divider />
+        <List.Item
+          title="入库记录"
+          left={(props) => <List.Icon {...props} icon="history" />}
+          right={(props) => <List.Icon {...props} icon="chevron-right" />}
+          onPress={() => router.push('/inbound/received' as never)}
+        />
+        <Divider />
+        <List.Item
+          title="盘点"
+          left={(props) => <List.Icon {...props} icon="clipboard-check" />}
+          right={(props) => <List.Icon {...props} icon="chevron-right" />}
+          onPress={() => router.push('/stocktake/index' as never)}
+        />
+        <Divider />
+        <List.Item
+          title="日结"
+          left={(props) => <List.Icon {...props} icon="calculator" />}
+          right={(props) => <List.Icon {...props} icon="chevron-right" />}
+          onPress={() => router.push('/settlement/index' as never)}
+        />
       </Card>
 
       {/* Settings */}
