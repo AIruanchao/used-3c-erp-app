@@ -89,6 +89,10 @@ export default function RepairDetailScreen() {
         laborCost: labor,
       });
       setShowQuoteDialog(false);
+      setLaborCost('');
+      setPartName('');
+      setPartCost('');
+      setPartPrice('');
       setCurrentStatus('QUOTED');
       Alert.alert('成功', '已报价');
     } catch (err) {
@@ -158,7 +162,7 @@ export default function RepairDetailScreen() {
       </Card>
 
       <Portal>
-        <Dialog visible={showQuoteDialog} onDismiss={() => setShowQuoteDialog(false)}>
+        <Dialog visible={showQuoteDialog} onDismiss={() => { setShowQuoteDialog(false); setLaborCost(''); setPartName(''); setPartCost(''); setPartPrice(''); }}>
           <Dialog.Title>报价</Dialog.Title>
           <Dialog.Content>
             <TextInput
