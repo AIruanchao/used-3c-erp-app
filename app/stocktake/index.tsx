@@ -84,7 +84,7 @@ export default function StocktakeScreen() {
       <FAB icon="plus" style={styles.fab} onPress={() => setShowNew(true)} />
 
       <Portal>
-        <Dialog visible={showNew} onDismiss={() => setShowNew(false)}>
+        <Dialog visible={showNew} onDismiss={() => { setShowNew(false); setScope('FULL'); }}>
           <Dialog.Title>新建盘点</Dialog.Title>
           <Dialog.Content>
             <TextInput
@@ -95,7 +95,7 @@ export default function StocktakeScreen() {
             />
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={() => setShowNew(false)}>取消</Button>
+            <Button onPress={() => { setShowNew(false); setScope('FULL'); }}>取消</Button>
             <Button onPress={handleCreate} loading={creating} disabled={creating}>创建</Button>
           </Dialog.Actions>
         </Dialog>

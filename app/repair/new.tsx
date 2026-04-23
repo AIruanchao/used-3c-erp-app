@@ -53,6 +53,10 @@ export default function NewRepairScreen() {
         deviceBrand: '未知',
         deviceModel: '未知',
       });
+      if (!result.ok || !result.order) {
+        Alert.alert('创建失败', '服务器返回失败');
+        return;
+      }
       const order = result.order;
       Alert.alert('成功', '维修工单已创建', [
         {

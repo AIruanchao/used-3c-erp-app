@@ -86,10 +86,14 @@ export default function RepairDetailScreen() {
         unitCost: parseFloat(partCost) || 0,
         unitPrice: parseFloat(partPrice) || 0,
       }] : [];
-      await quoteRepair(id, {
+      const result = await quoteRepair(id, {
         lines,
         laborCost: labor,
       });
+      if (!result.ok) {
+        Alert.alert('报价失败', '服务器返回失败');
+        return;
+      }
       setShowQuoteDialog(false);
       setLaborCost('');
       setPartName('');
