@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { AppState } from 'react-native';
 import { useAppStore } from '../stores/app-store';
 import { api } from '../lib/api';
@@ -16,17 +16,58 @@ interface OfflineAction {
 const DEFAULT_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 const MAX_QUEUE_SIZE = 100;
 
+function getOfflineQueue(): OfflineAction[] {
+  const raw = mmkv.getString(STORAGE_KEYS.OFFLINE_QUEUE);
+  if (!raw) return [];
+  try {
+    return JSON.parse(raw) as OfflineAction[];
+  } catch {
+    return [];
+  }
+}
+
+function saveOfflineQueue(queue: OfflineAction[]): void {
+  mmkv.set(STORAGE_KEYS.OFFLINE_QUEUE, JSON.stringify(queue));
+}
+
 export function useOffline() {
   const isOffline = useAppStore((s) => s.isOffline);
   const setOffline = useAppStore((s) => s.setOffline);
+  const flushQueueRef = useRef<(() => Promise<void>) | null>(null);
+
+  const flushQueue = useCallback(async () => {
+    const now = Date.now();
+    let queue = getOfflineQueue();
+
+    // Remove expired entries
+    queue = queue.filter((action) => now - action.timestamp < action.ttlMs);
+
+    const failed: OfflineAction[] = [];
+
+    for (const action of queue) {
+      try {
+        const res = await api.post(`/api/${action.type}`, action.data);
+        if (res.status >= 400) {
+          action.retries += 1;
+          if (action.retries < 3) failed.push(action);
+        }
+      } catch {
+        action.retries += 1;
+        if (action.retries < 3) failed.push(action);
+      }
+    }
+
+    saveOfflineQueue(failed);
+  }, []);
+
+  flushQueueRef.current = flushQueue;
 
   useEffect(() => {
     const checkConnection = async () => {
       try {
         await api.get('/api/health', { timeout: 5000 });
         setOffline(false);
-        // Try to flush queue when coming back online
-        flushQueue();
+        flushQueueRef.current?.();
       } catch {
         setOffline(true);
       }
@@ -60,48 +101,9 @@ export function useOffline() {
     saveOfflineQueue(queue);
   }, []);
 
-  const flushQueue = useCallback(async () => {
-    const now = Date.now();
-    let queue = getOfflineQueue();
-
-    // Remove expired entries
-    queue = queue.filter((action) => now - action.timestamp < action.ttlMs);
-
-    const failed: OfflineAction[] = [];
-
-    for (const action of queue) {
-      try {
-        const res = await api.post(`/api/${action.type}`, action.data);
-        if (res.status >= 400) {
-          action.retries += 1;
-          if (action.retries < 3) failed.push(action);
-        }
-      } catch {
-        action.retries += 1;
-        if (action.retries < 3) failed.push(action);
-      }
-    }
-
-    saveOfflineQueue(failed);
-  }, []);
-
   return {
     isOffline,
     enqueueAction,
     flushQueue,
   };
-}
-
-function getOfflineQueue(): OfflineAction[] {
-  const raw = mmkv.getString(STORAGE_KEYS.OFFLINE_QUEUE);
-  if (!raw) return [];
-  try {
-    return JSON.parse(raw) as OfflineAction[];
-  } catch {
-    return [];
-  }
-}
-
-function saveOfflineQueue(queue: OfflineAction[]): void {
-  mmkv.set(STORAGE_KEYS.OFFLINE_QUEUE, JSON.stringify(queue));
 }

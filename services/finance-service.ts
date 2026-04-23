@@ -22,3 +22,31 @@ export async function getCustomerById(
   });
   return res.data;
 }
+
+export async function findOrCreateCustomer(params: {
+  storeId: string;
+  organizationId: string;
+  name: string;
+  phone?: string;
+}): Promise<{ id: string }> {
+  // Try to find existing customer by phone
+  if (params.phone) {
+    const existing = await getCustomers({
+      storeId: params.storeId,
+      organizationId: params.organizationId,
+      q: params.phone,
+      take: 5,
+    });
+    const match = existing.items.find((c) => c.phone === params.phone);
+    if (match) return { id: match.id };
+  }
+
+  // Create new customer
+  const res = await api.post('/api/customers', {
+    storeId: params.storeId,
+    organizationId: params.organizationId,
+    name: params.name,
+    phone: params.phone || undefined,
+  });
+  return { id: res.data?.id ?? res.data?.customer?.id };
+}

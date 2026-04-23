@@ -11,6 +11,18 @@ function extractTokenFromHeaders(headers: Record<string, unknown>): string {
   return match?.[1] ?? '';
 }
 
+function extractSessionCookie(headers: Record<string, unknown>): string {
+  const cookieHeader = headers['set-cookie'];
+  if (!cookieHeader) return '';
+  const cookies = Array.isArray(cookieHeader) ? cookieHeader : [cookieHeader];
+  // Extract just the name=value part of session cookie
+  for (const c of cookies) {
+    const match = String(c).match(/(next-auth\.session-token=[^;]+)/);
+    if (match) return match[1] ?? '';
+  }
+  return '';
+}
+
 export async function loginWithEmail(
   email: string,
   password: string,
@@ -30,7 +42,17 @@ export async function loginWithEmail(
     validateStatus: (status) => status >= 200 && status < 400,
   });
 
-  const sessionRes = await api.get('/api/auth/session');
+  // Extract the session cookie from the sign-in response and forward it
+  // because React Native doesn't automatically manage cookies between requests
+  const sessionCookie = extractSessionCookie(signInRes.headers as Record<string, unknown>);
+  const sessionHeaders: Record<string, string> = {};
+  if (sessionCookie) {
+    sessionHeaders['Cookie'] = sessionCookie;
+  }
+
+  const sessionRes = await api.get('/api/auth/session', {
+    headers: sessionHeaders,
+  });
   const session = sessionRes.data as {
     user?: { id?: string; email?: string; name?: string };
   };

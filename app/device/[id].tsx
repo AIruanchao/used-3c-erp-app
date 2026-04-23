@@ -143,7 +143,12 @@ export default function DeviceDetailScreen() {
           <Button
             mode="contained"
             icon="cash-register"
-            onPress={() => router.push('/cashier' as never)}
+            onPress={() =>
+              router.push({
+                pathname: '/cashier',
+                params: { deviceId: device.id, deviceSn: device.sn, salePrice: device.DevicePricing?.retailPrice ?? '' },
+              } as never)
+            }
             style={styles.actionBtn}
           >
             前往收银

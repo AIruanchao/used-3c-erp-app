@@ -10,7 +10,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { Button, Card, Chip, Divider } from 'react-native-paper';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../hooks/useAuth';
 import { cashierCheckout } from '../services/cashier-service';
 import { searchDevice } from '../services/inventory-service';
@@ -22,9 +22,10 @@ import { getErrorMessage } from '../lib/errors';
 export default function CashierScreen() {
   const router = useRouter();
   const { storeId, organizationId } = useAuth();
-  const [deviceId, setDeviceId] = useState('');
-  const [deviceSn, setDeviceSn] = useState('');
-  const [salePrice, setSalePrice] = useState('');
+  const params = useLocalSearchParams<{ deviceId?: string; deviceSn?: string; salePrice?: string }>();
+  const [deviceId, setDeviceId] = useState(params.deviceId ?? '');
+  const [deviceSn, setDeviceSn] = useState(params.deviceSn ?? '');
+  const [salePrice, setSalePrice] = useState(params.salePrice ?? '');
   const [paymentMethod, setPaymentMethod] = useState('CASH');
   const [loading, setLoading] = useState(false);
   const [showScanner, setShowScanner] = useState(false);

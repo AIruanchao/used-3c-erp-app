@@ -17,9 +17,9 @@ export interface RepairItem {
 export async function createRepair(data: {
   storeId: string;
   organizationId: string;
+  customerId: string;
   deviceId?: string | null;
   deviceSn?: string | null;
-  customerId?: string | null;
   customerName?: string;
   customerPhone?: string;
   deviceBrand?: string;
@@ -34,31 +34,43 @@ export async function createRepair(data: {
 
 export async function quoteRepair(
   repairId: string,
-  data: { estimatedCost: number; note?: string },
+  data: {
+    lines: Array<{
+      type: string;
+      sparePartName: string;
+      quantity: number;
+      unitCost: number;
+      unitPrice: number;
+    }>;
+    laborCost: number;
+    quoteValidDays?: number;
+    repairMode?: string;
+    estimatedHours?: number;
+  },
 ): Promise<{ ok: boolean }> {
-  const res = await api.post('/api/repair/quote', { repairId, ...data });
+  const res = await api.post('/api/repair/quote', { orderId: repairId, ...data });
   return res.data;
 }
 
 export async function startRepair(repairId: string): Promise<{ ok: boolean }> {
-  const res = await api.post('/api/repair/start', { repairId });
+  const res = await api.post('/api/repair/start', { orderId: repairId });
   return res.data;
 }
 
 export async function completeRepair(
   repairId: string,
-  data?: { actualCost?: number; note?: string },
+  data?: { repairNotes?: string },
 ): Promise<{ ok: boolean }> {
-  const res = await api.post('/api/repair/complete', { repairId, ...data });
+  const res = await api.post('/api/repair/complete', { orderId: repairId, ...data });
   return res.data;
 }
 
 export async function qcRepair(repairId: string): Promise<{ ok: boolean }> {
-  const res = await api.post('/api/repair/qc', { repairId });
+  const res = await api.post('/api/repair/qc', { orderId: repairId, qcStatus: 'PASS' });
   return res.data;
 }
 
 export async function deliverRepair(repairId: string): Promise<{ ok: boolean }> {
-  const res = await api.post('/api/repair/deliver', { repairId });
+  const res = await api.post('/api/repair/deliver', { orderId: repairId, pickupMode: 'SELF' });
   return res.data;
 }

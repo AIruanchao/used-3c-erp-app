@@ -4,6 +4,7 @@ import { Button, Card } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../hooks/useAuth';
 import { createRepair } from '../../services/repair-service';
+import { findOrCreateCustomer } from '../../services/finance-service';
 import { getErrorMessage } from '../../lib/errors';
 
 export default function NewRepairScreen() {
@@ -28,17 +29,28 @@ export default function NewRepairScreen() {
 
     setLoading(true);
     try {
+      const name = customerName.trim() || '散客';
+      const phone = customerPhone.trim() || '00000000000';
+
+      // Ensure customer exists (find by phone or create)
+      const customer = await findOrCreateCustomer({
+        storeId,
+        organizationId,
+        name,
+        phone,
+      });
+
       const result = await createRepair({
         storeId,
         organizationId,
+        customerId: customer.id,
         deviceSn: sn.trim() || undefined,
         faultDescription: description.trim(),
         faultCategory: 'OTHER',
-        customerName: customerName.trim() || '散客',
-        customerPhone: customerPhone.trim() || '00000000000',
+        customerName: name,
+        customerPhone: phone,
         deviceBrand: '未知',
         deviceModel: '未知',
-        estimatedCost: estimatedCost ? parseFloat(estimatedCost) : null,
       });
       const order = result.order;
       Alert.alert('成功', '维修工单已创建', [

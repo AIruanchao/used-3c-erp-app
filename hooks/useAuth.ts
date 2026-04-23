@@ -3,30 +3,48 @@ import { useRouter } from 'expo-router';
 import { useCallback } from 'react';
 
 export function useAuth() {
-  const store = useAuthStore();
   const router = useRouter();
 
+  // Use individual selectors to avoid unnecessary re-renders
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const user = useAuthStore((s) => s.user);
+  const stores = useAuthStore((s) => s.stores);
+  const currentStore = useAuthStore((s) => s.currentStore);
+  const token = useAuthStore((s) => s.token);
+  const setAuth = useAuthStore((s) => s.setAuth);
+  const selectStore = useAuthStore((s) => s.selectStore);
+  const logout = useAuthStore((s) => s.logout);
+  const hydrate = useAuthStore((s) => s.hydrate);
+
   const requireAuth = useCallback(() => {
-    if (!store.isAuthenticated) {
+    if (!isAuthenticated) {
       router.replace('/(auth)/login');
       return false;
     }
     return true;
-  }, [store.isAuthenticated, router]);
+  }, [isAuthenticated, router]);
 
   const requireStore = useCallback(() => {
-    if (!store.currentStore) {
+    if (!currentStore) {
       return null;
     }
-    return store.currentStore;
-  }, [store.currentStore]);
+    return currentStore;
+  }, [currentStore]);
 
   return {
-    ...store,
+    isAuthenticated,
+    user,
+    stores,
+    currentStore,
+    token,
+    setAuth,
+    selectStore,
+    logout,
+    hydrate,
     requireAuth,
     requireStore,
-    storeId: store.currentStore?.storeId ?? null,
-    organizationId: store.currentStore?.organizationId ?? null,
-    storeName: store.currentStore?.storeName ?? null,
+    storeId: currentStore?.storeId ?? null,
+    organizationId: currentStore?.organizationId ?? null,
+    storeName: currentStore?.storeName ?? null,
   };
 }

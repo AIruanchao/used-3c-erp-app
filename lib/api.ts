@@ -9,12 +9,15 @@ export const api = axios.create({
   baseURL: API_BASE,
   timeout: 15000,
   headers: { 'Content-Type': 'application/json' },
+  withCredentials: true,
 });
 
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = getAuthToken();
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    // next-auth uses a session cookie, so we inject it as a Cookie header
+    // since React Native doesn't automatically send cookies
+    config.headers['Cookie'] = `next-auth.session-token=${token}`;
   }
   return config;
 });
@@ -24,7 +27,6 @@ api.interceptors.response.use(
   async (error: AxiosError) => {
     if (error.response?.status === 401) {
       removeAuthToken();
-      // Use a global navigation ref to avoid require() at runtime
       if (globalNavigationRef) {
         globalNavigationRef('(auth)/login');
       }
@@ -33,7 +35,6 @@ api.interceptors.response.use(
   }
 );
 
-// Global navigation callback - set by root layout
 let globalNavigationRef: ((path: string) => void) | null = null;
 
 export function setNavigationRef(ref: (path: string) => void): void {

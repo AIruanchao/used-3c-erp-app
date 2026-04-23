@@ -1,6 +1,5 @@
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useRef, useEffect } from 'react';
 import { Searchbar } from 'react-native-paper';
-import { debounce } from '../../lib/utils';
 
 interface SearchBarProps {
   placeholder?: string;
@@ -14,14 +13,23 @@ export const SearchBar = React.memo(function SearchBar({
   debounceMs = 300,
 }: SearchBarProps) {
   const [query, setQuery] = React.useState('');
-  const debouncedSearch = useRef(debounce(onSearch, debounceMs)).current;
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onSearchRef = useRef(onSearch);
+
+  // Keep the ref updated so the debounced call uses the latest callback
+  useEffect(() => {
+    onSearchRef.current = onSearch;
+  }, [onSearch]);
 
   const handleChange = useCallback(
     (text: string) => {
       setQuery(text);
-      debouncedSearch(text);
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => {
+        onSearchRef.current(text);
+      }, debounceMs);
     },
-    [debouncedSearch],
+    [debounceMs],
   );
 
   return (

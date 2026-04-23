@@ -1,16 +1,11 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
-import { Card, Button } from 'react-native-paper';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Alert, TextInput } from 'react-native';
+import { Card, Button, Dialog, Portal } from 'react-native-paper';
 import { useLocalSearchParams } from 'expo-router';
 import { REPAIR_STATUS_LABELS } from '../../lib/constants';
 import { quoteRepair, startRepair, completeRepair, qcRepair, deliverRepair } from '../../services/repair-service';
 import { getErrorMessage as getErr } from '../../lib/errors';
 
-/**
- * Repair detail screen.
- * Repair details are passed via router params when navigating from the create result.
- * Backend workflow: REGISTERED → DIAGNOSED → QUOTED → ACCEPTED → IN_REPAIR → COMPLETED → WAITING_PICKUP → DELIVERING → CLOSED
- */
 export default function RepairDetailScreen() {
   const params = useLocalSearchParams<{
     id: string;
@@ -21,6 +16,11 @@ export default function RepairDetailScreen() {
   }>();
 
   const { id, status, description, sn, estimatedCost } = params;
+  const [laborCost, setLaborCost] = useState('');
+  const [partName, setPartName] = useState('');
+  const [partCost, setPartCost] = useState('');
+  const [partPrice, setPartPrice] = useState('');
+  const [showQuoteDialog, setShowQuoteDialog] = useState(false);
 
   const handleAction = async (action: string) => {
     if (!id) return;
@@ -28,13 +28,7 @@ export default function RepairDetailScreen() {
       let result: { ok: boolean };
       switch (action) {
         case 'quote':
-          Alert.alert('报价', '请确认估价 ¥100', [
-            { text: '取消', style: 'cancel' },
-            { text: '确认报价', onPress: async () => {
-              await quoteRepair(id, { estimatedCost: 100 });
-              Alert.alert('成功', '已报价');
-            }},
-          ]);
+          setShowQuoteDialog(true);
           return;
         case 'start':
           result = await startRepair(id);
@@ -55,6 +49,32 @@ export default function RepairDetailScreen() {
       }
     } catch (err) {
       Alert.alert('操作失败', getErr(err));
+    }
+  };
+
+  const submitQuote = async () => {
+    if (!id) return;
+    const labor = parseFloat(laborCost);
+    if (Number.isNaN(labor) || labor < 0) {
+      Alert.alert('提示', '请输入有效的人工费');
+      return;
+    }
+
+    try {
+      await quoteRepair(id, {
+        lines: partName ? [{
+          type: 'PART',
+          sparePartName: partName,
+          quantity: 1,
+          unitCost: parseFloat(partCost) || 0,
+          unitPrice: parseFloat(partPrice) || 0,
+        }] : [],
+        laborCost: labor,
+      });
+      setShowQuoteDialog(false);
+      Alert.alert('成功', '已报价');
+    } catch (err) {
+      Alert.alert('报价失败', getErr(err));
     }
   };
 
@@ -114,6 +134,50 @@ export default function RepairDetailScreen() {
           )}
         </Card.Content>
       </Card>
+
+      <Portal>
+        <Dialog visible={showQuoteDialog} onDismiss={() => setShowQuoteDialog(false)}>
+          <Dialog.Title>报价</Dialog.Title>
+          <Dialog.Content>
+            <TextInput
+              style={styles.quoteInput}
+              placeholder="人工费 *"
+              value={laborCost}
+              onChangeText={setLaborCost}
+              keyboardType="decimal-pad"
+            />
+            <Text style={styles.fieldLabel}>配件信息(可选)</Text>
+            <TextInput
+              style={styles.quoteInput}
+              placeholder="配件名称"
+              value={partName}
+              onChangeText={setPartName}
+            />
+            {partName ? (
+              <>
+                <TextInput
+                  style={styles.quoteInput}
+                  placeholder="配件成本"
+                  value={partCost}
+                  onChangeText={setPartCost}
+                  keyboardType="decimal-pad"
+                />
+                <TextInput
+                  style={styles.quoteInput}
+                  placeholder="配件报价"
+                  value={partPrice}
+                  onChangeText={setPartPrice}
+                  keyboardType="decimal-pad"
+                />
+              </>
+            ) : null}
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setShowQuoteDialog(false)}>取消</Button>
+            <Button onPress={submitQuote} disabled={!laborCost}>确认报价</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </ScrollView>
   );
 }
@@ -129,4 +193,19 @@ const styles = StyleSheet.create({
   date: { fontSize: 12, color: '#bdbdbd', marginTop: 4 },
   cost: { fontSize: 14, color: '#616161', marginTop: 4 },
   actions: { gap: 8 },
+  quoteInput: {
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 16,
+    marginBottom: 8,
+  },
+  fieldLabel: {
+    fontSize: 13,
+    color: '#757575',
+    marginTop: 4,
+    marginBottom: 4,
+  },
 });

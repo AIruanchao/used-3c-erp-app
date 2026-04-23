@@ -1,13 +1,12 @@
 import React, { useState, useCallback } from 'react';
 import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
-import { SegmentedButtons, Text } from 'react-native-paper';
+import { Text } from 'react-native-paper';
 import { searchDevice } from '../../services/inventory-service';
 import { useAuth } from '../../hooks/useAuth';
 import { SearchBar } from '../../components/common/SearchBar';
 import { DeviceCard } from '../../components/device/DeviceCard';
 import { EmptyState } from '../../components/common/EmptyState';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
-import type { Device } from '../../types/device';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 
