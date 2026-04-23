@@ -103,8 +103,6 @@ export default function CashierScreen() {
 
       // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: ['dailyReport'] });
-      queryClient.invalidateQueries({ queryKey: ['stats'] });
-      queryClient.invalidateQueries({ queryKey: ['financeSummary'] });
       queryClient.invalidateQueries({ queryKey: ['inventorySearch'] });
       queryClient.invalidateQueries({ queryKey: ['outboundSearch'] });
     } catch (err) {

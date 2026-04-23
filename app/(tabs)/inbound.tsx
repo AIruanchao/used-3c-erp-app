@@ -171,7 +171,6 @@ export default function InboundScreen() {
 
       // Invalidate related queries so other screens show fresh data
       queryClient.invalidateQueries({ queryKey: ['dailyReport'] });
-      queryClient.invalidateQueries({ queryKey: ['stats'] });
       queryClient.invalidateQueries({ queryKey: ['inventorySearch'] });
       queryClient.invalidateQueries({ queryKey: ['outboundSearch'] });
     } catch (err) {

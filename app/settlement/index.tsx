@@ -15,7 +15,7 @@ export default function SettlementScreen() {
   const [printing, setPrinting] = useState(false);
 
   const { data: report, isLoading, isError, refetch, isRefetching } = useQuery({
-    queryKey: ['settlement', storeId, organizationId],
+    queryKey: ['dailyReport', storeId, organizationId],
     queryFn: () =>
       getDailyReport({
         storeId: storeId ?? undefined,

@@ -13,7 +13,7 @@ export default function ReceivableScreen() {
   const { storeId, organizationId } = useAuth();
 
   const { data: report, isLoading, isError, refetch, isRefetching } = useQuery({
-    queryKey: ['receivables', storeId, organizationId],
+    queryKey: ['dailyReport', storeId, organizationId],
     queryFn: () =>
       getDailyReport({
         storeId: storeId ?? undefined,

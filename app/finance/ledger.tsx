@@ -13,7 +13,7 @@ export default function LedgerScreen() {
   const { storeId, organizationId } = useAuth();
 
   const { data: report, isLoading, isError, refetch, isRefetching } = useQuery({
-    queryKey: ['ledgerSummary', storeId, organizationId],
+    queryKey: ['dailyReport', storeId, organizationId],
     queryFn: () =>
       getDailyReport({
         storeId: storeId ?? undefined,

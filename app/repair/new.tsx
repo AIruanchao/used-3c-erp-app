@@ -72,7 +72,6 @@ export default function NewRepairScreen() {
       ]);
 
       queryClient.invalidateQueries({ queryKey: ['dailyReport'] });
-      queryClient.invalidateQueries({ queryKey: ['stats'] });
     } catch (err) {
       Alert.alert('创建失败', getErrorMessage(err));
     } finally {
