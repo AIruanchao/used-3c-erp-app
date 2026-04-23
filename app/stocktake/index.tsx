@@ -44,6 +44,7 @@ export default function StocktakeScreen() {
         scope,
       });
       setShowNew(false);
+      setScope('FULL');
       refetch();
       Alert.alert('成功', '盘点会话已创建');
     } catch (err) {
