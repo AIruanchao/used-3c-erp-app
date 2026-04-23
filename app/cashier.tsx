@@ -69,10 +69,29 @@ export default function CashierScreen() {
 
     setLoading(true);
     try {
+      // If we have SN but no deviceId, try to find the device first
+      let resolvedDeviceId = deviceId;
+      if (!resolvedDeviceId && deviceSn) {
+        const found = await searchDevice({
+          sn: deviceSn,
+          organizationId,
+        });
+        if (!found) {
+          Alert.alert('错误', '未找到该设备，请确认SN或先入库');
+          setLoading(false);
+          return;
+        }
+        resolvedDeviceId = found.id;
+        setDeviceId(found.id);
+        if (!salePrice && found.DevicePricing?.retailPrice) {
+          setSalePrice(String(found.DevicePricing.retailPrice));
+        }
+      }
+
       const result = await cashierCheckout({
         storeId,
         organizationId,
-        deviceId,
+        deviceId: resolvedDeviceId,
         salePrice: price,
         Payment: [{ method: paymentMethod, amount: price }],
       });

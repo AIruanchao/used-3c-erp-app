@@ -13,6 +13,7 @@ import { Button, HelperText } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useAuthStore, type StoreInfo } from '../../stores/auth-store';
 import { loginWithEmail, getUserStores } from '../../services/auth-service';
+import { setAuthToken } from '../../lib/storage';
 import { COMPANY_NAME } from '../../lib/constants';
 
 export default function LoginScreen() {
@@ -38,6 +39,9 @@ export default function LoginScreen() {
 
     try {
       const result = await loginWithEmail(email.trim(), password);
+
+      // Store token immediately so that getUserStores can use it
+      setAuthToken(result.token);
 
       let stores: StoreInfo[] = [];
       try {

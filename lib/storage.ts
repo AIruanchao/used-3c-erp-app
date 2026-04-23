@@ -7,6 +7,7 @@ export const STORAGE_KEYS = {
   AUTH_TOKEN: 'auth_token',
   REFRESH_TOKEN: 'refresh_token',
   USER_DATA: 'user_data',
+  STORES_DATA: 'stores_data',
   SELECTED_STORE: 'selected_store',
   SELECTED_ORG: 'selected_org',
   THEME: 'theme',
@@ -37,6 +38,20 @@ export function getUserData(): Record<string, unknown> | null {
     return JSON.parse(raw) as Record<string, unknown>;
   } catch {
     return null;
+  }
+}
+
+export function setStoresData(stores: Record<string, unknown>[]): void {
+  mmkv.set(STORAGE_KEYS.STORES_DATA, JSON.stringify(stores));
+}
+
+export function getStoresData(): Record<string, unknown>[] {
+  const raw = mmkv.getString(STORAGE_KEYS.STORES_DATA);
+  if (!raw) return [];
+  try {
+    return JSON.parse(raw) as Record<string, unknown>[];
+  } catch {
+    return [];
   }
 }
 

@@ -17,6 +17,8 @@ export async function quickInbound(data: {
   retailPrice?: string;
   condition?: string;
   channel?: string;
+  sourceType?: string;
+  batteryHealth?: number | null;
   supplierId?: string;
   remark?: string;
 }): Promise<QuickInboundResult> {

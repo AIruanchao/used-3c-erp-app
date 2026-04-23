@@ -25,13 +25,3 @@ export async function getDailyReport(params: {
   const res = await api.get('/api/dashboard/daily-report', { params });
   return res.data;
 }
-
-export async function getSalesStats(params: {
-  storeId?: string;
-  organizationId?: string;
-  startDate?: string;
-  endDate?: string;
-}) {
-  const res = await api.get('/api/dashboard/daily-report', { params });
-  return res.data;
-}

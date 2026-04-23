@@ -9,6 +9,8 @@ import {
   setSelectedStore,
   getSelectedOrg,
   setSelectedOrg,
+  setStoresData,
+  getStoresData,
 } from '../lib/storage';
 
 export interface UserInfo {
@@ -47,6 +49,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   setAuth: (user, token, stores) => {
     setAuthToken(token);
     setUserData(user as unknown as Record<string, unknown>);
+    setStoresData(stores as unknown as Record<string, unknown>[]);
 
     const savedStoreId = getSelectedStore();
     const savedOrgId = getSelectedOrg();
@@ -102,7 +105,13 @@ export const useAuthStore = create<AuthState>((set) => ({
       name: userData['name'] as string,
     };
 
-    const stores = (userData['stores'] as StoreInfo[]) ?? [];
+    const storesRaw = getStoresData();
+    const stores = storesRaw.map((s) => ({
+      storeId: s['storeId'] as string,
+      storeName: s['storeName'] as string,
+      organizationId: s['organizationId'] as string,
+      orgName: s['orgName'] as string,
+    }));
     let currentStore = stores[0] ?? null;
 
     if (savedStoreId && savedOrgId) {

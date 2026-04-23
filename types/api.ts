@@ -14,20 +14,6 @@ export interface PaginatedResponse<T> {
   totalPages: number;
 }
 
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-export interface LoginResponse {
-  token: string;
-  user: {
-    id: string;
-    email: string;
-    name: string;
-  };
-}
-
 export interface QuickInboundRequest {
   storeId: string;
   organizationId: string;
@@ -100,57 +86,4 @@ export interface CashierResponse {
   paymentId: string;
   totalPaid: number;
   profit: number;
-}
-
-export interface StoreItem {
-  id: string;
-  name: string;
-  code: string;
-  organizationId: string;
-  Organization: {
-    id: string;
-    name: string;
-  };
-}
-
-export interface StoreMemberItem {
-  id: string;
-  userId: string;
-  storeId: string;
-  role: string;
-  Store: StoreItem;
-}
-
-export interface RepairCreateRequest {
-  storeId: string;
-  organizationId: string;
-  deviceId?: string | null;
-  sn?: string | null;
-  customerId?: string | null;
-  description: string;
-  estimatedCost?: number | null;
-}
-
-export interface RepairItem {
-  id: string;
-  status: string;
-  description: string;
-  sn: string | null;
-  estimatedCost: string | null;
-  actualCost: string | null;
-  createdAt: string;
-  updatedAt: string;
-  Device?: {
-    id: string;
-    sn: string;
-    Sku?: {
-      id: string;
-      name: string;
-    };
-  };
-  Customer?: {
-    id: string;
-    name: string;
-    phone: string;
-  };
 }

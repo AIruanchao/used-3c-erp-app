@@ -15,7 +15,6 @@ import { useAuth } from '../../hooks/useAuth';
 import { useScanner } from '../../hooks/useScanner';
 import { useInboundStore } from '../../stores/inbound-store';
 import { quickInbound, checkImei } from '../../services/inbound-service';
-import { getSkuInfo } from '../../services/inbound-service';
 import { CONDITION_OPTIONS, CHANNEL_OPTIONS, SOURCE_CHANNELS } from '../../lib/constants';
 import { getErrorMessage } from '../../lib/errors';
 import { BarcodeScannerView } from '../../components/scanner/BarcodeScannerView';
@@ -104,6 +103,8 @@ export default function InboundScreen() {
         retailPrice: retailPrice || undefined,
         condition: condition || undefined,
         channel: channel || undefined,
+        sourceType: sourceType,
+        batteryHealth: batteryHealth ? parseInt(batteryHealth, 10) : null,
       });
 
       Alert.alert('入库成功', `设备ID: ${result.deviceId}`, [
