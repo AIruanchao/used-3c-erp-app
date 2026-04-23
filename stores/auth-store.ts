@@ -114,10 +114,12 @@ export const useAuthStore = create<AuthState>((set) => ({
     if (!userData) return;
 
     const user: UserInfo = {
-      id: userData['id'] as string,
-      email: userData['email'] as string,
-      name: userData['name'] as string,
+      id: (userData['id'] as string) ?? '',
+      email: (userData['email'] as string) ?? '',
+      name: (userData['name'] as string) ?? '',
     };
+
+    if (!user.id) return;
 
     const storesRaw = getStoresData();
     const stores = storesRaw.map((s) => ({
