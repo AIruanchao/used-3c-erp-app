@@ -114,6 +114,7 @@ export default function CashierScreen() {
       queryClient.invalidateQueries({ queryKey: ['dailyReport'] });
       queryClient.invalidateQueries({ queryKey: ['inventorySearch'] });
       queryClient.invalidateQueries({ queryKey: ['outboundSearch'] });
+      queryClient.invalidateQueries({ queryKey: ['device'] });
     } catch (err) {
       Alert.alert('收银失败', getErrorMessage(err));
     } finally {

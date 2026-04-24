@@ -15,17 +15,18 @@ interface QuickAction {
   label: string;
   route: string;
   color: string;
+  bgColor: string;
 }
 
 const QUICK_ACTIONS: QuickAction[] = [
-  { icon: 'package-down', label: '快速入库', route: '/(tabs)/inbound', color: '#4caf50' },
-  { icon: 'package-up', label: '出库', route: '/(tabs)/outbound', color: '#2196f3' },
-  { icon: 'archive', label: '库存查询', route: '/(tabs)/inventory', color: '#ff9800' },
-  { icon: 'cash-register', label: '收银台', route: '/cashier', color: '#e53935' },
-  { icon: 'wrench', label: '维修工单', route: '/repair/index', color: '#9c27b0' },
-  { icon: 'chart-bar', label: '统计报表', route: '/stats', color: '#00bcd4' },
-  { icon: 'cash-multiple', label: '财务', route: '/finance/index', color: '#795548' },
-  { icon: 'account-group', label: '客户', route: '/customer/index', color: '#607d8b' },
+  { icon: 'package-down', label: '快速入库', route: '/(tabs)/inbound', color: '#4caf50', bgColor: 'rgba(76,175,80,0.08)' },
+  { icon: 'package-up', label: '出库', route: '/(tabs)/outbound', color: '#2196f3', bgColor: 'rgba(33,150,243,0.08)' },
+  { icon: 'archive', label: '库存查询', route: '/(tabs)/inventory', color: '#ff9800', bgColor: 'rgba(255,152,0,0.08)' },
+  { icon: 'cash-register', label: '收银台', route: '/cashier', color: '#e53935', bgColor: 'rgba(229,57,53,0.08)' },
+  { icon: 'wrench', label: '维修工单', route: '/repair/index', color: '#9c27b0', bgColor: 'rgba(156,39,176,0.08)' },
+  { icon: 'chart-bar', label: '统计报表', route: '/stats', color: '#00bcd4', bgColor: 'rgba(0,188,212,0.08)' },
+  { icon: 'cash-multiple', label: '财务', route: '/finance/index', color: '#795548', bgColor: 'rgba(121,85,72,0.08)' },
+  { icon: 'account-group', label: '客户', route: '/customer/index', color: '#607d8b', bgColor: 'rgba(96,125,139,0.08)' },
 ];
 
 export default function WorkspaceScreen() {
@@ -143,7 +144,7 @@ export default function WorkspaceScreen() {
             <View
               style={[
                 styles.actionIcon,
-                { backgroundColor: action.color + '15' },
+                { backgroundColor: action.bgColor },
               ]}
             >
               <IconButton

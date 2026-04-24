@@ -212,6 +212,7 @@ export default function InboundScreen() {
       queryClient.invalidateQueries({ queryKey: ['dailyReport'] });
       queryClient.invalidateQueries({ queryKey: ['inventorySearch'] });
       queryClient.invalidateQueries({ queryKey: ['outboundSearch'] });
+      queryClient.invalidateQueries({ queryKey: ['device'] });
     } catch (err) {
       Alert.alert('入库失败', getErrorMessage(err));
     } finally {
