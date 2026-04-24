@@ -189,8 +189,8 @@ export default function InboundScreen() {
         unitCost: parseFloat(unitCost),
         peerPrice: peerPrice ? parseFloat(peerPrice) : undefined,
         retailPrice: retailPrice ? parseFloat(retailPrice) : undefined,
-        condition: condition || undefined,
-        channel: channel || undefined,
+        condition: condition.trim() || undefined,
+        channel: channel.trim() || undefined,
         sourceType: sourceType,
         batteryHealth: parsedBatteryHealth,
       });
