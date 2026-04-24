@@ -42,6 +42,11 @@ export default function CashierScreen() {
           organizationId: organizationId ?? '',
         });
         if (result) {
+          if (result.inventoryStatus !== 'IN_STOCK') {
+            Alert.alert('提示', `该设备状态为「${result.inventoryStatus}」，不可销售`);
+            setShowScanner(false);
+            return;
+          }
           setDeviceId(result.id);
           if (result.DevicePricing?.retailPrice) {
             setSalePrice(String(result.DevicePricing.retailPrice));
@@ -82,6 +87,11 @@ export default function CashierScreen() {
         });
         if (!found) {
           Alert.alert('错误', '未找到该设备，请确认SN或先入库');
+          setLoading(false);
+          return;
+        }
+        if (found.inventoryStatus !== 'IN_STOCK') {
+          Alert.alert('错误', `该设备状态为「${found.inventoryStatus}」，不可销售`);
           setLoading(false);
           return;
         }
