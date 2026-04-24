@@ -1,5 +1,7 @@
 import type { ExpoConfig, ConfigContext } from 'expo/config';
-import { APP_DISPLAY_NAME } from './lib/constants';
+
+/** Must match `APP_DISPLAY_NAME` in lib/constants (config loader cannot import that module). */
+const APP_DISPLAY_NAME = '咖机汇SVIP';
 
 export default ({ config }: ConfigContext): ExpoConfig => {
   const sentryDsn = process.env['EXPO_PUBLIC_SENTRY_DSN'] ?? '';
