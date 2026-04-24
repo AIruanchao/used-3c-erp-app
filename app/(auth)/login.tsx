@@ -24,6 +24,7 @@ export default function LoginScreen() {
   const router = useRouter();
 
   const handleLogin = useCallback(async () => {
+    if (loading) return;
     if (!email.trim()) {
       setError('请输入邮箱');
       return;
@@ -68,7 +69,7 @@ export default function LoginScreen() {
     } finally {
       setLoading(false);
     }
-  }, [email, password, setAuth, router]);
+  }, [email, password, loading, setAuth, router]);
 
   return (
     <KeyboardAvoidingView
