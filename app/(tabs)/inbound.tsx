@@ -329,7 +329,7 @@ export default function InboundScreen() {
                     style={[styles.input, { flex: 1 }]}
                     placeholder="输入型号ID/名称"
                     value={modelId}
-                    onChangeText={setModelId}
+                    onChangeText={(text) => { setModelId(text); setSkuId(''); setSkuName(''); }}
                     autoCapitalize="none"
                     autoCorrect={false}
                     editable={!loading && !skuLoading}
