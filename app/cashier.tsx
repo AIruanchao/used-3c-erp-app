@@ -34,11 +34,12 @@ export default function CashierScreen() {
 
   const onScan = useCallback(
     async (code: string) => {
-      setDeviceSn(code);
+      const trimmedCode = code.trim();
+      setDeviceSn(trimmedCode);
       setDeviceId('');
       try {
         const result = await searchDevice({
-          sn: code,
+          sn: trimmedCode,
           organizationId: organizationId ?? '',
         });
         if (result) {
@@ -82,7 +83,7 @@ export default function CashierScreen() {
       let resolvedDeviceId = deviceId;
       if (!resolvedDeviceId && deviceSn) {
         const found = await searchDevice({
-          sn: deviceSn,
+          sn: deviceSn.trim(),
           organizationId,
         });
         if (!found) {
