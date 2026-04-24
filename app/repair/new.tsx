@@ -96,6 +96,7 @@ export default function NewRepairScreen() {
               placeholder="客户姓名（可选，默认散客）"
               value={customerName}
               onChangeText={setCustomerName}
+              editable={!loading}
             />
             <TextInput
               style={styles.input}
@@ -105,6 +106,7 @@ export default function NewRepairScreen() {
               keyboardType="phone-pad"
               autoCapitalize="none"
               autoCorrect={false}
+              editable={!loading}
             />
             <TextInput
               style={styles.input}
@@ -113,6 +115,7 @@ export default function NewRepairScreen() {
               onChangeText={setSn}
               autoCapitalize="none"
               autoCorrect={false}
+              editable={!loading}
             />
             <TextInput
               style={[styles.input, styles.textArea]}
@@ -121,6 +124,7 @@ export default function NewRepairScreen() {
               onChangeText={setDescription}
               multiline
               numberOfLines={4}
+              editable={!loading}
             />
             <Button
               mode="contained"

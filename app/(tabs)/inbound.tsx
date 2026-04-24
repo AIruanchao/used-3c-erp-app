@@ -311,14 +311,15 @@ export default function InboundScreen() {
                   {/* SKU lookup */}
                   <Text style={styles.sectionTitle}>SKU查询 *</Text>
                   <View style={styles.skuRow}>
-                    <TextInput
-                      style={[styles.input, { flex: 1 }]}
-                      placeholder="输入型号ID/名称"
-                      value={modelId}
-                      onChangeText={setModelId}
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                    />
+                  <TextInput
+                    style={[styles.input, { flex: 1 }]}
+                    placeholder="输入型号ID/名称"
+                    value={modelId}
+                    onChangeText={setModelId}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    editable={!loading && !skuLoading}
+                  />
                     <Button
                       mode="contained"
                       onPress={handleLookupSku}
@@ -342,6 +343,7 @@ export default function InboundScreen() {
                     onChangeText={setUnitCost}
                     keyboardType="decimal-pad"
                     returnKeyType="done"
+                    editable={!loading}
                   />
                   <TextInput
                     style={styles.input}
@@ -350,6 +352,7 @@ export default function InboundScreen() {
                     onChangeText={setPeerPrice}
                     keyboardType="decimal-pad"
                     returnKeyType="done"
+                    editable={!loading}
                   />
                   <TextInput
                     style={styles.input}
@@ -358,6 +361,7 @@ export default function InboundScreen() {
                     onChangeText={setRetailPrice}
                     keyboardType="decimal-pad"
                     returnKeyType="done"
+                    editable={!loading}
                   />
                   <TextInput
                     style={styles.input}
@@ -366,6 +370,7 @@ export default function InboundScreen() {
                     onChangeText={setBatteryHealth}
                     keyboardType="number-pad"
                     maxLength={3}
+                    editable={!loading}
                   />
 
                   <Text style={styles.sectionTitle}>成色</Text>

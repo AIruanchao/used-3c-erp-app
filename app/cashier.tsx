@@ -148,6 +148,7 @@ export default function CashierScreen() {
                 }}
                 autoCapitalize="none"
                 autoCorrect={false}
+                editable={!loading}
               />
               <TextInput
                 style={styles.input}
@@ -156,6 +157,7 @@ export default function CashierScreen() {
                 onChangeText={setSalePrice}
                 keyboardType="decimal-pad"
                 returnKeyType="done"
+                editable={!loading}
               />
             </Card.Content>
           </Card>

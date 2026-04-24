@@ -92,6 +92,7 @@ export default function StocktakeScreen() {
               value={scope}
               onChangeText={setScope}
               mode="outlined"
+              editable={!creating}
             />
           </Dialog.Content>
           <Dialog.Actions>
