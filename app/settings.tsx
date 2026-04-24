@@ -13,6 +13,7 @@ export default function SettingsScreen() {
   const [connected, setConnected] = useState(printerService.isConnected());
 
   const handleScanPrinters = useCallback(async () => {
+    if (scanning) return;
     setScanning(true);
     try {
       const found = await printerService.scanPrinters();
@@ -25,7 +26,7 @@ export default function SettingsScreen() {
     } finally {
       setScanning(false);
     }
-  }, []);
+  }, [scanning]);
 
   const handleConnectPrinter = useCallback(async (id: string) => {
     try {
