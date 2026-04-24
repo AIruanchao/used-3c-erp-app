@@ -170,7 +170,7 @@ export default function DeviceDetailScreen() {
                 const ok = await printerService.printInboundReceipt({
                   sn: device.sn,
                   skuName: device.Sku?.name ?? '未知',
-                  unitCost: device.DevicePricing?.unitCost ?? '0',
+                  unitCost: device.DevicePricing?.unitCost || '0',
                   storeName: storeName ?? device.Store?.name ?? '',
                   operatorName: user?.name ?? '',
                   date: formatDate(new Date().toISOString()),
