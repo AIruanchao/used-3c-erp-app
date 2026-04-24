@@ -28,7 +28,8 @@ export async function loginWithEmail(
   password: string,
 ): Promise<{ token: string; user: { id: string; email: string; name: string } }> {
   const csrfRes = await api.get('/api/auth/csrf');
-  const csrfToken = csrfRes.data?.csrfToken as string;
+  const csrfToken = (csrfRes.data as { csrfToken?: string })?.csrfToken;
+  if (!csrfToken) throw new Error('获取CSRF令牌失败');
 
   const formData = new URLSearchParams();
   formData.append('email', email);
