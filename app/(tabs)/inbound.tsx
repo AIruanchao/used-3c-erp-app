@@ -200,8 +200,11 @@ export default function InboundScreen() {
 
       Alert.alert('入库成功', `设备ID: ${result.deviceId}`, [
         { text: '继续入库', onPress: resetForm },
-        { text: '查看库存', onPress: () => router.push('/(tabs)/inventory' as never) },
+        { text: '查看库存', onPress: () => { resetForm(); router.push('/(tabs)/inventory' as never); } },
       ]);
+
+      // Reset form immediately to prevent double submission
+      resetForm();
 
       // Invalidate related queries so other screens show fresh data
       queryClient.invalidateQueries({ queryKey: ['dailyReport'] });
