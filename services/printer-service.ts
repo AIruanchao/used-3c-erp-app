@@ -17,15 +17,18 @@ interface PrintHistoryEntry {
 }
 
 class BluetoothPrinterService {
-  private manager: BleManager;
+  private _manager: BleManager | null = null;
   private connectedDevice: Device | null = null;
   private lastDeviceId: string | null = null;
 
   private PRINTER_SERVICE_UUID = '0000ff00-0000-1000-8000-00805f9b34fb';
   private PRINTER_CHAR_UUID = '0000ff02-0000-1000-8000-00805f9b34fb';
 
-  constructor() {
-    this.manager = new BleManager();
+  private get manager(): BleManager {
+    if (!this._manager) {
+      this._manager = new BleManager();
+    }
+    return this._manager;
   }
 
   async requestPermissions(): Promise<boolean> {
@@ -336,7 +339,10 @@ class BluetoothPrinterService {
   }
 
   destroy(): void {
-    this.manager.destroy();
+    if (this._manager) {
+      this._manager.destroy();
+      this._manager = null;
+    }
   }
 
   private arrayToBase64(arr: number[]): string {
