@@ -13,6 +13,7 @@ import { useAppStore } from '../stores/app-store';
 import { setNavigationRef, setLogoutRef } from '../lib/api';
 import { ErrorBoundary } from '../components/common/ErrorBoundary';
 import { useOffline } from '../hooks/useOffline';
+import { startAppLogging } from '../services/logging-service';
 import '../i18n';
 
 try {
@@ -39,6 +40,13 @@ if (typeof ErrorUtils !== 'undefined') {
       originalHandler(error, isFatal ?? false);
     }
   });
+}
+
+// Local log drain (console capture + batch POST). Safe no-op unless configured.
+try {
+  startAppLogging();
+} catch (e) {
+  console.warn('App logging init failed', e);
 }
 
 const queryClient = new QueryClient({
