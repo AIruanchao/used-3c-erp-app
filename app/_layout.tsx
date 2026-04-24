@@ -13,6 +13,7 @@ import { useAppStore } from '../stores/app-store';
 import { setNavigationRef, setLogoutRef } from '../lib/api';
 import { ErrorBoundary } from '../components/common/ErrorBoundary';
 import { useOffline } from '../hooks/useOffline';
+import '../i18n';
 
 sentryInit({
   dsn: process.env['EXPO_PUBLIC_SENTRY_DSN'] ?? '',

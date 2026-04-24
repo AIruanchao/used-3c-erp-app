@@ -1,0 +1,159 @@
+{
+  "common": {
+    "confirm": "确认",
+    "cancel": "取消",
+    "retry": "重试",
+    "close": "关闭",
+    "save": "保存",
+    "delete": "删除",
+    "edit": "编辑",
+    "loading": "加载中...",
+    "success": "成功",
+    "error": "错误",
+    "warning": "警告",
+    "tip": "提示",
+    "unknownError": "未知错误",
+    "networkError": "网络连接失败",
+    "serverError": "服务器错误",
+    "loginExpired": "登录已过期，请重新登录",
+    "permissionDenied": "权限不足"
+  },
+  "auth": {
+    "login": "登录",
+    "logout": "退出登录",
+    "confirmLogout": "确定要退出登录吗？",
+    "username": "用户名",
+    "password": "密码",
+    "loginFailed": "登录失败"
+  },
+  "tabs": {
+    "workspace": "工作台",
+    "inbound": "入库",
+    "outbound": "出库",
+    "inventory": "库存",
+    "profile": "我的"
+  },
+  "inbound": {
+    "scanInbound": "扫码入库",
+    "quickInbound": "快速入库",
+    "confirmInbound": "确认入库",
+    "nextStep": "下一步",
+    "closeCamera": "关闭相机",
+    "scanHistory": "扫码历史",
+    "clearHistory": "清空",
+    "unitCost": "成本价",
+    "peerPrice": "同行价",
+    "retailPrice": "零售价",
+    "condition": "成色",
+    "channel": "渠道",
+    "sourceType": "来源类型",
+    "batteryHealth": "电池健康度",
+    "remark": "备注",
+    "invalidCostPrice": "请输入有效的成本价",
+    "imeiBlocked": "IMEI在黑名单中",
+    "imeiInStore": "该设备已在本门店库中，不可重复入库",
+    "inboundSuccess": "入库成功",
+    "lookupSku": "查询"
+  },
+  "cashier": {
+    "title": "收银台",
+    "scanDevice": "扫描设备",
+    "salePrice": "销售价格",
+    "paymentMethod": "支付方式",
+    "confirmCheckout": "确认收款",
+    "wechat": "微信",
+    "alipay": "支付宝",
+    "cash": "现金",
+    "card": "银行卡",
+    "invalidPrice": "请输入有效的销售价格"
+  },
+  "repair": {
+    "title": "维修工单",
+    "createOrder": "创建工单",
+    "newOrder": "新建工单",
+    "orderDetail": "工单详情",
+    "faultDescription": "故障描述",
+    "quote": "报价",
+    "startRepair": "开始维修",
+    "acceptQuote": "接受报价并开始维修",
+    "completeRepair": "完成维修",
+    "qcPass": "质检通过",
+    "deliver": "安排交付",
+    "confirmQuote": "确认报价",
+    "laborCost": "工时费",
+    "repairNotes": "维修备注"
+  },
+  "device": {
+    "detail": "设备详情",
+    "goToCashier": "前往收银",
+    "printLabel": "打印标签"
+  },
+  "settlement": {
+    "title": "日结",
+    "printSettlement": "打印日结单",
+    "printSuccess": "日结单已打印",
+    "printFailed": "打印失败",
+    "checkPrinter": "请检查打印机连接"
+  },
+  "settings": {
+    "title": "设置",
+    "darkMode": "深色模式",
+    "followSystem": "跟随系统",
+    "searchPrinter": "搜索打印机",
+    "disconnect": "断开",
+    "disconnectSuccess": "已断开打印机连接",
+    "disconnectFailed": "断开失败，请重试"
+  },
+  "customer": {
+    "title": "客户列表",
+    "searchPlaceholder": "搜索客户名/手机号...",
+    "noCustomers": "暂无客户",
+    "noPhone": "未留电话"
+  },
+  "stocktake": {
+    "title": "盘点",
+    "newStocktake": "新建盘点",
+    "noRecords": "暂无盘点记录",
+    "scope": "范围(可选)",
+    "createSuccess": "盘点会话已创建"
+  },
+  "finance": {
+    "title": "财务",
+    "ledger": "记账明细",
+    "payable": "应付账款",
+    "receivable": "应收账款"
+  },
+  "stats": {
+    "title": "统计",
+    "dailySummary": "今日概览",
+    "salesAmount": "销售额",
+    "purchaseAmount": "采购额",
+    "netCashFlow": "净现金流",
+    "inbound": "入库",
+    "outbound": "出库",
+    "stockWarning": "库存预警",
+    "profitTop5": "利润TOP5"
+  },
+  "profile": {
+    "currentStore": "当前门店",
+    "noStoreSelected": "未选择门店",
+    "selectStore": "选择门店",
+    "inboundHistory": "入库记录",
+    "version": "版本"
+  },
+  "error": {
+    "title": "出错了",
+    "unknown": "未知错误",
+    "clickRetry": "点击重试",
+    "searchFailed": "搜索失败"
+  },
+  "scanner": {
+    "grantPermission": "授权相机",
+    "torchToggle": "开启/关闭闪光灯"
+  },
+  "print": {
+    "printFailed": "打印失败",
+    "checkConnection": "请检查打印机连接",
+    "printSuccess": "打印成功"
+  }
+}
