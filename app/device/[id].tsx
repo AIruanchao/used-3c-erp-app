@@ -164,6 +164,7 @@ export default function DeviceDetailScreen() {
             loading={printing}
             disabled={printing}
             onPress={async () => {
+              if (printing) return;
               setPrinting(true);
               try {
                 const ok = await printerService.printInboundReceipt({

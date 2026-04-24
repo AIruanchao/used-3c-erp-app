@@ -66,9 +66,13 @@ export default function InboundScreen() {
         setSkuName(info.category ?? 'SKU已找到');
         Alert.alert('成功', `已匹配SKU: ${info.skuId.slice(0, 8)}...`);
       } else {
+        setSkuId('');
+        setSkuName('');
         Alert.alert('未找到', '该型号没有对应的SKU，请联系管理员创建');
       }
     } catch (err) {
+      setSkuId('');
+      setSkuName('');
       Alert.alert('查询失败', getErrorMessage(err));
     } finally {
       setSkuLoading(false);
