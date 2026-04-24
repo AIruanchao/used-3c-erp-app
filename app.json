@@ -41,13 +41,12 @@
       ]
     },
     "plugins": [
-      "expo-router",
-      [
-        "react-native-vision-camera",
-        {
-          "cameraPermissionText": "嫩叶ERP需要相机权限以扫描条码"
-        }
-      ]
-    ]
+      "expo-router"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "23a4dc07-f9b5-41a1-bcfa-1df52f98197d"
+      }
+    }
   }
 }
