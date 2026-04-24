@@ -155,6 +155,14 @@ export default function InboundScreen() {
       Alert.alert('错误', '请输入有效的成本价');
       return;
     }
+    if (peerPrice && (Number.isNaN(parseFloat(peerPrice)) || parseFloat(peerPrice) < 0)) {
+      Alert.alert('错误', '同行价不能为负数');
+      return;
+    }
+    if (retailPrice && (Number.isNaN(parseFloat(retailPrice)) || parseFloat(retailPrice) < 0)) {
+      Alert.alert('错误', '零售价不能为负数');
+      return;
+    }
 
     setLoading(true);
     try {
