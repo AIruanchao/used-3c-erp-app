@@ -19,7 +19,7 @@ export default function ProfileScreen() {
       Alert.alert('提示', '当前没有可用的门店');
       return;
     }
-    if (stores.length <= 5) {
+    if (stores.length <= 3) {
       Alert.alert(
         '切换门店',
         '请选择门店',
