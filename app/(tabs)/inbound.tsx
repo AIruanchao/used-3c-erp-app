@@ -304,9 +304,9 @@ export default function InboundScreen() {
                     清空
                   </Button>
                 </View>
-                {scanResults.slice(-5).reverse().map((result) => (
+                {scanResults.slice(-5).reverse().map((result, idx) => (
                   <ScanResultCard
-                    key={result.timestamp.toString()}
+                    key={`${result.timestamp}-${idx}`}
                     code={result.code}
                     format={result.format}
                     timestamp={result.timestamp}
