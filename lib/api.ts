@@ -1,8 +1,9 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import { Platform } from 'react-native';
 import { getAuthToken, removeAuthToken } from './storage';
 
 const API_BASE = __DEV__
-  ? 'http://10.0.2.2:3000'
+  ? (Platform.OS === 'android' ? 'http://10.0.2.2:3000' : 'http://localhost:3000')
   : 'https://erp.nenie.vip';
 
 export const api = axios.create({
