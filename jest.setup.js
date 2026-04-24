@@ -12,6 +12,12 @@ jest.mock('sentry-expo', () => ({
   addBreadcrumb: jest.fn(),
 }));
 
+// Mock expo-constants (imported by lib/api.ts for optional extra config)
+jest.mock('expo-constants', () => ({
+  __esModule: true,
+  default: { expoConfig: { extra: {} } },
+}));
+
 // Mock react-native-mmkv
 const mockMmkvStore = new Map();
 jest.mock('react-native-mmkv', () => ({

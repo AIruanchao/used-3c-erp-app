@@ -1,6 +1,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { Platform } from 'react-native';
 import * as SentryRN from '@sentry/react-native';
+import Constants from 'expo-constants';
 import {
   getAuthSessionCookie,
   getAuthToken,
@@ -8,9 +9,38 @@ import {
   removeAuthToken,
 } from './storage';
 
-const API_BASE = __DEV__
-  ? (Platform.OS === 'android' ? 'http://10.0.2.2:3000' : 'http://localhost:3000')
-  : 'https://erp.nenie.vip';
+function normalizeApiBaseUrl(input: string): string {
+  const s = input.trim();
+  if (!s) return s;
+  // axios baseURL should not end with "/"
+  return s.endsWith('/') ? s.slice(0, -1) : s;
+}
+
+function getExtraApiBaseUrl(): string | undefined {
+  const extra = Constants.expoConfig?.extra as Record<string, unknown> | undefined;
+  const v = extra?.['apiBaseUrl'];
+  return typeof v === 'string' && v.trim() ? v : undefined;
+}
+
+/**
+ * API base selection order:
+ * 1) `EXPO_PUBLIC_API_BASE` (recommended for EAS + local .env)
+ * 2) `expo.extra.apiBaseUrl` (optional in app config)
+ * 3) Dev default (Android emulator can reach host via 10.0.2.2)
+ * 4) Prod default (legacy)
+ */
+const API_BASE = (() => {
+  const fromEnv = process.env['EXPO_PUBLIC_API_BASE']?.trim();
+  if (fromEnv) return normalizeApiBaseUrl(fromEnv);
+
+  const fromExtra = getExtraApiBaseUrl();
+  if (fromExtra) return normalizeApiBaseUrl(fromExtra);
+
+  if (__DEV__) {
+    return Platform.OS === 'android' ? 'http://10.0.2.2:3000' : 'http://localhost:3000';
+  }
+  return 'https://erp.nenie.vip';
+})();
 
 export const api = axios.create({
   baseURL: API_BASE,
