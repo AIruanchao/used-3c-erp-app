@@ -12,7 +12,7 @@ import { Button, HelperText } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useAuthStore, type StoreInfo } from '../../stores/auth-store';
 import { loginWithEmail, getUserStores } from '../../services/auth-service';
-import { setAuthToken } from '../../lib/storage';
+import { setAuthSessionCookie } from '../../lib/storage';
 import { COMPANY_NAME } from '../../lib/constants';
 
 export default function LoginScreen() {
@@ -41,23 +41,19 @@ export default function LoginScreen() {
       const result = await loginWithEmail(email.trim(), password);
 
       // Store token immediately so that getUserStores can use it
-      setAuthToken(result.token);
+      setAuthSessionCookie(result.token);
 
-      let stores: StoreInfo[] = [];
-      try {
-        const userStores = await getUserStores();
-        stores = userStores.map((s) => ({
-          storeId: s.storeId,
-          storeName: s.storeName,
-          organizationId: s.organizationId,
-          orgName: s.orgName,
-        }));
-      } catch {
-        // stores fetch might fail, continue anyway
-      }
+      const userStores = await getUserStores();
+      const stores: StoreInfo[] = userStores.map((s) => ({
+        storeId: s.storeId,
+        storeName: s.storeName,
+        organizationId: s.organizationId,
+        orgName: s.orgName,
+      }));
 
       if (stores.length === 0) {
-        Alert.alert('提示', '未能获取门店信息，部分功能可能受限');
+        Alert.alert('提示', '未能获取门店信息，无法继续使用。请联系管理员。');
+        return;
       }
 
       setAuth(result.user, result.token, stores);

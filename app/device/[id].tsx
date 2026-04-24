@@ -15,11 +15,11 @@ import { printerService } from '../../services/printer-service';
 export default function DeviceDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { organizationId, storeName, user } = useAuth();
+  const { organizationId, storeId, storeName, user } = useAuth();
   const [printing, setPrinting] = useState(false);
 
   const { data: device, isLoading, isError, refetch, isRefetching } = useQuery({
-    queryKey: ['device', id, organizationId],
+    queryKey: ['device', id, storeId, organizationId],
     queryFn: () => getDeviceById(id, organizationId ?? ''),
     enabled: !!id && !!organizationId,
   });

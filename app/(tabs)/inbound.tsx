@@ -18,6 +18,7 @@ import { useInboundStore } from '../../stores/inbound-store';
 import { quickInbound, checkImei, getSkuInfo } from '../../services/inbound-service';
 import { CONDITION_OPTIONS, CHANNEL_OPTIONS, INVENTORY_STATUS_LABELS } from '../../lib/constants';
 import { getErrorMessage } from '../../lib/errors';
+import { isValidMoneyInput, moneyToNumber } from '../../lib/utils';
 import { BarcodeScannerView } from '../../components/scanner/BarcodeScannerView';
 import { ScanResultCard } from '../../components/scanner/ScanResultCard';
 
@@ -117,8 +118,8 @@ export default function InboundScreen() {
         if (imeiResult.inOtherStore) {
           Alert.alert('提示', `该设备在其他门店(${imeiResult.otherStoreName ?? '未知'})库中，请确认后再入库`);
         }
-      } catch {
-        // IMEI check failure is non-blocking
+      } catch (err) {
+        Alert.alert('提示', `IMEI 校验失败：${getErrorMessage(err)}`);
       }
 
       setStep('info');
@@ -162,18 +163,15 @@ export default function InboundScreen() {
       Alert.alert('错误', '请先查询SKU（输入型号并点击查询）');
       return;
     }
-    const unitCostNum = parseFloat(unitCost);
-    if (!unitCost || Number.isNaN(unitCostNum) || unitCostNum <= 0 || (unitCost.match(/\./g) ?? []).length > 1) {
+    if (!isValidMoneyInput(unitCost) || moneyToNumber(unitCost) <= 0) {
       Alert.alert('错误', '请输入有效的成本价');
       return;
     }
-    const peerPriceNum = parseFloat(peerPrice);
-    if (peerPrice && (Number.isNaN(peerPriceNum) || peerPriceNum < 0 || (peerPrice.match(/\./g) ?? []).length > 1)) {
+    if (peerPrice && (!isValidMoneyInput(peerPrice) || moneyToNumber(peerPrice) < 0)) {
       Alert.alert('错误', '同行价不能为负数');
       return;
     }
-    const retailPriceNum = parseFloat(retailPrice);
-    if (retailPrice && (Number.isNaN(retailPriceNum) || retailPriceNum < 0 || (retailPrice.match(/\./g) ?? []).length > 1)) {
+    if (retailPrice && (!isValidMoneyInput(retailPrice) || moneyToNumber(retailPrice) < 0)) {
       Alert.alert('错误', '零售价不能为负数');
       return;
     }
@@ -194,9 +192,9 @@ export default function InboundScreen() {
         organizationId,
         skuId: skuId,
         sn: sn.trim(),
-        unitCost: unitCostNum,
-        peerPrice: peerPrice ? peerPriceNum : undefined,
-        retailPrice: retailPrice ? retailPriceNum : undefined,
+        unitCost: moneyToNumber(unitCost),
+        peerPrice: peerPrice ? moneyToNumber(peerPrice) : undefined,
+        retailPrice: retailPrice ? moneyToNumber(retailPrice) : undefined,
         condition: condition.trim() || undefined,
         channel: channel.trim() || undefined,
         sourceType: sourceType,

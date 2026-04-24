@@ -5,6 +5,25 @@
 
 type DecimalLike = string | number | null | undefined;
 
+export function isValidMoneyInput(input: string): boolean {
+  const s = input.trim();
+  if (!s) return false;
+  // Allow integers or decimals with up to 2 fraction digits.
+  if (!/^(?:0|[1-9]\d*)(?:\.\d{1,2})?$/.test(s)) return false;
+  const n = Number(s);
+  return Number.isFinite(n);
+}
+
+export function moneyToNumber(input: string): number {
+  const s = input.trim();
+  if (!isValidMoneyInput(s)) {
+    throw new Error('Invalid money input');
+  }
+  const n = Number(s);
+  if (!Number.isFinite(n)) throw new Error('Invalid money input');
+  return n;
+}
+
 /** Convert any Decimal-like value to its exact string representation */
 export function decStr(value: DecimalLike | unknown): string {
   if (value == null) return '0';
@@ -50,12 +69,17 @@ export function sanitizePagination(
 export function debounce<T extends (...args: never[]) => void>(
   fn: T,
   ms: number,
-): (...args: Parameters<T>) => void {
+): ((...args: Parameters<T>) => void) & { cancel: () => void } {
   let timer: ReturnType<typeof setTimeout> | null = null;
-  return (...args: Parameters<T>) => {
+  const wrapped = (...args: Parameters<T>) => {
     if (timer) clearTimeout(timer);
     timer = setTimeout(() => fn(...args), ms);
   };
+  wrapped.cancel = () => {
+    if (timer) clearTimeout(timer);
+    timer = null;
+  };
+  return wrapped;
 }
 
 /** Format date with dayjs-friendly pattern */

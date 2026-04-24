@@ -19,6 +19,7 @@ import { BarcodeScannerView } from '../components/scanner/BarcodeScannerView';
 import { AmountText } from '../components/finance/AmountText';
 import { PAYMENT_METHODS, INVENTORY_STATUS_LABELS } from '../lib/constants';
 import { getErrorMessage } from '../lib/errors';
+import { isValidMoneyInput, moneyToNumber } from '../lib/utils';
 
 export default function CashierScreen() {
   const router = useRouter();
@@ -72,11 +73,11 @@ export default function CashierScreen() {
       Alert.alert('错误', '请扫描或输入设备SN');
       return;
     }
-    const price = parseFloat(salePrice);
-    if (Number.isNaN(price) || price <= 0 || (salePrice.match(/\./g) ?? []).length > 1) {
+    if (!isValidMoneyInput(salePrice) || moneyToNumber(salePrice) <= 0) {
       Alert.alert('错误', '请输入有效的销售价格');
       return;
     }
+    const price = moneyToNumber(salePrice);
 
     setLoading(true);
     try {

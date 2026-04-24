@@ -5,6 +5,7 @@ export const mmkv: MMKV = createMMKV({ id: 'nenie-erp' });
 
 export const STORAGE_KEYS = {
   AUTH_TOKEN: 'auth_token',
+  AUTH_SESSION_COOKIE: 'auth_session_cookie',
   REFRESH_TOKEN: 'refresh_token',
   USER_DATA: 'user_data',
   STORES_DATA: 'stores_data',
@@ -25,6 +26,18 @@ export function setAuthToken(token: string): void {
 
 export function removeAuthToken(): void {
   mmkv.remove(STORAGE_KEYS.AUTH_TOKEN);
+}
+
+export function getAuthSessionCookie(): string | undefined {
+  return mmkv.getString(STORAGE_KEYS.AUTH_SESSION_COOKIE);
+}
+
+export function setAuthSessionCookie(cookieHeader: string): void {
+  mmkv.set(STORAGE_KEYS.AUTH_SESSION_COOKIE, cookieHeader);
+}
+
+export function removeAuthSessionCookie(): void {
+  mmkv.remove(STORAGE_KEYS.AUTH_SESSION_COOKIE);
 }
 
 export function setUserData(data: Record<string, unknown>): void {

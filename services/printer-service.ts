@@ -62,8 +62,8 @@ class BluetoothPrinterService {
           resolve([]);
           return;
         }
-        if (device?.name) {
-          devices.set(device.id, { id: device.id, name: device.name });
+        if (device?.id) {
+          devices.set(device.id, { id: device.id, name: device.name ?? null });
         }
       });
 
@@ -132,7 +132,6 @@ class BluetoothPrinterService {
   private async writeToPrinter(commands: number[]): Promise<void> {
     if (!this.connectedDevice) throw new Error('未连接打印机');
 
-    const base64 = this.arrayToBase64(commands);
     const services = await this.connectedDevice.services();
     const service = services.find(
       (s) => s.uuid.toLowerCase() === this.PRINTER_SERVICE_UUID,
@@ -145,7 +144,15 @@ class BluetoothPrinterService {
     );
     if (!char) throw new Error('找不到打印特征');
 
-    await char.writeWithResponse(base64);
+    // BLE writes have payload limits; chunk to avoid "Write request rejected" / MTU errors.
+    const CHUNK_SIZE = 180;
+    const bytes = new Uint8Array(commands);
+    for (let offset = 0; offset < bytes.length; offset += CHUNK_SIZE) {
+      const end = Math.min(offset + CHUNK_SIZE, bytes.length);
+      const chunk = bytes.slice(offset, end);
+      const base64 = this.uint8ArrayToBase64(chunk);
+      await char.writeWithResponse(base64);
+    }
   }
 
   /** Print with automatic retry on disconnection */
@@ -170,13 +177,12 @@ class BluetoothPrinterService {
   }
 
   async printText(text: string): Promise<boolean> {
-    const encoder = new TextEncoder();
     const commands: number[] = [];
 
     commands.push(ESC, 0x40);
     commands.push(ESC, 0x74, 0x01);
 
-    const textBytes = encoder.encode(text);
+    const textBytes = this.encodeUtf8(text);
     for (let i = 0; i < textBytes.length; i++) {
       commands.push(textBytes[i]!);
     }
@@ -334,8 +340,73 @@ class BluetoothPrinterService {
   }
 
   private arrayToBase64(arr: number[]): string {
-    const binary = arr.map((n) => String.fromCharCode(n)).join('');
-    return btoa(binary);
+    return this.uint8ArrayToBase64(new Uint8Array(arr));
+  }
+
+  private uint8ArrayToBase64(bytes: Uint8Array): string {
+    const alphabet =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+    let out = '';
+    let i = 0;
+
+    for (; i + 2 < bytes.length; i += 3) {
+      const n = (bytes[i]! << 16) | (bytes[i + 1]! << 8) | bytes[i + 2]!;
+      out += alphabet[(n >> 18) & 63]!;
+      out += alphabet[(n >> 12) & 63]!;
+      out += alphabet[(n >> 6) & 63]!;
+      out += alphabet[n & 63]!;
+    }
+
+    const remaining = bytes.length - i;
+    if (remaining === 1) {
+      const n = bytes[i]! << 16;
+      out += alphabet[(n >> 18) & 63]!;
+      out += alphabet[(n >> 12) & 63]!;
+      out += '==';
+    } else if (remaining === 2) {
+      const n = (bytes[i]! << 16) | (bytes[i + 1]! << 8);
+      out += alphabet[(n >> 18) & 63]!;
+      out += alphabet[(n >> 12) & 63]!;
+      out += alphabet[(n >> 6) & 63]!;
+      out += '=';
+    }
+
+    return out;
+  }
+
+  private encodeUtf8(str: string): Uint8Array {
+    // Minimal UTF-8 encoder to avoid TextEncoder dependency in RN runtimes.
+    const bytes: number[] = [];
+    for (let i = 0; i < str.length; i++) {
+      let codePoint = str.charCodeAt(i);
+
+      // Handle surrogate pairs.
+      if (codePoint >= 0xd800 && codePoint <= 0xdbff && i + 1 < str.length) {
+        const next = str.charCodeAt(i + 1);
+        if (next >= 0xdc00 && next <= 0xdfff) {
+          codePoint =
+            0x10000 + ((codePoint - 0xd800) << 10) + (next - 0xdc00);
+          i++;
+        }
+      }
+
+      if (codePoint <= 0x7f) {
+        bytes.push(codePoint);
+      } else if (codePoint <= 0x7ff) {
+        bytes.push(0xc0 | (codePoint >> 6));
+        bytes.push(0x80 | (codePoint & 0x3f));
+      } else if (codePoint <= 0xffff) {
+        bytes.push(0xe0 | (codePoint >> 12));
+        bytes.push(0x80 | ((codePoint >> 6) & 0x3f));
+        bytes.push(0x80 | (codePoint & 0x3f));
+      } else {
+        bytes.push(0xf0 | (codePoint >> 18));
+        bytes.push(0x80 | ((codePoint >> 12) & 0x3f));
+        bytes.push(0x80 | ((codePoint >> 6) & 0x3f));
+        bytes.push(0x80 | (codePoint & 0x3f));
+      }
+    }
+    return new Uint8Array(bytes);
   }
 }
 

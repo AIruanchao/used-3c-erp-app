@@ -1,8 +1,9 @@
 import { create } from 'zustand';
 import {
-  setAuthToken,
+  setAuthSessionCookie,
   setUserData,
   getUserData,
+  getAuthSessionCookie,
   getAuthToken,
   getSelectedStore,
   setSelectedStore,
@@ -49,7 +50,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   token: null,
 
   setAuth: (user, token, stores) => {
-    setAuthToken(token);
+    // token here is the merged Cookie header (session + csrf)
+    setAuthSessionCookie(token);
     setUserData(user as unknown as Record<string, unknown>);
     setStoresData(stores as unknown as Record<string, unknown>[]);
 
@@ -87,6 +89,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: () => {
     // Clear all auth-related MMKV keys
     mmkv.remove(STORAGE_KEYS.AUTH_TOKEN);
+    mmkv.remove(STORAGE_KEYS.AUTH_SESSION_COOKIE);
     mmkv.remove(STORAGE_KEYS.REFRESH_TOKEN);
     mmkv.remove(STORAGE_KEYS.USER_DATA);
     mmkv.remove(STORAGE_KEYS.STORES_DATA);
@@ -121,6 +124,11 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     if (!user.id) return;
 
+    const sessionCookie = getAuthSessionCookie();
+    const legacyToken = getAuthToken();
+    const hasToken = Boolean(sessionCookie || legacyToken);
+    if (!hasToken) return;
+
     const storesRaw = getStoresData();
     const stores = storesRaw.map((s) => ({
       storeId: s['storeId'] as string,
@@ -140,7 +148,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({
       isAuthenticated: true,
       user,
-      token: getAuthToken() ?? null,
+      token: sessionCookie ?? legacyToken ?? null,
       stores,
       currentStore,
     });

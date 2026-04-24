@@ -5,6 +5,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { REPAIR_STATUS_LABELS } from '../../lib/constants';
 import { quoteRepair, startRepair, completeRepair, qcRepair, deliverRepair, acceptRepairQuote } from '../../services/repair-service';
 import { getErrorMessage as getErr } from '../../lib/errors';
+import { isValidMoneyInput, moneyToNumber } from '../../lib/utils';
 import { useAuthStore } from '../../stores/auth-store';
 
 export default function RepairDetailScreen() {
@@ -71,20 +72,18 @@ export default function RepairDetailScreen() {
 
   const submitQuote = async () => {
     if (!id || actionLoading) return;
-    const labor = parseFloat(laborCost);
-    if (Number.isNaN(labor) || labor < 0) {
+    if (!isValidMoneyInput(laborCost) || moneyToNumber(laborCost) < 0) {
       Alert.alert('提示', '请输入有效的人工费');
       return;
     }
+    const labor = moneyToNumber(laborCost);
 
     if (partName) {
-      const cost = parseFloat(partCost);
-      const price = parseFloat(partPrice);
-      if (Number.isNaN(cost) || cost < 0) {
+      if (!isValidMoneyInput(partCost) || moneyToNumber(partCost) < 0) {
         Alert.alert('提示', '请输入有效的零件成本');
         return;
       }
-      if (Number.isNaN(price) || price < 0) {
+      if (!isValidMoneyInput(partPrice) || moneyToNumber(partPrice) < 0) {
         Alert.alert('提示', '请输入有效的零件单价');
         return;
       }
@@ -96,8 +95,8 @@ export default function RepairDetailScreen() {
         type: 'PART' as const,
         sparePartName: partName,
         quantity: 1,
-        unitCost: parseFloat(partCost) || 0,
-        unitPrice: parseFloat(partPrice) || 0,
+        unitCost: moneyToNumber(partCost),
+        unitPrice: moneyToNumber(partPrice),
       }] : [];
       const result = await quoteRepair(id, {
         lines,

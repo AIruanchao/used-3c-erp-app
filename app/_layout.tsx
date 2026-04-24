@@ -60,10 +60,20 @@ export default function RootLayout() {
     [router],
   );
 
+  const fullLogout = useCallback(() => {
+    logout();
+    queryClient.clear();
+    router.replace('/(auth)/login' as never);
+  }, [logout, router]);
+
   useEffect(() => {
     setNavigationRef(handleNavigate);
-    setLogoutRef(logout);
-  }, [handleNavigate, logout]);
+    setLogoutRef(fullLogout);
+    return () => {
+      setNavigationRef(() => {});
+      setLogoutRef(() => {});
+    };
+  }, [handleNavigate, fullLogout]);
 
   const isDark =
     theme === 'dark' || (theme === 'system' && colorScheme === 'dark');

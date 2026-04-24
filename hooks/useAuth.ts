@@ -17,12 +17,12 @@ export function useAuth() {
   const hydrate = useAuthStore((s) => s.hydrate);
 
   const requireAuth = useCallback(() => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !token) {
       router.replace('/(auth)/login');
       return false;
     }
     return true;
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, token, router]);
 
   const requireStore = useCallback(() => {
     if (!currentStore) {

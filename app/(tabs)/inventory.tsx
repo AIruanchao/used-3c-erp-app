@@ -13,14 +13,15 @@ import { useRouter } from 'expo-router';
 
 export default function InventoryScreen() {
   const router = useRouter();
-  const { organizationId } = useAuth();
+  const { organizationId, storeId } = useAuth();
   const [search, setSearch] = useState('');
 
   const { data: device, isLoading, isError, refetch, isRefetching } = useQuery({
-    queryKey: ['inventorySearch', organizationId, search],
+    queryKey: ['inventorySearch', storeId, organizationId, search],
     queryFn: () =>
       searchDevice({
         q: search,
+        storeId: storeId ?? '',
         organizationId: organizationId ?? '',
       }),
     enabled: !!search && !!organizationId,

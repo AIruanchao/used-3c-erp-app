@@ -1,41 +1,66 @@
 import { api } from '../lib/api';
+import { removeAuthSessionCookie, removeAuthToken } from '../lib/storage';
 
-/** Login using next-auth credentials provider */
-function extractTokenFromHeaders(headers: Record<string, unknown>): string {
-  const cookieHeader = headers['set-cookie'];
-  if (!cookieHeader) return '';
-  const cookies = Array.isArray(cookieHeader)
-    ? cookieHeader.join('; ')
-    : String(cookieHeader);
-  const match = cookies.match(/next-auth\.session-token=([^;]+)/);
-  return match?.[1] ?? '';
+type HeaderBag = Record<string, unknown>;
+
+function getSetCookieValues(headers: HeaderBag): string[] {
+  const h = headers as Record<string, unknown>;
+  const v = h['set-cookie'] ?? h['Set-Cookie'] ?? h['SET-COOKIE'];
+  if (!v) return [];
+  if (Array.isArray(v)) return v.map(String);
+  return [String(v)];
 }
 
-function extractSessionCookie(headers: Record<string, unknown>): string {
-  const cookieHeader = headers['set-cookie'];
-  if (!cookieHeader) return '';
-  const cookies = Array.isArray(cookieHeader) ? cookieHeader : [cookieHeader];
-  // Extract just the name=value part of session cookie
-  for (const c of cookies) {
-    const match = String(c).match(/(next-auth\.session-token=[^;]+)/);
-    if (match) return match[1] ?? '';
+function pickCookieNameValue(setCookieLines: string[], nameRe: RegExp): string | null {
+  for (const line of setCookieLines) {
+    // Each Set-Cookie line begins with "name=value; ..."
+    const m = line.match(nameRe);
+    if (m?.[0]) {
+      const nv = m[0].split(';')[0]?.trim();
+      if (nv) return nv;
+    }
   }
-  return '';
+  return null;
+}
+
+function extractAuthCookieHeader(headers: HeaderBag): string {
+  const setCookies = getSetCookieValues(headers);
+  const session =
+    pickCookieNameValue(setCookies, /(?:^|,\s*)(__Host-|__Secure-)?next-auth\.session-token=[^;]+/i) ??
+    pickCookieNameValue(setCookies, /(?:^|,\s*)next-auth\.session-token=[^;]+/i);
+  const csrf =
+    pickCookieNameValue(setCookies, /(?:^|,\s*)(__Host-|__Secure-)?next-auth\.csrf-token=[^;]+/i) ??
+    pickCookieNameValue(setCookies, /(?:^|,\s*)next-auth\.csrf-token=[^;]+/i);
+  const parts = [session, csrf].filter(Boolean) as string[];
+  return parts.join('; ');
+}
+
+function formUrlEncode(data: Record<string, string>): string {
+  const keys = Object.keys(data);
+  return keys
+    .map((k) => `${encodeURIComponent(k)}=${encodeURIComponent(data[k] ?? '')}`)
+    .join('&');
 }
 
 export async function loginWithEmail(
   email: string,
   password: string,
 ): Promise<{ token: string; user: { id: string; email: string; name: string } }> {
+  // Clear stale auth so interceptor doesn't inject old cookies during login
+  removeAuthToken();
+  removeAuthSessionCookie();
+
   const csrfRes = await api.get('/api/auth/csrf');
   const csrfToken = (csrfRes.data as { csrfToken?: string })?.csrfToken;
   if (!csrfToken) throw new Error('获取CSRF令牌失败');
 
-  const formData = new URLSearchParams();
-  formData.append('email', email);
-  formData.append('password', password);
-  formData.append('csrfToken', csrfToken);
-  formData.append('callbackUrl', '/');
+  // Avoid relying on URLSearchParams availability in RN runtimes.
+  const formData = formUrlEncode({
+    email,
+    password,
+    csrfToken,
+    callbackUrl: '/',
+  });
 
   const signInRes = await api.post('/api/auth/callback/credentials', formData, {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -45,10 +70,10 @@ export async function loginWithEmail(
 
   // Extract the session cookie from the sign-in response and forward it
   // because React Native doesn't automatically manage cookies between requests
-  const sessionCookie = extractSessionCookie(signInRes.headers as Record<string, unknown>);
+  let cookieHeader = extractAuthCookieHeader(signInRes.headers as HeaderBag);
   const sessionHeaders: Record<string, string> = {};
-  if (sessionCookie) {
-    sessionHeaders['Cookie'] = sessionCookie;
+  if (cookieHeader) {
+    sessionHeaders['Cookie'] = cookieHeader;
   }
 
   const sessionRes = await api.get('/api/auth/session', {
@@ -62,16 +87,16 @@ export async function loginWithEmail(
     throw new Error('登录失败，请检查用户名和密码');
   }
 
-  let token = extractTokenFromHeaders(signInRes.headers as Record<string, unknown>);
-  if (!token) {
-    token = extractTokenFromHeaders(sessionRes.headers as Record<string, unknown>);
+  if (!cookieHeader) {
+    const cookie2 = extractAuthCookieHeader(sessionRes.headers as HeaderBag);
+    if (cookie2) cookieHeader = cookie2;
   }
-  if (!token) {
-    token = `session-${session.user.id}`;
+  if (!cookieHeader) {
+    throw new Error('登录失败：未获取到会话 Cookie（可能是 Set-Cookie 不可见或 Cookie 名不兼容）');
   }
 
   return {
-    token,
+    token: cookieHeader,
     user: {
       id: session.user.id,
       email: session.user.email ?? '',
