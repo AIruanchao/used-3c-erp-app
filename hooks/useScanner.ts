@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef } from 'react';
 import { Vibration, Platform } from 'react-native';
 import { useInboundStore } from '../stores/inbound-store';
 
@@ -6,13 +6,11 @@ interface UseScannerOptions {
   onScan?: (code: string, format: string) => void;
   debounceMs?: number;
   enableHaptic?: boolean;
-  enableSound?: boolean;
 }
 
 export function useScanner(options: UseScannerOptions = {}) {
   const { onScan, debounceMs = 500, enableHaptic = true } = options;
   const lastScanTime = useRef(0);
-  const [isScanning, setIsScanning] = useState(true);
   const addScanResult = useInboundStore((s) => s.addScanResult);
 
   const handleBarcodeScanned = useCallback(
@@ -44,7 +42,7 @@ export function useScanner(options: UseScannerOptions = {}) {
   );
 
   return {
-    isScanning,
+    isScanning: true as const,
     handleBarcodeScanned,
   };
 }
