@@ -77,6 +77,19 @@ export default function RepairDetailScreen() {
       return;
     }
 
+    if (partName) {
+      const cost = parseFloat(partCost);
+      const price = parseFloat(partPrice);
+      if (Number.isNaN(cost) || cost < 0) {
+        Alert.alert('提示', '请输入有效的零件成本');
+        return;
+      }
+      if (Number.isNaN(price) || price < 0) {
+        Alert.alert('提示', '请输入有效的零件单价');
+        return;
+      }
+    }
+
     setActionLoading(true);
     try {
       const lines = partName ? [{
