@@ -169,12 +169,14 @@ export default function InboundScreen() {
       Alert.alert('错误', '零售价不能为负数');
       return;
     }
+    let parsedBatteryHealth: number | null = null;
     if (batteryHealth) {
       const bh = parseInt(batteryHealth, 10);
       if (Number.isNaN(bh) || bh < 0 || bh > 100) {
         Alert.alert('错误', '电池健康度请输入0-100之间的整数');
         return;
       }
+      parsedBatteryHealth = bh;
     }
 
     setLoading(true);
@@ -190,7 +192,7 @@ export default function InboundScreen() {
         condition: condition || undefined,
         channel: channel || undefined,
         sourceType: sourceType,
-        batteryHealth: batteryHealth ? (parseInt(batteryHealth, 10) || null) : null,
+        batteryHealth: parsedBatteryHealth,
       });
 
       if (!result.success || !result.deviceId) {
