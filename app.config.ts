@@ -22,7 +22,9 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     icon: './assets/icon.png',
     userInterfaceStyle: 'automatic',
     scheme: 'nenie-erp',
-    newArchEnabled: false,
+    // Reanimated 4 + react-native-worklets require the New Architecture on Android.
+    // (Gradle fails with assertNewArchitectureEnabledTask if this is false.)
+    newArchEnabled: true,
     splash: {
       image: './assets/splash-icon.png',
       resizeMode: 'contain',
