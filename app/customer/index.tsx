@@ -1,7 +1,8 @@
 import React, { useState, useCallback } from 'react';
-import { View, StyleSheet, RefreshControl, ScrollView } from 'react-native';
+import { View, StyleSheet, RefreshControl } from 'react-native';
 import { Card, Text } from 'react-native-paper';
 import { useRouter } from 'expo-router';
+import { FlashList } from '@shopify/flash-list';
 import { getCustomers } from '../../services/finance-service';
 import { SearchBar } from '../../components/common/SearchBar';
 import { AmountText } from '../../components/finance/AmountText';
@@ -32,9 +33,8 @@ export default function CustomerListScreen() {
   const items: CustomerItem[] = data?.items ?? [];
 
   const renderItem = useCallback(
-    (customer: CustomerItem) => (
+    ({ item: customer }: { item: CustomerItem }) => (
       <Card
-        key={customer.id}
         style={styles.card}
         mode="outlined"
         onPress={() => router.push(`/customer/${customer.id}` as never)}
@@ -63,18 +63,19 @@ export default function CustomerListScreen() {
   return (
     <View style={styles.container}>
       <SearchBar onSearch={setSearch} placeholder="搜索客户名/手机号..." />
-      <ScrollView
-        refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-        }
-        contentContainerStyle={styles.listContent}
-      >
-        {items.length === 0 ? (
-          <EmptyState icon="account-group" title="暂无客户" />
-        ) : (
-          items.map(renderItem)
-        )}
-      </ScrollView>
+      {items.length === 0 ? (
+        <EmptyState icon="account-group" title="暂无客户" />
+      ) : (
+        <FlashList
+          data={items}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          refreshControl={
+            <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+          }
+          contentContainerStyle={styles.listContent}
+        />
+      )}
     </View>
   );
 }

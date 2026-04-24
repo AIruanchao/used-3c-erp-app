@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
-import { View, StyleSheet, Alert, RefreshControl, ScrollView } from 'react-native';
+import { View, StyleSheet, Alert, RefreshControl } from 'react-native';
 import { Card, Text, Button, FAB, Dialog, Portal, TextInput } from 'react-native-paper';
+import { FlashList } from '@shopify/flash-list';
 import { useAuth } from '../../hooks/useAuth';
 import { getStocktakeSessions, createStocktake } from '../../services/inventory-service';
 import { EmptyState } from '../../components/common/EmptyState';
@@ -54,32 +55,37 @@ export default function StocktakeScreen() {
     }
   }, [storeId, organizationId, scope, refetch, creating]);
 
+  const renderItem = useCallback(
+    ({ item }: { item: StocktakeSession }) => (
+      <Card style={styles.card} mode="outlined">
+        <Card.Content>
+          <View style={styles.row}>
+            <Text style={styles.status}>{item.status}</Text>
+            <Text style={styles.date}>{formatDate(item.createdAt, 'MM-DD HH:mm')}</Text>
+          </View>
+          <Text style={styles.scope}>范围: {item.scope}</Text>
+        </Card.Content>
+      </Card>
+    ),
+    [],
+  );
+
   if (isLoading) return <LoadingScreen />;
   if (isError) return <QueryError onRetry={() => refetch()} />;
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        keyboardShouldPersistTaps="handled"
-        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {items.length === 0 ? (
-          <EmptyState icon="clipboard-check" title="暂无盘点记录" />
-        ) : (
-          items.map((item) => (
-            <Card key={item.id} style={styles.card} mode="outlined">
-              <Card.Content>
-                <View style={styles.row}>
-                  <Text style={styles.status}>{item.status}</Text>
-                  <Text style={styles.date}>{formatDate(item.createdAt, 'MM-DD HH:mm')}</Text>
-                </View>
-                <Text style={styles.scope}>范围: {item.scope}</Text>
-              </Card.Content>
-            </Card>
-          ))
-        )}
-      </ScrollView>
+      {items.length === 0 ? (
+        <EmptyState icon="clipboard-check" title="暂无盘点记录" />
+      ) : (
+        <FlashList
+          data={items}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
+          contentContainerStyle={styles.scrollContent}
+        />
+      )}
 
       <FAB icon="plus" style={styles.fab} onPress={() => setShowNew(true)} accessibilityLabel="新建盘点" />
 
