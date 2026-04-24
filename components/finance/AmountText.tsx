@@ -17,8 +17,9 @@ export const AmountText = React.memo(function AmountText({
 }: AmountTextProps) {
   const strVal = decStr(value);
   const num = parseFloat(strVal);
-  const isNegative = num < 0;
-  const absStr = Math.abs(num).toFixed(2);
+  const safeNum = Number.isNaN(num) ? 0 : num;
+  const isNegative = safeNum < 0;
+  const absStr = Math.abs(safeNum).toFixed(2);
   const formatted = absStr.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
   let display = `${prefix}${formatted}`;
@@ -29,7 +30,7 @@ export const AmountText = React.memo(function AmountText({
   const color = colorize
     ? isNegative
       ? '#e53935'
-      : num > 0
+      : safeNum > 0
         ? '#2e7d32'
         : '#757575'
     : undefined;
