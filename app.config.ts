@@ -12,8 +12,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     icon: './assets/icon.png',
     userInterfaceStyle: 'automatic',
     scheme: 'nenie-erp',
-    // Reanimated 4 + react-native-worklets require New Architecture on Android.
-    newArchEnabled: true,
+    newArchEnabled: false,
     splash: {
       image: './assets/splash-icon.png',
       resizeMode: 'contain',
@@ -28,7 +27,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         foregroundImage: './assets/adaptive-icon.png',
         backgroundColor: '#e8e8e8',
       },
-      edgeToEdgeEnabled: true,
+      edgeToEdgeEnabled: false,
       package: 'com.nenie.erp',
       versionCode: 2,
       allowBackup: false,
