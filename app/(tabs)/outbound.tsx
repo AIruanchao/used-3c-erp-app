@@ -8,6 +8,7 @@ import { SearchBar } from '../../components/common/SearchBar';
 import { DeviceCard } from '../../components/device/DeviceCard';
 import { EmptyState } from '../../components/common/EmptyState';
 import { QueryError } from '../../components/common/QueryError';
+import { INVENTORY_STATUS_LABELS } from '../../lib/constants';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
 import { useQuery } from '@tanstack/react-query';
 
@@ -62,7 +63,7 @@ export default function OutboundScreen() {
           <EmptyState
             icon="package-variant-closed-remove"
             title="设备不可出库"
-            subtitle={`该设备状态为「${device.inventoryStatus}」，只有「在库」设备可出库`}
+            subtitle={`该设备状态为「${INVENTORY_STATUS_LABELS[device.inventoryStatus] ?? device.inventoryStatus}」，只有「在库」设备可出库`}
           />
         ) : (
           <EmptyState

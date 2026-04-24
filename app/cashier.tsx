@@ -17,7 +17,7 @@ import { cashierCheckout } from '../services/cashier-service';
 import { searchDevice } from '../services/inventory-service';
 import { BarcodeScannerView } from '../components/scanner/BarcodeScannerView';
 import { AmountText } from '../components/finance/AmountText';
-import { PAYMENT_METHODS } from '../lib/constants';
+import { PAYMENT_METHODS, INVENTORY_STATUS_LABELS } from '../lib/constants';
 import { getErrorMessage } from '../lib/errors';
 
 export default function CashierScreen() {
@@ -43,7 +43,7 @@ export default function CashierScreen() {
         });
         if (result) {
           if (result.inventoryStatus !== 'IN_STOCK') {
-            Alert.alert('提示', `该设备状态为「${result.inventoryStatus}」，不可销售`);
+            Alert.alert('提示', `该设备状态为「${INVENTORY_STATUS_LABELS[result.inventoryStatus] ?? result.inventoryStatus}」，不可销售`);
             setShowScanner(false);
             return;
           }
@@ -91,7 +91,7 @@ export default function CashierScreen() {
           return;
         }
         if (found.inventoryStatus !== 'IN_STOCK') {
-          Alert.alert('错误', `该设备状态为「${found.inventoryStatus}」，不可销售`);
+          Alert.alert('错误', `该设备状态为「${INVENTORY_STATUS_LABELS[found.inventoryStatus] ?? found.inventoryStatus}」，不可销售`);
           setLoading(false);
           return;
         }
