@@ -1,9 +1,8 @@
-import React, { useState, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { Camera, useCameraDevice, useCameraPermission, useObjectOutput } from 'react-native-vision-camera';
+import React, { useState, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { CameraView } from 'expo-camera';
 import { IconButton } from 'react-native-paper';
 import { useAppStore } from '../../stores/app-store';
-import type { ScannedCode, ScannedObject, ScannedObjectType } from 'react-native-vision-camera';
 
 interface BarcodeScannerViewProps {
   onBarcodeScanned: (code: string, format: string) => void;
@@ -11,99 +10,55 @@ interface BarcodeScannerViewProps {
 }
 
 const FORMAT_MAP: Record<string, string> = {
-  'code-128': 'Code128',
-  'ean-13': 'EAN13',
-  'ean-8': 'EAN8',
+  'code128': 'Code128',
+  'ean13': 'EAN13',
+  'ean8': 'EAN8',
   'qr': 'QR',
-  'itf-14': 'ITF',
-  'interleaved-2-of-5': 'ITF',
-  'upc-e': 'UPC-E',
-  'code-39': 'Code39',
-  'code-93': 'Code93',
+  'itf14': 'ITF',
+  'interleaved2of5': 'ITF',
+  'upc_e': 'UPC-E',
+  'code39': 'Code39',
+  'code93': 'Code93',
   'codabar': 'Codabar',
 };
-
-const BARCODE_TYPES: ScannedObjectType[] = [
-  'code-128', 'code-39', 'code-39-mod-43', 'code-93',
-  'ean-13', 'ean-8',
-  'interleaved-2-of-5', 'itf-14',
-  'upc-e',
-  'qr',
-  'data-matrix',
-  'pdf-417',
-  'aztec',
-];
 
 export const BarcodeScannerView = React.memo(function BarcodeScannerView({
   onBarcodeScanned,
   isActive = true,
 }: BarcodeScannerViewProps) {
-  const { hasPermission, requestPermission } = useCameraPermission();
-  const device = useCameraDevice('back');
   const torchOn = useAppStore((s) => s.scannerTorchOn);
   const setScannerTorch = useAppStore((s) => s.setScannerTorch);
   const lastCodeRef = useRef<string | null>(null);
   const lastScanTimeRef = useRef(0);
   const [lastCodeDisplay, setLastCodeDisplay] = useState<string | null>(null);
 
-  const handleObjectsScanned = useCallback(
-    (objects: ScannedObject[]) => {
-      if (!isActive) return;
-      const now = Date.now();
-      if (now - lastScanTimeRef.current < 500) return;
+  const handleBarCodeScanned = ({ type, data }: { type: string; data: string }) => {
+    if (!isActive) return;
+    const now = Date.now();
+    if (now - lastScanTimeRef.current < 500) return;
+    if (data === lastCodeRef.current) return;
 
-      for (const obj of objects) {
-        if (!('value' in obj)) continue;
-        const scannedCode = obj as ScannedCode;
-        const value = scannedCode.value;
-        if (!value) continue;
-        if (value === lastCodeRef.current) continue;
-
-        lastScanTimeRef.current = now;
-        lastCodeRef.current = value;
-        setLastCodeDisplay(value);
-        const format = FORMAT_MAP[obj.type] ?? obj.type;
-        onBarcodeScanned(value, format);
-        break;
-      }
-    },
-    [isActive, onBarcodeScanned],
-  );
-
-  const objectOutput = useObjectOutput({
-    types: BARCODE_TYPES,
-    onObjectsScanned: handleObjectsScanned,
-  });
-
-  if (!hasPermission) {
-    return (
-      <View style={styles.permissionContainer}>
-        <IconButton icon="camera" size={48} iconColor="#757575" />
-        <Text style={styles.permissionText}>需要相机权限以扫描条码</Text>
-        <TouchableOpacity style={styles.permissionBtn} onPress={requestPermission} accessibilityLabel="授权相机">
-          <Text style={styles.permissionBtnText}>授权相机</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
-  if (!device) {
-    return (
-      <View style={styles.permissionContainer}>
-        <ActivityIndicator size="large" color="#1976d2" />
-        <Text style={styles.permissionText}>正在初始化相机...</Text>
-      </View>
-    );
-  }
+    lastScanTimeRef.current = now;
+    lastCodeRef.current = data;
+    setLastCodeDisplay(data);
+    const format = FORMAT_MAP[type] ?? type;
+    onBarcodeScanned(data, format);
+  };
 
   return (
     <View style={styles.container}>
-      <Camera
+      <CameraView
         style={styles.camera}
-        device={device}
-        isActive={isActive}
-        torchMode={torchOn ? 'on' : 'off'}
-        outputs={[objectOutput]}
+        facing="back"
+        onBarcodeScanned={handleBarCodeScanned}
+        barcodeScannerSettings={{
+          barcodeTypes: [
+            'qr', 'ean13', 'ean8', 'code128', 'code39', 'code93',
+            'itf14', 'upc_e', 'codabar', 'pdf417', 'aztec', 'datamatrix',
+          ],
+        }}
+        flash={torchOn ? 'on' : 'off'}
+        active={isActive}
       />
       <View style={styles.overlay}>
         <View style={styles.scanArea} />
@@ -161,31 +116,6 @@ const styles = StyleSheet.create({
   torchBtn: {
     backgroundColor: 'rgba(0,0,0,0.5)',
     borderRadius: 24,
-  },
-  permissionContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-    padding: 24,
-  },
-  permissionText: {
-    fontSize: 16,
-    color: '#757575',
-    marginTop: 12,
-    textAlign: 'center',
-  },
-  permissionBtn: {
-    backgroundColor: '#1976d2',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginTop: 16,
-  },
-  permissionBtnText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
   },
   lastCode: {
     position: 'absolute',

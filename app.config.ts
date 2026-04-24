@@ -4,7 +4,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
   const sentryDsn = process.env['EXPO_PUBLIC_SENTRY_DSN'] ?? '';
   const hasSentry = Boolean(sentryDsn && sentryDsn.startsWith('https://'));
 
-  const plugins: ExpoConfig['plugins'] = ['expo-router'];
+  const plugins: ExpoConfig['plugins'] = [
+    'expo-router',
+    ['expo-camera', { barcodeScannerEnabled: true }],
+  ];
 
   if (hasSentry) {
     plugins.push('sentry-expo', '@sentry/react-native');
@@ -40,12 +43,6 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       allowBackup: false,
       permissions: [
         'android.permission.CAMERA',
-        'android.permission.BLUETOOTH',
-        'android.permission.BLUETOOTH_ADMIN',
-        'android.permission.BLUETOOTH_CONNECT',
-        'android.permission.BLUETOOTH_SCAN',
-        'android.permission.BLUETOOTH_ADVERTISE',
-        'android.permission.ACCESS_FINE_LOCATION',
         'android.permission.INTERNET',
         'android.permission.POST_NOTIFICATIONS',
         'android.permission.VIBRATE',
