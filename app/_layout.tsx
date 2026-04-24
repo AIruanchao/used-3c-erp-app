@@ -15,20 +15,31 @@ import { ErrorBoundary } from '../components/common/ErrorBoundary';
 import { useOffline } from '../hooks/useOffline';
 import '../i18n';
 
-sentryInit({
-  dsn: process.env['EXPO_PUBLIC_SENTRY_DSN'] ?? '',
-  enableInExpoDevelopment: __DEV__,
-  debug: __DEV__,
-});
+try {
+  sentryInit({
+    dsn: process.env['EXPO_PUBLIC_SENTRY_DSN'] ?? '',
+    enableInExpoDevelopment: __DEV__,
+    debug: __DEV__,
+  });
+} catch (e) {
+  // If Sentry init fails, never block app boot (would otherwise = black screen in release)
+  console.warn('Sentry init failed', e);
+}
 
-// Global error handler for uncaught exceptions
-const originalHandler = ErrorUtils.getGlobalHandler();
-ErrorUtils.setGlobalHandler((error: Error, isFatal?: boolean) => {
-  SentryRN.captureException(error);
-  if (originalHandler) {
-    originalHandler(error, isFatal ?? false);
-  }
-});
+// Global error handler for uncaught JS exceptions
+if (typeof ErrorUtils !== 'undefined') {
+  const originalHandler = ErrorUtils.getGlobalHandler?.();
+  ErrorUtils.setGlobalHandler((error: Error, isFatal?: boolean) => {
+    try {
+      SentryRN.captureException(error);
+    } catch {
+      // ignore
+    }
+    if (originalHandler) {
+      originalHandler(error, isFatal ?? false);
+    }
+  });
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
