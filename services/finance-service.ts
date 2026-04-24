@@ -1,4 +1,5 @@
 import { api } from '../lib/api';
+import { offlinePost } from './api-helpers';
 import type { CustomerItem } from '../types/finance';
 
 export async function getCustomers(params: {
@@ -16,11 +17,11 @@ export async function getCustomerById(
   id: string,
   organizationId: string,
   storeId: string,
-): Promise<CustomerItem> {
+): Promise<CustomerItem | null> {
   const res = await api.get(`/api/customers/${id}`, {
     params: { organizationId, storeId },
   });
-  return res.data;
+  return res.data ?? null;
 }
 
 export async function findOrCreateCustomer(params: {
@@ -29,13 +30,12 @@ export async function findOrCreateCustomer(params: {
   name: string;
   phone?: string;
 }): Promise<{ id: string }> {
-  // Try to find existing customer by phone or name
   if (params.phone) {
     const existing = await getCustomers({
       storeId: params.storeId,
       organizationId: params.organizationId,
       q: params.phone,
-      take: 5,
+      take: 20,
     });
     const match = existing.items.find((c) => c.phone === params.phone);
     if (match) return { id: match.id };
@@ -44,20 +44,26 @@ export async function findOrCreateCustomer(params: {
       storeId: params.storeId,
       organizationId: params.organizationId,
       q: params.name,
-      take: 5,
+      take: 20,
     });
     const match = existing.items.find((c) => c.name === params.name && !c.phone);
     if (match) return { id: match.id };
   }
 
-  // Create new customer
-  const res = await api.post('/api/customers', {
-    storeId: params.storeId,
-    organizationId: params.organizationId,
-    name: params.name,
-    phone: params.phone || undefined,
-  });
-  const customerId = res.data?.id ?? res.data?.customer?.id;
+  const res = await offlinePost<{ id?: string; customer?: { id: string } }>(
+    '/api/customers',
+    {
+      storeId: params.storeId,
+      organizationId: params.organizationId,
+      name: params.name,
+      phone: params.phone || undefined,
+    },
+  );
+  if ('queued' in res && res.queued) {
+    const tempId = 'pending-' + Date.now().toString(36);
+    return { id: tempId };
+  }
+  const customerId = res.id ?? res.customer?.id;
   if (!customerId) {
     throw new Error('创建客户失败：未返回客户ID');
   }

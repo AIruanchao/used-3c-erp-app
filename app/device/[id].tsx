@@ -155,6 +155,7 @@ export default function DeviceDetailScreen() {
               } as never)
             }
             style={styles.actionBtn}
+            accessibilityLabel="前往收银"
           >
             前往收银
           </Button>
@@ -171,12 +172,14 @@ export default function DeviceDetailScreen() {
                   sn: device.sn,
                   skuName: device.Sku?.name ?? '未知',
                   unitCost: device.DevicePricing?.unitCost || '0',
-                  storeName: storeName ?? device.Store?.name ?? '',
-                  operatorName: user?.name ?? '',
+                  storeName: storeName ?? device.Store?.name ?? '未知门店',
+                  operatorName: user?.name ?? '未知操作员',
                   date: formatDate(new Date().toISOString()),
                 });
                 if (!ok) {
                   Alert.alert('打印失败', '请检查打印机连接');
+                } else {
+                  Alert.alert('成功', '入库单已打印');
                 }
               } catch (err) {
                 Alert.alert('打印失败', err instanceof Error ? err.message : '请检查打印机连接');
@@ -185,6 +188,7 @@ export default function DeviceDetailScreen() {
               }
             }}
             style={styles.actionBtn}
+            accessibilityLabel="打印标签"
           >
             打印标签
           </Button>

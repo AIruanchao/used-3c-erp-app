@@ -19,7 +19,7 @@ export const DeviceCard = React.memo(function DeviceCard({
   const brandName = device.Sku?.Model?.Brand?.name ?? '';
 
   return (
-    <TouchableOpacity onPress={() => onPress(device.id)} activeOpacity={0.7}>
+    <TouchableOpacity onPress={() => onPress(device.id)} activeOpacity={0.7} accessibilityLabel={skuName}>
       <Card style={styles.card} mode="elevated">
         <Card.Content>
           <View style={styles.header}>

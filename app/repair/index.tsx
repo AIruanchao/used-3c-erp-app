@@ -19,6 +19,7 @@ export default function RepairListScreen() {
         icon="plus"
         style={styles.fab}
         onPress={() => router.push('/repair/new' as never)}
+        accessibilityLabel="新建维修工单"
       />
     </View>
   );

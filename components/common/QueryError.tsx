@@ -16,7 +16,7 @@ export const QueryError = React.memo(function QueryError({
       <IconButton icon="alert-circle-outline" size={64} iconColor="#e53935" />
       <Text style={styles.title}>{message}</Text>
       {onRetry ? (
-        <TouchableOpacity onPress={onRetry} style={styles.retryBtn}>
+        <TouchableOpacity onPress={onRetry} style={styles.retryBtn} accessibilityLabel="点击重试">
           <Text style={styles.retryText}>点击重试</Text>
         </TouchableOpacity>
       ) : null}

@@ -2,51 +2,37 @@ import { useEffect, useCallback, useRef } from 'react';
 import { AppState } from 'react-native';
 import { useAppStore } from '../stores/app-store';
 import { api } from '../lib/api';
-import { mmkv, STORAGE_KEYS } from '../lib/storage';
+import {
+  getOfflineQueue,
+  saveOfflineQueue,
+  getPendingCount,
+  type OfflineAction,
+} from '../services/offline-queue';
 
-interface OfflineAction {
-  id: string;
-  type: string;
-  data: Record<string, unknown>;
-  timestamp: number;
-  retries: number;
-  ttlMs: number;
-}
-
-const DEFAULT_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
-const MAX_QUEUE_SIZE = 100;
-
-function getOfflineQueue(): OfflineAction[] {
-  const raw = mmkv.getString(STORAGE_KEYS.OFFLINE_QUEUE);
-  if (!raw) return [];
-  try {
-    return JSON.parse(raw) as OfflineAction[];
-  } catch {
-    return [];
-  }
-}
-
-function saveOfflineQueue(queue: OfflineAction[]): void {
-  mmkv.set(STORAGE_KEYS.OFFLINE_QUEUE, JSON.stringify(queue));
-}
+export { enqueueAction, getPendingCount, type OfflineAction } from '../services/offline-queue';
 
 export function useOffline() {
   const isOffline = useAppStore((s) => s.isOffline);
   const setOffline = useAppStore((s) => s.setOffline);
+  const pendingCount = useAppStore((s) => s.offlineQueueCount);
+  const setPendingCount = useAppStore((s) => s.setOfflineQueueCount);
   const flushQueueRef = useRef<(() => Promise<void>) | null>(null);
 
   const flushQueue = useCallback(async () => {
     const now = Date.now();
     let queue = getOfflineQueue();
 
-    // Remove expired entries
     queue = queue.filter((action) => now - action.timestamp < action.ttlMs);
 
     const failed: OfflineAction[] = [];
 
     for (const action of queue) {
       try {
-        const res = await api.post(`/api/${action.type}`, action.data);
+        const res = await api.request({
+          url: action.url,
+          method: action.method,
+          data: action.data,
+        });
         if (res.status >= 400) {
           action.retries += 1;
           if (action.retries < 3) failed.push(action);
@@ -58,7 +44,8 @@ export function useOffline() {
     }
 
     saveOfflineQueue(failed);
-  }, []);
+    setPendingCount(getPendingCount());
+  }, [setPendingCount]);
 
   flushQueueRef.current = flushQueue;
 
@@ -74,6 +61,7 @@ export function useOffline() {
     };
 
     checkConnection();
+    setPendingCount(getPendingCount());
 
     const subscription = AppState.addEventListener('change', (state) => {
       if (state === 'active') {
@@ -82,28 +70,11 @@ export function useOffline() {
     });
 
     return () => subscription.remove();
-  }, [setOffline]);
-
-  const enqueueAction = useCallback((type: string, data: Record<string, unknown>, ttlMs = DEFAULT_TTL_MS) => {
-    const queue = getOfflineQueue();
-    // Enforce capacity limit
-    if (queue.length >= MAX_QUEUE_SIZE) {
-      queue.shift(); // Remove oldest
-    }
-    queue.push({
-      id: Date.now().toString(36) + Math.random().toString(36).slice(2),
-      type,
-      data,
-      timestamp: Date.now(),
-      retries: 0,
-      ttlMs,
-    });
-    saveOfflineQueue(queue);
-  }, []);
+  }, [setOffline, setPendingCount]);
 
   return {
     isOffline,
-    enqueueAction,
     flushQueue,
+    pendingCount,
   };
 }

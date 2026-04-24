@@ -80,7 +80,7 @@ export const BarcodeScannerView = React.memo(function BarcodeScannerView({
       <View style={styles.permissionContainer}>
         <IconButton icon="camera" size={48} iconColor="#757575" />
         <Text style={styles.permissionText}>需要相机权限以扫描条码</Text>
-        <TouchableOpacity style={styles.permissionBtn} onPress={requestPermission}>
+        <TouchableOpacity style={styles.permissionBtn} onPress={requestPermission} accessibilityLabel="授权相机">
           <Text style={styles.permissionBtnText}>授权相机</Text>
         </TouchableOpacity>
       </View>
@@ -112,6 +112,7 @@ export const BarcodeScannerView = React.memo(function BarcodeScannerView({
         <TouchableOpacity
           style={styles.torchBtn}
           onPress={() => setScannerTorch(!torchOn)}
+          accessibilityLabel={torchOn ? '关闭闪光灯' : '开启闪光灯'}
         >
           <IconButton
             icon={torchOn ? 'flashlight' : 'flashlight-off'}

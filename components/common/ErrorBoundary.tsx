@@ -1,6 +1,7 @@
-import React, { Component } from 'react';
+import React, { Component, type ErrorInfo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Button } from 'react-native-paper';
+import { captureException as sentryCapture } from '@sentry/react-native';
 
 interface Props {
   children: React.ReactNode;
@@ -10,17 +11,24 @@ interface Props {
 interface State {
   hasError: boolean;
   error: Error | null;
+  errorKey: number;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
-  override state: State = { hasError: false, error: null };
+  override state: State = { hasError: false, error: null, errorKey: 0 };
 
-  static getDerivedStateFromError(error: Error): State {
+  static getDerivedStateFromError(error: Error): Partial<State> {
     return { hasError: true, error };
   }
 
+  override componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+    sentryCapture(error, {
+      extra: { componentStack: errorInfo.componentStack },
+    });
+  }
+
   handleRetry = () => {
-    this.setState({ hasError: false, error: null });
+    this.setState((prev) => ({ hasError: false, error: null, errorKey: prev.errorKey + 1 }));
   };
 
   override render() {
@@ -32,13 +40,13 @@ export class ErrorBoundary extends Component<Props, State> {
           <Text style={styles.message}>
             {this.state.error?.message ?? '未知错误'}
           </Text>
-          <Button mode="contained" onPress={this.handleRetry}>
+          <Button mode="contained" onPress={this.handleRetry} accessibilityLabel="重试">
             重试
           </Button>
         </View>
       );
     }
-    return this.props.children;
+    return <View key={this.state.errorKey} style={{ flex: 1 }}>{this.props.children}</View>;
   }
 }
 

@@ -6,11 +6,28 @@ import { useColorScheme } from 'react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useRouter } from 'expo-router';
+import { init as sentryInit } from 'sentry-expo';
+import * as SentryRN from '@sentry/react-native';
 import { useAuthStore } from '../stores/auth-store';
 import { useAppStore } from '../stores/app-store';
 import { setNavigationRef, setLogoutRef } from '../lib/api';
 import { ErrorBoundary } from '../components/common/ErrorBoundary';
 import { useOffline } from '../hooks/useOffline';
+
+sentryInit({
+  dsn: process.env['EXPO_PUBLIC_SENTRY_DSN'] ?? '',
+  enableInExpoDevelopment: __DEV__,
+  debug: __DEV__,
+});
+
+// Global error handler for uncaught exceptions
+const originalHandler = ErrorUtils.getGlobalHandler();
+ErrorUtils.setGlobalHandler((error: Error, isFatal?: boolean) => {
+  SentryRN.captureException(error);
+  if (originalHandler) {
+    originalHandler(error, isFatal ?? false);
+  }
+});
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,14 +46,12 @@ export default function RootLayout() {
   const logout = useAuthStore((s) => s.logout);
   const router = useRouter();
 
-  // Enable offline detection and queue flushing
   useOffline();
 
   useEffect(() => {
     hydrate();
   }, [hydrate]);
 
-  // Register navigation ref for 401 redirect
   const handleNavigate = useCallback(
     (path: string) => {
       router.replace(path as never);

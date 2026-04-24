@@ -69,6 +69,7 @@ export default function FinanceIndexScreen() {
           left={(props) => <List.Icon {...props} icon="receipt" />}
           right={(props) => <List.Icon {...props} icon="chevron-right" />}
           onPress={() => router.push('/finance/ledger' as never)}
+          accessibilityLabel="记账明细"
         />
         <Divider />
         <List.Item
@@ -77,6 +78,7 @@ export default function FinanceIndexScreen() {
           left={(props) => <List.Icon {...props} icon="cash-minus" />}
           right={(props) => <List.Icon {...props} icon="chevron-right" />}
           onPress={() => router.push('/finance/payable' as never)}
+          accessibilityLabel="应付账款"
         />
         <Divider />
         <List.Item
@@ -85,6 +87,7 @@ export default function FinanceIndexScreen() {
           left={(props) => <List.Icon {...props} icon="cash-plus" />}
           right={(props) => <List.Icon {...props} icon="chevron-right" />}
           onPress={() => router.push('/finance/receivable' as never)}
+          accessibilityLabel="应收账款"
         />
       </Card>
     </ScrollView>

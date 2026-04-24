@@ -19,7 +19,7 @@ export const ScanResultCard = React.memo(function ScanResultCard({
   onPress,
 }: ScanResultCardProps) {
   return (
-    <Card style={styles.card} mode="outlined" onPress={onPress}>
+    <Card style={styles.card} mode="outlined" onPress={onPress} accessibilityLabel={code}>
       <Card.Content style={styles.content}>
         <View style={styles.row}>
           <IconButton

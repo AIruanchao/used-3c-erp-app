@@ -81,7 +81,7 @@ export default function StocktakeScreen() {
         )}
       </ScrollView>
 
-      <FAB icon="plus" style={styles.fab} onPress={() => setShowNew(true)} />
+      <FAB icon="plus" style={styles.fab} onPress={() => setShowNew(true)} accessibilityLabel="新建盘点" />
 
       <Portal>
         <Dialog visible={showNew} onDismiss={() => { setShowNew(false); setScope('FULL'); }}>
@@ -96,8 +96,8 @@ export default function StocktakeScreen() {
             />
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={() => { setShowNew(false); setScope('FULL'); }}>取消</Button>
-            <Button onPress={handleCreate} loading={creating} disabled={creating}>创建</Button>
+            <Button onPress={() => { setShowNew(false); setScope('FULL'); }} accessibilityLabel="取消">取消</Button>
+            <Button onPress={handleCreate} loading={creating} disabled={creating} accessibilityLabel="创建">创建</Button>
           </Dialog.Actions>
         </Dialog>
       </Portal>

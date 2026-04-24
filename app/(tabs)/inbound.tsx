@@ -16,7 +16,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useScanner } from '../../hooks/useScanner';
 import { useInboundStore } from '../../stores/inbound-store';
 import { quickInbound, checkImei, getSkuInfo } from '../../services/inbound-service';
-import { CONDITION_OPTIONS, CHANNEL_OPTIONS } from '../../lib/constants';
+import { CONDITION_OPTIONS, CHANNEL_OPTIONS, INVENTORY_STATUS_LABELS } from '../../lib/constants';
 import { getErrorMessage } from '../../lib/errors';
 import { BarcodeScannerView } from '../../components/scanner/BarcodeScannerView';
 import { ScanResultCard } from '../../components/scanner/ScanResultCard';
@@ -63,7 +63,7 @@ export default function InboundScreen() {
       const info = await getSkuInfo(modelId.trim());
       if (info.skuId) {
         setSkuId(info.skuId);
-        setSkuName(info.category ?? 'SKU已找到');
+        setSkuName(info.skuId.slice(0, 8));
         Alert.alert('成功', `已匹配SKU: ${info.skuId.slice(0, 8)}...`);
       } else {
         setSkuId('');
@@ -97,13 +97,18 @@ export default function InboundScreen() {
 
         if (imeiResult.blocked) {
           Alert.alert('警告', `IMEI在黑名单中: ${imeiResult.blacklistReason ?? '未知原因'}`);
+          setSn('');
           setShowScanner(false);
           setScanLoading(false);
           return;
         }
 
-        if (imeiResult.inThisStore && imeiResult.inventoryStatus === 'IN_STOCK') {
-          Alert.alert('提示', '该设备已在本门店库中');
+        if (imeiResult.inThisStore) {
+          const statusLabel = imeiResult.inventoryStatus
+            ? (INVENTORY_STATUS_LABELS[imeiResult.inventoryStatus] ?? imeiResult.inventoryStatus)
+            : '未知状态';
+          Alert.alert('提示', `该设备已在本门店库中（${statusLabel}），不可重复入库`);
+          setSn('');
           setShowScanner(false);
           setScanLoading(false);
           return;
@@ -157,15 +162,18 @@ export default function InboundScreen() {
       Alert.alert('错误', '请先查询SKU（输入型号并点击查询）');
       return;
     }
-    if (!unitCost || Number.isNaN(parseFloat(unitCost)) || parseFloat(unitCost) <= 0) {
+    const unitCostNum = parseFloat(unitCost);
+    if (!unitCost || Number.isNaN(unitCostNum) || unitCostNum <= 0 || (unitCost.match(/\./g) ?? []).length > 1) {
       Alert.alert('错误', '请输入有效的成本价');
       return;
     }
-    if (peerPrice && (Number.isNaN(parseFloat(peerPrice)) || parseFloat(peerPrice) < 0)) {
+    const peerPriceNum = parseFloat(peerPrice);
+    if (peerPrice && (Number.isNaN(peerPriceNum) || peerPriceNum < 0 || (peerPrice.match(/\./g) ?? []).length > 1)) {
       Alert.alert('错误', '同行价不能为负数');
       return;
     }
-    if (retailPrice && (Number.isNaN(parseFloat(retailPrice)) || parseFloat(retailPrice) < 0)) {
+    const retailPriceNum = parseFloat(retailPrice);
+    if (retailPrice && (Number.isNaN(retailPriceNum) || retailPriceNum < 0 || (retailPrice.match(/\./g) ?? []).length > 1)) {
       Alert.alert('错误', '零售价不能为负数');
       return;
     }
@@ -186,9 +194,9 @@ export default function InboundScreen() {
         organizationId,
         skuId: skuId,
         sn: sn.trim(),
-        unitCost: parseFloat(unitCost),
-        peerPrice: peerPrice ? parseFloat(peerPrice) : undefined,
-        retailPrice: retailPrice ? parseFloat(retailPrice) : undefined,
+        unitCost: unitCostNum,
+        peerPrice: peerPrice ? peerPriceNum : undefined,
+        retailPrice: retailPrice ? retailPriceNum : undefined,
         condition: condition.trim() || undefined,
         channel: channel.trim() || undefined,
         sourceType: sourceType,
@@ -252,6 +260,7 @@ export default function InboundScreen() {
               mode="text"
               onPress={() => { setShowScanner(false); setScanLoading(false); }}
               style={styles.closeScannerBtn}
+              accessibilityLabel="关闭相机"
             >
               关闭相机
             </Button>
@@ -260,65 +269,71 @@ export default function InboundScreen() {
 
         {!showScanner && (
           <>
-            {/* Scan Button */}
-            <Card style={styles.card} mode="outlined">
-              <Card.Content>
-                <Button
-                  mode="contained"
-                  icon="barcode-scan"
-                  onPress={() => setShowScanner(true)}
-                  style={styles.scanBtn}
-                >
-                  扫码入库
-                </Button>
-                <View style={styles.manualInput}>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="或手动输入SN/IMEI"
-                    value={sn}
-                    onChangeText={setSn}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    editable={!scanLoading}
-                  />
-                  <Button
-                    mode="outlined"
-                    onPress={() => {
-                      if (sn.trim()) setStep('info');
-                    }}
-                    disabled={!sn.trim()}
-                  >
-                    下一步
-                  </Button>
-                </View>
-              </Card.Content>
-            </Card>
+            {step === 'scan' && (
+              <>
+                {/* Scan Button */}
+                <Card style={styles.card} mode="outlined">
+                  <Card.Content>
+                    <Button
+                      mode="contained"
+                      icon="barcode-scan"
+                      onPress={() => setShowScanner(true)}
+                      style={styles.scanBtn}
+                      accessibilityLabel="扫码入库"
+                    >
+                      扫码入库
+                    </Button>
+                    <View style={styles.manualInput}>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="或手动输入SN/IMEI"
+                        value={sn}
+                        onChangeText={setSn}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        editable={!scanLoading}
+                      />
+                      <Button
+                        mode="outlined"
+                        onPress={() => {
+                          if (sn.trim()) setStep('info');
+                        }}
+                        disabled={!sn.trim()}
+                        accessibilityLabel="下一步"
+                      >
+                        下一步
+                      </Button>
+                    </View>
+                  </Card.Content>
+                </Card>
 
-            {/* Scan History */}
-            {scanResults.length > 0 && (
-              <View style={styles.scanHistory}>
-                <View style={styles.scanHistoryHeader}>
-                  <Text style={styles.sectionTitle}>
-                    扫码记录 ({scanResults.length})
-                  </Text>
-                  <Button mode="text" compact onPress={clearScanResults}>
-                    清空
-                  </Button>
-                </View>
-                {scanResults.slice(-5).reverse().map((result, idx) => (
-                  <ScanResultCard
-                    key={`${result.timestamp}-${idx}`}
-                    code={result.code}
-                    format={result.format}
-                    timestamp={result.timestamp}
-                    synced={result.synced}
-                    onPress={() => {
-                      setSn(result.code);
-                      setStep('info');
-                    }}
-                  />
-                ))}
-              </View>
+                {/* Scan History */}
+                {scanResults.length > 0 && (
+                  <View style={styles.scanHistory}>
+                    <View style={styles.scanHistoryHeader}>
+                      <Text style={styles.sectionTitle}>
+                        扫码记录 ({scanResults.length})
+                      </Text>
+                      <Button mode="text" compact onPress={clearScanResults} accessibilityLabel="清空">
+                        清空
+                      </Button>
+                    </View>
+                    {scanResults.slice(-5).reverse().map((result, idx) => (
+                      <ScanResultCard
+                        key={`${result.timestamp}-${idx}`}
+                        code={result.code}
+                        format={result.format}
+                        timestamp={result.timestamp}
+                        synced={result.synced}
+                        onPress={() => {
+                          setSn(result.code);
+                          setStep('info');
+                        }}
+                      />
+                    ))}
+                  </View>
+                )}
+              </>
             )}
 
             {/* Inbound Form */}
@@ -346,6 +361,7 @@ export default function InboundScreen() {
                       loading={skuLoading}
                       disabled={skuLoading || !modelId.trim()}
                       compact
+                      accessibilityLabel="查询"
                     >
                       查询
                     </Button>
@@ -395,13 +411,14 @@ export default function InboundScreen() {
 
                   <Text style={styles.sectionTitle}>成色</Text>
                   <View style={styles.chipRow}>
-                    {CONDITION_OPTIONS.slice(0, 8).map((opt) => (
+                    {CONDITION_OPTIONS.map((opt) => (
                       <Chip
                         key={opt.value}
                         selected={condition === opt.value}
                         onPress={() => setCondition(condition === opt.value ? '' : opt.value)}
                         style={styles.chip}
                         compact
+                        accessibilityLabel={opt.value}
                       >
                         {opt.value}
                       </Chip>
@@ -410,13 +427,14 @@ export default function InboundScreen() {
 
                   <Text style={styles.sectionTitle}>渠道</Text>
                   <View style={styles.chipRow}>
-                    {CHANNEL_OPTIONS.slice(0, 6).map((opt) => (
+                    {CHANNEL_OPTIONS.map((opt) => (
                       <Chip
                         key={opt}
                         selected={channel === opt}
                         onPress={() => setChannel(channel === opt ? '' : opt)}
                         style={styles.chip}
                         compact
+                        accessibilityLabel={opt}
                       >
                         {opt}
                       </Chip>
@@ -440,6 +458,7 @@ export default function InboundScreen() {
                     loading={loading}
                     disabled={loading || !unitCost || !skuId}
                     style={styles.submitBtn}
+                    accessibilityLabel="确认入库"
                   >
                     确认入库
                   </Button>

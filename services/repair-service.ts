@@ -1,4 +1,4 @@
-import { api } from '../lib/api';
+import { offlinePost } from './api-helpers';
 
 export interface RepairItem {
   id: string;
@@ -28,8 +28,7 @@ export async function createRepair(data: {
   faultDescription: string;
   estimatedCost?: number | null;
 }): Promise<{ ok: boolean; order: RepairItem }> {
-  const res = await api.post('/api/repair/create', data);
-  return res.data;
+  return offlinePost('/api/repair/create', data as Record<string, unknown>);
 }
 
 export interface RepairActionResult {
@@ -53,37 +52,31 @@ export async function quoteRepair(
     estimatedHours?: number;
   },
 ): Promise<RepairActionResult> {
-  const res = await api.post('/api/repair/quote', { orderId: repairId, ...data });
-  return res.data;
+  return offlinePost('/api/repair/quote', { orderId: repairId, ...data } as Record<string, unknown>);
 }
 
 export async function startRepair(repairId: string, technicianId?: string): Promise<RepairActionResult> {
-  const res = await api.post('/api/repair/start', {
+  return offlinePost('/api/repair/start', {
     orderId: repairId,
     technicianId: technicianId || undefined,
   });
-  return res.data;
 }
 
 export async function acceptRepairQuote(repairId: string): Promise<RepairActionResult> {
-  const res = await api.post('/api/repair/accept', { orderId: repairId });
-  return res.data;
+  return offlinePost('/api/repair/accept', { orderId: repairId });
 }
 
 export async function completeRepair(
   repairId: string,
   data?: { repairNotes?: string },
 ): Promise<RepairActionResult> {
-  const res = await api.post('/api/repair/complete', { orderId: repairId, ...data });
-  return res.data;
+  return offlinePost('/api/repair/complete', { orderId: repairId, ...data } as Record<string, unknown>);
 }
 
 export async function qcRepair(repairId: string): Promise<RepairActionResult> {
-  const res = await api.post('/api/repair/qc', { orderId: repairId, qcStatus: 'PASS' });
-  return res.data;
+  return offlinePost('/api/repair/qc', { orderId: repairId, qcStatus: 'PASS' });
 }
 
 export async function deliverRepair(repairId: string): Promise<RepairActionResult> {
-  const res = await api.post('/api/repair/deliver', { orderId: repairId, pickupMode: 'SELF' });
-  return res.data;
+  return offlinePost('/api/repair/deliver', { orderId: repairId, pickupMode: 'SELF' });
 }

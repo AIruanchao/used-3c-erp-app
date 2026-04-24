@@ -18,6 +18,13 @@ export default function NewRepairScreen() {
   const [customerPhone, setCustomerPhone] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const resetForm = useCallback(() => {
+    setSn('');
+    setDescription('');
+    setCustomerName('');
+    setCustomerPhone('');
+  }, []);
+
   const handleSubmit = useCallback(async () => {
     if (loading) return;
     if (!storeId || !organizationId) {
@@ -59,6 +66,7 @@ export default function NewRepairScreen() {
         return;
       }
       const order = result.order;
+      resetForm();
       Alert.alert('成功', '维修工单已创建', [
         {
           text: '查看详情',
@@ -77,12 +85,13 @@ export default function NewRepairScreen() {
       ]);
 
       queryClient.invalidateQueries({ queryKey: ['dailyReport'] });
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
     } catch (err) {
       Alert.alert('创建失败', getErrorMessage(err));
     } finally {
       setLoading(false);
     }
-  }, [storeId, organizationId, sn, description, customerName, customerPhone, router, queryClient, loading]);
+  }, [storeId, organizationId, sn, description, customerName, customerPhone, router, queryClient, loading, resetForm]);
 
   return (
     <KeyboardAvoidingView
@@ -133,6 +142,7 @@ export default function NewRepairScreen() {
               loading={loading}
               disabled={loading || !description.trim()}
               style={styles.submitBtn}
+              accessibilityLabel="创建工单"
             >
               创建工单
             </Button>

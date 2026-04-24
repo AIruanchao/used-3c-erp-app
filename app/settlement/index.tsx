@@ -29,7 +29,7 @@ export default function SettlementScreen() {
     setPrinting(true);
     try {
       const ok = await printerService.printDailySettlement({
-        storeName: storeName ?? '',
+        storeName: storeName ?? '未知门店',
         date: formatDate(new Date().toISOString()),
         totalSales: yuan(report?.sales.amount ?? 0),
         totalPurchases: yuan(report?.purchase.cost ?? 0),
@@ -38,6 +38,8 @@ export default function SettlementScreen() {
       });
       if (!ok) {
         Alert.alert('打印失败', '请检查打印机连接');
+      } else {
+        Alert.alert('成功', '日结单已打印');
       }
     } catch (err) {
       Alert.alert('打印失败', err instanceof Error ? err.message : '请检查打印机连接');
@@ -107,7 +109,7 @@ export default function SettlementScreen() {
         </Card.Content>
       </Card>
 
-      <Button mode="contained" icon="printer" onPress={handlePrint} style={styles.printBtn} loading={printing} disabled={printing}>
+      <Button mode="contained" icon="printer" onPress={handlePrint} style={styles.printBtn} loading={printing} disabled={printing} accessibilityLabel="打印日结单">
         打印日结单
       </Button>
 

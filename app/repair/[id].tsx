@@ -28,15 +28,15 @@ export default function RepairDetailScreen() {
 
   const handleAction = async (action: string) => {
     if (!id || actionLoading) return;
+    if (action === 'quote') {
+      setShowQuoteDialog(true);
+      return;
+    }
     setActionLoading(true);
     try {
       let result: { ok: boolean; error?: string };
       switch (action) {
-        case 'quote':
-          setShowQuoteDialog(true);
-          return;
         case 'start':
-          // If QUOTED, must accept first then start
           if (currentStatus === 'QUOTED') {
             const acceptRes = await acceptRepairQuote(id);
             if (!acceptRes.ok) { Alert.alert('失败', acceptRes.error ?? '接受报价失败'); break; }
@@ -153,12 +153,12 @@ export default function RepairDetailScreen() {
         <Card.Title title="操作" titleStyle={styles.cardTitle} />
         <Card.Content style={styles.actions}>
           {(currentStatus === 'REGISTERED' || currentStatus === 'DIAGNOSED') && (
-            <Button mode="contained" onPress={() => handleAction('quote')} loading={actionLoading} disabled={actionLoading}>
+            <Button mode="contained" onPress={() => handleAction('quote')} loading={actionLoading} disabled={actionLoading} accessibilityLabel="报价">
               报价
             </Button>
           )}
           {currentStatus === 'QUOTED' && (
-            <Button mode="contained" onPress={() => handleAction('start')} loading={actionLoading} disabled={actionLoading}>
+            <Button mode="contained" onPress={() => handleAction('start')} loading={actionLoading} disabled={actionLoading} accessibilityLabel="接受报价并开始维修">
               接受报价并开始维修
             </Button>
           )}
@@ -166,24 +166,30 @@ export default function RepairDetailScreen() {
             <Text style={styles.rejectedHint}>客户已拒绝报价，请在Web端处理</Text>
           )}
           {currentStatus === 'ACCEPTED' && (
-            <Button mode="contained" onPress={() => handleAction('start')} loading={actionLoading} disabled={actionLoading}>
+            <Button mode="contained" onPress={() => handleAction('start')} loading={actionLoading} disabled={actionLoading} accessibilityLabel="开始维修">
               开始维修
             </Button>
           )}
           {currentStatus === 'IN_REPAIR' && (
-            <Button mode="contained" onPress={() => handleAction('complete')} loading={actionLoading} disabled={actionLoading}>
+            <Button mode="contained" onPress={() => handleAction('complete')} loading={actionLoading} disabled={actionLoading} accessibilityLabel="完成维修">
               完成维修
             </Button>
           )}
           {currentStatus === 'COMPLETED' && (
-            <Button mode="contained" onPress={() => handleAction('qc')} loading={actionLoading} disabled={actionLoading}>
+            <Button mode="contained" onPress={() => handleAction('qc')} loading={actionLoading} disabled={actionLoading} accessibilityLabel="质检通过">
               质检通过
             </Button>
           )}
           {currentStatus === 'WAITING_PICKUP' && (
-            <Button mode="contained" onPress={() => handleAction('deliver')} loading={actionLoading} disabled={actionLoading}>
+            <Button mode="contained" onPress={() => handleAction('deliver')} loading={actionLoading} disabled={actionLoading} accessibilityLabel="安排交付">
               安排交付
             </Button>
+          )}
+          {currentStatus === 'DELIVERING' && (
+            <Text style={styles.rejectedHint}>设备配送中，请在Web端完成交付确认</Text>
+          )}
+          {(currentStatus === 'CLOSED' || currentStatus === 'CANCELLED') && (
+            <Text style={styles.rejectedHint}>工单已{currentStatus === 'CLOSED' ? '关闭' : '取消'}</Text>
           )}
         </Card.Content>
       </Card>
@@ -233,8 +239,8 @@ export default function RepairDetailScreen() {
             ) : null}
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={() => { setShowQuoteDialog(false); setLaborCost(''); setPartName(''); setPartCost(''); setPartPrice(''); }}>取消</Button>
-            <Button onPress={submitQuote} disabled={!laborCost || actionLoading} loading={actionLoading}>确认报价</Button>
+            <Button onPress={() => { setShowQuoteDialog(false); setLaborCost(''); setPartName(''); setPartCost(''); setPartPrice(''); }} accessibilityLabel="取消">取消</Button>
+            <Button onPress={submitQuote} disabled={!laborCost || actionLoading} loading={actionLoading} accessibilityLabel="确认报价">确认报价</Button>
           </Dialog.Actions>
         </Dialog>
       </Portal>

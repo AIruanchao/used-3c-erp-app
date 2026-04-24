@@ -1,5 +1,6 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { Platform } from 'react-native';
+import * as SentryRN from '@sentry/react-native';
 import { getAuthToken, removeAuthToken } from './storage';
 
 const API_BASE = __DEV__
@@ -16,15 +17,19 @@ export const api = axios.create({
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = getAuthToken();
   if (token) {
-    // next-auth uses a session cookie, so we inject it as a Cookie header
-    // since React Native doesn't automatically send cookies
     config.headers['Cookie'] = `next-auth.session-token=${token}`;
   }
+  SentryRN.addBreadcrumb({
+    category: 'api',
+    message: `${config.method?.toUpperCase() ?? 'GET'} ${(config.baseURL ?? '') + (config.url ?? '')}`,
+    level: 'info',
+  });
   return config;
 });
 
 let globalNavigationRef: ((path: string) => void) | null = null;
 let globalLogoutRef: (() => void) | null = null;
+let isHandling401 = false;
 
 export function setNavigationRef(ref: (path: string) => void): void {
   globalNavigationRef = ref;
@@ -37,12 +42,23 @@ export function setLogoutRef(ref: () => void): void {
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 && !isHandling401) {
+      isHandling401 = true;
       removeAuthToken();
       globalLogoutRef?.();
       if (globalNavigationRef) {
         globalNavigationRef('(auth)/login');
       }
+      setTimeout(() => { isHandling401 = false; }, 2000);
+    } else if (error.response?.status !== 401) {
+      SentryRN.captureException(error, {
+        extra: {
+          url: error.config?.url,
+          method: error.config?.method,
+          status: error.response?.status,
+          data: error.response?.data,
+        },
+      });
     }
     return Promise.reject(error);
   }

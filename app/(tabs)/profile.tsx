@@ -2,12 +2,14 @@ import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Card, List, Switch, Divider, Button, Portal, Modal, RadioButton } from 'react-native-paper';
 import { useRouter } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppStore } from '../../stores/app-store';
 import { COMPANY_NAME } from '../../lib/constants';
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { user, stores, currentStore, selectStore, logout } = useAuth();
   const theme = useAppStore((s) => s.theme);
   const setTheme = useAppStore((s) => s.setTheme);
@@ -41,6 +43,7 @@ export default function ProfileScreen() {
         style: 'destructive',
         onPress: () => {
           logout();
+          queryClient.clear();
           router.replace('/(auth)/login' as never);
         },
       },
@@ -74,6 +77,7 @@ export default function ProfileScreen() {
           left={(props) => <List.Icon {...props} icon="store" />}
           right={(props) => <List.Icon {...props} icon="chevron-right" />}
           onPress={handleStoreSelect}
+          accessibilityLabel="选择门店"
         />
       </Card>
 
@@ -84,6 +88,7 @@ export default function ProfileScreen() {
           left={(props) => <List.Icon {...props} icon="cash-multiple" />}
           right={(props) => <List.Icon {...props} icon="chevron-right" />}
           onPress={() => router.push('/finance/index' as never)}
+          accessibilityLabel="财务"
         />
         <Divider />
         <List.Item
@@ -91,6 +96,7 @@ export default function ProfileScreen() {
           left={(props) => <List.Icon {...props} icon="wrench" />}
           right={(props) => <List.Icon {...props} icon="chevron-right" />}
           onPress={() => router.push('/repair/index' as never)}
+          accessibilityLabel="维修"
         />
         <Divider />
         <List.Item
@@ -98,6 +104,7 @@ export default function ProfileScreen() {
           left={(props) => <List.Icon {...props} icon="account-group" />}
           right={(props) => <List.Icon {...props} icon="chevron-right" />}
           onPress={() => router.push('/customer/index' as never)}
+          accessibilityLabel="客户"
         />
         <Divider />
         <List.Item
@@ -105,6 +112,7 @@ export default function ProfileScreen() {
           left={(props) => <List.Icon {...props} icon="chart-bar" />}
           right={(props) => <List.Icon {...props} icon="chevron-right" />}
           onPress={() => router.push('/stats' as never)}
+          accessibilityLabel="统计"
         />
         <Divider />
         <List.Item
@@ -112,6 +120,7 @@ export default function ProfileScreen() {
           left={(props) => <List.Icon {...props} icon="cash-register" />}
           right={(props) => <List.Icon {...props} icon="chevron-right" />}
           onPress={() => router.push('/cashier' as never)}
+          accessibilityLabel="收银台"
         />
         <Divider />
         <List.Item
@@ -119,6 +128,7 @@ export default function ProfileScreen() {
           left={(props) => <List.Icon {...props} icon="history" />}
           right={(props) => <List.Icon {...props} icon="chevron-right" />}
           onPress={() => router.push('/inbound/received' as never)}
+          accessibilityLabel="入库记录"
         />
         <Divider />
         <List.Item
@@ -126,6 +136,7 @@ export default function ProfileScreen() {
           left={(props) => <List.Icon {...props} icon="clipboard-check" />}
           right={(props) => <List.Icon {...props} icon="chevron-right" />}
           onPress={() => router.push('/stocktake/index' as never)}
+          accessibilityLabel="盘点"
         />
         <Divider />
         <List.Item
@@ -133,6 +144,7 @@ export default function ProfileScreen() {
           left={(props) => <List.Icon {...props} icon="calculator" />}
           right={(props) => <List.Icon {...props} icon="chevron-right" />}
           onPress={() => router.push('/settlement/index' as never)}
+          accessibilityLabel="日结"
         />
       </Card>
 
@@ -145,6 +157,7 @@ export default function ProfileScreen() {
             <Switch
               value={theme === 'dark'}
               onValueChange={(v) => setTheme(v ? 'dark' : 'light')}
+              accessibilityLabel="深色模式"
             />
           )}
         />
@@ -154,6 +167,7 @@ export default function ProfileScreen() {
           left={(props) => <List.Icon {...props} icon="cog" />}
           right={(props) => <List.Icon {...props} icon="chevron-right" />}
           onPress={() => router.push('/settings' as never)}
+          accessibilityLabel="设置"
         />
       </Card>
 
@@ -172,6 +186,7 @@ export default function ProfileScreen() {
         onPress={handleLogout}
         style={styles.logoutBtn}
         textColor="#e53935"
+        accessibilityLabel="退出登录"
       >
         退出登录
       </Button>
@@ -200,7 +215,7 @@ export default function ProfileScreen() {
               ))}
             </ScrollView>
           </RadioButton.Group>
-          <Button onPress={() => setShowStorePicker(false)} style={styles.modalClose}>
+          <Button onPress={() => setShowStorePicker(false)} style={styles.modalClose} accessibilityLabel="关闭">
             关闭
           </Button>
         </Modal>

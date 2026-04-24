@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Text, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Card, List, Switch, Divider, Button } from 'react-native-paper';
+import { useFocusEffect } from '@react-navigation/native';
 import { useAppStore } from '../stores/app-store';
 import { COMPANY_NAME } from '../lib/constants';
 import { printerService } from '../services/printer-service';
@@ -11,6 +12,13 @@ export default function SettingsScreen() {
   const [scanning, setScanning] = useState(false);
   const [printers, setPrinters] = useState<Array<{ id: string; name: string | null }>>([]);
   const [connected, setConnected] = useState(printerService.isConnected());
+
+  // Refresh connection state when screen gains focus
+  useFocusEffect(
+    useCallback(() => {
+      setConnected(printerService.isConnected());
+    }, []),
+  );
 
   const handleScanPrinters = useCallback(async () => {
     if (scanning) return;
@@ -39,9 +47,13 @@ export default function SettingsScreen() {
   }, []);
 
   const handleDisconnectPrinter = useCallback(async () => {
-    await printerService.disconnect();
-    setConnected(false);
-    Alert.alert('提示', '已断开打印机连接');
+    try {
+      await printerService.disconnect();
+      setConnected(false);
+      Alert.alert('提示', '已断开打印机连接');
+    } catch {
+      Alert.alert('提示', '断开失败，请重试');
+    }
   }, []);
 
   return (
@@ -56,6 +68,7 @@ export default function SettingsScreen() {
             <Switch
               value={theme === 'dark'}
               onValueChange={(v) => setTheme(v ? 'dark' : 'light')}
+              accessibilityLabel="深色模式"
             />
           )}
         />
@@ -67,6 +80,7 @@ export default function SettingsScreen() {
             <Switch
               value={theme === 'system'}
               onValueChange={(v) => setTheme(v ? 'system' : 'light')}
+              accessibilityLabel="跟随系统"
             />
           )}
         />
@@ -83,6 +97,7 @@ export default function SettingsScreen() {
             loading={scanning}
             disabled={scanning}
             style={styles.scanBtn}
+            accessibilityLabel="搜索打印机"
           >
             搜索打印机
           </Button>
@@ -92,7 +107,7 @@ export default function SettingsScreen() {
               description="当前打印机"
               left={(props) => <List.Icon {...props} icon="printer-check" />}
               right={() => (
-                <Button mode="text" onPress={handleDisconnectPrinter} textColor="#e53935">
+                <Button mode="text" onPress={handleDisconnectPrinter} textColor="#e53935" accessibilityLabel="断开">
                   断开
                 </Button>
               )}
@@ -106,6 +121,7 @@ export default function SettingsScreen() {
               left={(props) => <List.Icon {...props} icon="printer" />}
               right={(props) => <List.Icon {...props} icon="bluetooth-connect" />}
               onPress={() => handleConnectPrinter(printer.id)}
+              accessibilityLabel={printer.name ?? '未知设备'}
             />
           ))}
         </Card.Content>

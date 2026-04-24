@@ -46,6 +46,7 @@ export const SearchBar = React.memo(function SearchBar({
       onChangeText={handleChange}
       value={query}
       style={styles.searchbar}
+      accessibilityLabel={placeholder}
     />
   );
 });

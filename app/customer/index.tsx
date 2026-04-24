@@ -38,6 +38,7 @@ export default function CustomerListScreen() {
         style={styles.card}
         mode="outlined"
         onPress={() => router.push(`/customer/${customer.id}` as never)}
+        accessibilityLabel={customer.name}
       >
         <Card.Content>
           <View style={styles.row}>

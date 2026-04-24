@@ -1,4 +1,5 @@
 import { api } from '../lib/api';
+import { offlinePost } from './api-helpers';
 
 export interface QuickInboundResult {
   success: string;
@@ -22,8 +23,7 @@ export async function quickInbound(data: {
   supplierId?: string;
   remark?: string;
 }): Promise<QuickInboundResult> {
-  const res = await api.post('/api/devices/quick-inbound', data);
-  return res.data;
+  return offlinePost<QuickInboundResult>('/api/devices/quick-inbound', data as Record<string, unknown>);
 }
 
 export async function getSkuInfo(modelId: string): Promise<{ skuId: string | null; category: string | null }> {

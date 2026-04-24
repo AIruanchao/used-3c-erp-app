@@ -28,7 +28,7 @@ export default function CashierScreen() {
   const [deviceId, setDeviceId] = useState(params.deviceId ?? '');
   const [deviceSn, setDeviceSn] = useState(params.deviceSn ?? '');
   const [salePrice, setSalePrice] = useState(params.salePrice ?? '');
-  const [paymentMethod, setPaymentMethod] = useState('CASH');
+  const [paymentMethod, setPaymentMethod] = useState('WECHAT');
   const [loading, setLoading] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
 
@@ -40,6 +40,7 @@ export default function CashierScreen() {
       try {
         const result = await searchDevice({
           sn: trimmedCode,
+          storeId: storeId ?? '',
           organizationId: organizationId ?? '',
         });
         if (result) {
@@ -72,7 +73,7 @@ export default function CashierScreen() {
       return;
     }
     const price = parseFloat(salePrice);
-    if (Number.isNaN(price) || price <= 0) {
+    if (Number.isNaN(price) || price <= 0 || (salePrice.match(/\./g) ?? []).length > 1) {
       Alert.alert('错误', '请输入有效的销售价格');
       return;
     }
@@ -84,16 +85,15 @@ export default function CashierScreen() {
       if (!resolvedDeviceId && deviceSn) {
         const found = await searchDevice({
           sn: deviceSn.trim(),
+          storeId: storeId ?? '',
           organizationId,
         });
         if (!found) {
           Alert.alert('错误', '未找到该设备，请确认SN或先入库');
-          setLoading(false);
           return;
         }
         if (found.inventoryStatus !== 'IN_STOCK') {
           Alert.alert('错误', `该设备状态为「${INVENTORY_STATUS_LABELS[found.inventoryStatus] ?? found.inventoryStatus}」，不可销售`);
-          setLoading(false);
           return;
         }
         resolvedDeviceId = found.id;
@@ -107,7 +107,8 @@ export default function CashierScreen() {
         salePrice: price,
         Payment: [{ method: paymentMethod, amount: price }],
       });
-      Alert.alert('收银成功', `订单号: ${result.saleOrderId}\n利润: ¥${typeof result.profit === 'number' ? result.profit.toFixed(2) : result.profit}`, [
+      const profitDisplay = Number.isFinite(result.profit) ? result.profit.toFixed(2) : '0.00';
+      Alert.alert('收银成功', `订单号: ${result.saleOrderId}\n利润: ¥${profitDisplay}`, [
         { text: '好的', onPress: () => router.back() },
       ]);
 
@@ -116,6 +117,7 @@ export default function CashierScreen() {
       queryClient.invalidateQueries({ queryKey: ['inventorySearch'] });
       queryClient.invalidateQueries({ queryKey: ['outboundSearch'] });
       queryClient.invalidateQueries({ queryKey: ['device'] });
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
     } catch (err) {
       Alert.alert('收银失败', getErrorMessage(err));
     } finally {
@@ -134,7 +136,7 @@ export default function CashierScreen() {
             onBarcodeScanned={(code) => onScan(code)}
             isActive
           />
-          <Button mode="text" onPress={() => setShowScanner(false)}>
+          <Button mode="text" onPress={() => setShowScanner(false)} accessibilityLabel="关闭相机">
             关闭相机
           </Button>
         </View>
@@ -148,6 +150,7 @@ export default function CashierScreen() {
                 icon="barcode-scan"
                 onPress={() => setShowScanner(true)}
                 style={styles.scanBtn}
+                accessibilityLabel="扫描设备"
               >
                 扫描设备
               </Button>
@@ -185,6 +188,7 @@ export default function CashierScreen() {
                     selected={paymentMethod === method.value}
                     onPress={() => setPaymentMethod(method.value)}
                     style={styles.chip}
+                    accessibilityLabel={method.label}
                   >
                     {method.label}
                   </Chip>
@@ -209,6 +213,7 @@ export default function CashierScreen() {
                   disabled={loading}
                   style={styles.checkoutBtn}
                   labelStyle={styles.checkoutLabel}
+                  accessibilityLabel="确认收款"
                 >
                   确认收款
                 </Button>

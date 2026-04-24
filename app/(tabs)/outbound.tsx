@@ -79,6 +79,7 @@ export default function OutboundScreen() {
         label="扫码出库"
         style={styles.fab}
         onPress={() => router.push('/cashier' as never)}
+        accessibilityLabel="扫码出库"
       />
     </View>
   );
