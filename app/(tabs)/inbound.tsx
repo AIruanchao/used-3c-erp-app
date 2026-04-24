@@ -165,6 +165,13 @@ export default function InboundScreen() {
       Alert.alert('错误', '零售价不能为负数');
       return;
     }
+    if (batteryHealth) {
+      const bh = parseInt(batteryHealth, 10);
+      if (Number.isNaN(bh) || bh < 0 || bh > 100) {
+        Alert.alert('错误', '电池健康度请输入0-100之间的整数');
+        return;
+      }
+    }
 
     setLoading(true);
     try {

@@ -5,8 +5,8 @@ export const CashierResponseSchema = z.object({
   success: z.string(),
   saleOrderId: z.string(),
   paymentId: z.string(),
-  totalPaid: z.number(),
-  profit: z.number(),
+  totalPaid: z.union([z.number(), z.string()]).transform(Number),
+  profit: z.union([z.number(), z.string()]).transform(Number),
 });
 
 /** Validate API response data or throw a descriptive error */
