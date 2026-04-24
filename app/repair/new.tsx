@@ -19,6 +19,7 @@ export default function NewRepairScreen() {
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = useCallback(async () => {
+    if (loading) return;
     if (!storeId || !organizationId) {
       Alert.alert('错误', '请先选择门店');
       return;
@@ -81,7 +82,7 @@ export default function NewRepairScreen() {
     } finally {
       setLoading(false);
     }
-  }, [storeId, organizationId, sn, description, customerName, customerPhone, router, queryClient]);
+  }, [storeId, organizationId, sn, description, customerName, customerPhone, router, queryClient, loading]);
 
   return (
     <KeyboardAvoidingView

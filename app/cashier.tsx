@@ -56,6 +56,7 @@ export default function CashierScreen() {
   );
 
   const handleCheckout = useCallback(async () => {
+    if (loading) return;
     if (!storeId || !organizationId) {
       Alert.alert('错误', '请先选择门店');
       return;
@@ -108,7 +109,7 @@ export default function CashierScreen() {
     } finally {
       setLoading(false);
     }
-  }, [storeId, organizationId, deviceId, deviceSn, salePrice, paymentMethod, router, queryClient]);
+  }, [storeId, organizationId, deviceId, deviceSn, salePrice, paymentMethod, router, queryClient, loading]);
 
   return (
     <KeyboardAvoidingView

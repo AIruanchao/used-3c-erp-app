@@ -140,6 +140,7 @@ export default function InboundScreen() {
   }, [storeId, resetForm, clearScanResults]);
 
   const handleSubmit = useCallback(async () => {
+    if (loading) return;
     if (!storeId || !organizationId) {
       Alert.alert('错误', '请先选择门店');
       return;
@@ -215,6 +216,7 @@ export default function InboundScreen() {
     router,
     resetForm,
     queryClient,
+    loading,
   ]);
 
   return (
@@ -260,6 +262,7 @@ export default function InboundScreen() {
                     onChangeText={setSn}
                     autoCapitalize="none"
                     autoCorrect={false}
+                    editable={!scanLoading}
                   />
                   <Button
                     mode="outlined"
