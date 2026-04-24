@@ -54,10 +54,16 @@ export default function OutboundScreen() {
             title="未找到设备"
             subtitle={`没有匹配 "${search}" 的在库设备`}
           />
-        ) : device ? (
+        ) : device && device.inventoryStatus === 'IN_STOCK' ? (
           <View style={styles.resultSection}>
             <DeviceCard device={device} onPress={handleDevicePress} />
           </View>
+        ) : search && device && device.inventoryStatus !== 'IN_STOCK' ? (
+          <EmptyState
+            icon="package-variant-closed-remove"
+            title="设备不可出库"
+            subtitle={`该设备状态为「${device.inventoryStatus}」，只有「在库」设备可出库`}
+          />
         ) : (
           <EmptyState
             icon="package-up"
