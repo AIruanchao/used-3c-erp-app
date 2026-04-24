@@ -1,21 +1,8 @@
 import type { ExpoConfig, ConfigContext } from 'expo/config';
 
-/** Must match `APP_DISPLAY_NAME` in lib/constants (config loader cannot import that module). */
 const APP_DISPLAY_NAME = '咖机汇SVIP';
 
 export default ({ config }: ConfigContext): ExpoConfig => {
-  const sentryDsn = process.env['EXPO_PUBLIC_SENTRY_DSN'] ?? '';
-  const hasSentry = Boolean(sentryDsn && sentryDsn.startsWith('https://'));
-
-  const plugins: ExpoConfig['plugins'] = [
-    'expo-router',
-    ['expo-camera', { barcodeScannerEnabled: true }],
-  ];
-
-  if (hasSentry) {
-    plugins.push('sentry-expo', '@sentry/react-native');
-  }
-
   return {
     ...config,
     name: APP_DISPLAY_NAME,
@@ -25,8 +12,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     icon: './assets/icon.png',
     userInterfaceStyle: 'automatic',
     scheme: 'nenie-erp',
-    // Reanimated 4 + react-native-worklets require the New Architecture on Android.
-    // (Gradle fails with assertNewArchitectureEnabledTask if this is false.)
+    // Reanimated 4 + react-native-worklets require New Architecture on Android.
     newArchEnabled: true,
     splash: {
       image: './assets/splash-icon.png',
@@ -44,7 +30,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       },
       edgeToEdgeEnabled: true,
       package: 'com.nenie.erp',
-      versionCode: 1,
+      versionCode: 2,
       allowBackup: false,
       permissions: [
         'android.permission.CAMERA',
@@ -54,7 +40,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         'android.permission.WAKE_LOCK',
       ],
     },
-    plugins,
+    plugins: [
+      'expo-router',
+      ['expo-camera', { barcodeScannerEnabled: true }],
+    ],
     extra: {
       eas: {
         projectId: '23a4dc07-f9b5-41a1-bcfa-1df52f98197d',

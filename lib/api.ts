@@ -1,6 +1,5 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { Platform } from 'react-native';
-import * as SentryRN from '@sentry/react-native';
 import Constants from 'expo-constants';
 import {
   getAuthSessionCookie,
@@ -85,11 +84,6 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
       headersAny.cookie = merged;
     }
   }
-  SentryRN.addBreadcrumb({
-    category: 'api',
-    message: `${config.method?.toUpperCase() ?? 'GET'} ${(config.baseURL ?? '') + (config.url ?? '')}`,
-    level: 'info',
-  });
   return config;
 });
 
@@ -117,15 +111,8 @@ api.interceptors.response.use(
         globalNavigationRef('/(auth)/login');
       }
       setTimeout(() => { isHandling401 = false; }, 2000);
-    } else if (error.response?.status !== 401) {
-      SentryRN.captureException(error, {
-        extra: {
-          url: error.config?.url,
-          method: error.config?.method,
-          status: error.response?.status,
-          data: error.response?.data,
-        },
-      });
+    } else if (error.response?.status !== 401 && __DEV__) {
+      console.warn('[api]', error.config?.method, error.config?.url, error.response?.status);
     }
     return Promise.reject(error);
   }

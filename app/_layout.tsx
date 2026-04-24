@@ -6,8 +6,6 @@ import { useColorScheme, View, ActivityIndicator, Text, StyleSheet } from 'react
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useRouter } from 'expo-router';
-import { init as sentryInit } from 'sentry-expo';
-import * as SentryRN from '@sentry/react-native';
 import { useAuthStore } from '../stores/auth-store';
 import { useAppStore } from '../stores/app-store';
 import { hydrateStorage, getStoredThemeOrDefault } from '../lib/storage';
@@ -18,25 +16,12 @@ import { useOffline } from '../hooks/useOffline';
 import { startAppLogging } from '../services/logging-service';
 import '../i18n';
 
-try {
-  sentryInit({
-    dsn: process.env['EXPO_PUBLIC_SENTRY_DSN'] ?? '',
-    enableInExpoDevelopment: __DEV__,
-    debug: __DEV__,
-  });
-} catch (e) {
-  // If Sentry init fails, never block app boot (would otherwise = black screen in release)
-  console.warn('Sentry init failed', e);
-}
-
-// Global error handler for uncaught JS exceptions
+// Global error handler — keep chain to RN; log in dev only.
 if (typeof ErrorUtils !== 'undefined') {
   const originalHandler = ErrorUtils.getGlobalHandler?.();
   ErrorUtils.setGlobalHandler((error: Error, isFatal?: boolean) => {
-    try {
-      SentryRN.captureException(error);
-    } catch {
-      // ignore
+    if (__DEV__) {
+      console.error('[global]', error, isFatal);
     }
     if (originalHandler) {
       originalHandler(error, isFatal ?? false);
@@ -44,7 +29,6 @@ if (typeof ErrorUtils !== 'undefined') {
   });
 }
 
-// Local log drain (console capture + batch POST). Safe no-op unless configured.
 try {
   startAppLogging();
 } catch (e) {

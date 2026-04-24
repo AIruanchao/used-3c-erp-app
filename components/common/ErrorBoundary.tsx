@@ -1,7 +1,6 @@
 import React, { Component, type ErrorInfo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Button } from 'react-native-paper';
-import { captureException as sentryCapture } from '@sentry/react-native';
 
 interface Props {
   children: React.ReactNode;
@@ -22,9 +21,9 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   override componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    sentryCapture(error, {
-      extra: { componentStack: errorInfo.componentStack },
-    });
+    if (__DEV__) {
+      console.warn('ErrorBoundary', error.message, errorInfo.componentStack);
+    }
   }
 
   handleRetry = () => {
