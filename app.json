@@ -42,7 +42,8 @@
     },
     "plugins": [
       "expo-router",
-      "sentry-expo"
+      "sentry-expo",
+      "@sentry/react-native"
     ],
     "extra": {
       "eas": {
