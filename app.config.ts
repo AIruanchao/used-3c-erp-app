@@ -28,7 +28,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     splash: {
       image: './assets/splash-icon.png',
       resizeMode: 'contain',
-      backgroundColor: '#ffffff',
+      backgroundColor: '#e8e8e8',
     },
     ios: {
       supportsTablet: true,
@@ -37,7 +37,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     android: {
       adaptiveIcon: {
         foregroundImage: './assets/adaptive-icon.png',
-        backgroundColor: '#ffffff',
+        backgroundColor: '#e8e8e8',
       },
       edgeToEdgeEnabled: true,
       package: 'com.nenie.erp',
