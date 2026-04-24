@@ -18,17 +18,9 @@ jest.mock('expo-constants', () => ({
   default: { expoConfig: { extra: {} } },
 }));
 
-// Mock react-native-mmkv
-const mockMmkvStore = new Map();
-jest.mock('react-native-mmkv', () => ({
-  createMMKV: jest.fn(() => ({
-    getString: jest.fn((key) => mockMmkvStore.get(key)),
-    set: jest.fn((key, value) => { mockMmkvStore.set(key, value); }),
-    remove: jest.fn((key) => { mockMmkvStore.delete(key); }),
-    delete: jest.fn((key) => { mockMmkvStore.delete(key); }),
-    clearAll: jest.fn(() => { mockMmkvStore.clear(); }),
-  })),
-}));
+jest.mock('@react-native-async-storage/async-storage', () =>
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
+);
 
 // Mock expo-camera
 jest.mock('expo-camera', () => ({

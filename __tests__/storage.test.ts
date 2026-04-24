@@ -1,4 +1,14 @@
-import { getAuthToken, setAuthToken, removeAuthToken, getUserData, setUserData, getStoresData, setStoresData } from '../lib/storage';
+import {
+  getAuthToken,
+  setAuthToken,
+  removeAuthToken,
+  getUserData,
+  setUserData,
+  getStoresData,
+  setStoresData,
+  STORAGE_KEYS,
+  mmkv,
+} from '../lib/storage';
 
 describe('storage auth token helpers', () => {
   it('returns undefined when no token set', () => {
@@ -27,9 +37,8 @@ describe('storage user data helpers', () => {
   });
 
   it('returns null when no data set', () => {
-    // After clearing via removeAuthToken (which clears the key),
-    // getUserData should return null
-    expect(getUserData()).toBeDefined();
+    mmkv.remove(STORAGE_KEYS.USER_DATA);
+    expect(getUserData()).toBeNull();
   });
 });
 

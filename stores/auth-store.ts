@@ -87,7 +87,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   logout: () => {
-    // Clear all auth-related MMKV keys
+    // Clear all auth-related persisted keys
     mmkv.remove(STORAGE_KEYS.AUTH_TOKEN);
     mmkv.remove(STORAGE_KEYS.AUTH_SESSION_COOKIE);
     mmkv.remove(STORAGE_KEYS.REFRESH_TOKEN);

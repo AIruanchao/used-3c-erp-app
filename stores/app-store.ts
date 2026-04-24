@@ -16,7 +16,8 @@ interface AppState {
 }
 
 export const useAppStore = create<AppState>((set) => ({
-  theme: (mmkv.getString(STORAGE_KEYS.THEME) as ThemeMode) || 'system',
+  // Real theme applied after `hydrateStorage` in `app/_layout` (see `getStoredThemeOrDefault`)
+  theme: 'system',
   isOffline: false,
   scannerTorchOn: false,
   offlineQueueCount: 0,

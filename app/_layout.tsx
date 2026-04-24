@@ -1,8 +1,8 @@
 import { Stack } from 'expo-router';
 import { PaperProvider, DefaultTheme, MD3DarkTheme } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useCallback } from 'react';
-import { useColorScheme } from 'react-native';
+import { useEffect, useCallback, useState } from 'react';
+import { useColorScheme, View, ActivityIndicator, Text, StyleSheet } from 'react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useRouter } from 'expo-router';
@@ -10,6 +10,8 @@ import { init as sentryInit } from 'sentry-expo';
 import * as SentryRN from '@sentry/react-native';
 import { useAuthStore } from '../stores/auth-store';
 import { useAppStore } from '../stores/app-store';
+import { hydrateStorage, getStoredThemeOrDefault } from '../lib/storage';
+import { notificationService } from '../services/notification-service';
 import { setNavigationRef, setLogoutRef } from '../lib/api';
 import { ErrorBoundary } from '../components/common/ErrorBoundary';
 import { useOffline } from '../hooks/useOffline';
@@ -62,15 +64,35 @@ const queryClient = new QueryClient({
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const theme = useAppStore((s) => s.theme);
+  const setTheme = useAppStore((s) => s.setTheme);
   const hydrate = useAuthStore((s) => s.hydrate);
   const logout = useAuthStore((s) => s.logout);
   const router = useRouter();
+  const [storageReady, setStorageReady] = useState(false);
 
   useOffline();
 
   useEffect(() => {
-    hydrate();
-  }, [hydrate]);
+    let cancelled = false;
+    (async () => {
+      try {
+        await hydrateStorage();
+        notificationService.hydrate();
+        const t = getStoredThemeOrDefault();
+        setTheme(t);
+        hydrate();
+      } catch (e) {
+        console.warn('Storage bootstrap failed', e);
+        hydrate();
+      }
+      if (!cancelled) {
+        setStorageReady(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [hydrate, setTheme]);
 
   const handleNavigate = useCallback(
     (path: string) => {
@@ -97,6 +119,15 @@ export default function RootLayout() {
   const isDark =
     theme === 'dark' || (theme === 'system' && colorScheme === 'dark');
   const paperTheme = isDark ? MD3DarkTheme : DefaultTheme;
+
+  if (!storageReady) {
+    return (
+      <View style={layoutBootStyles.root} accessibilityLabel="app-starting">
+        <ActivityIndicator />
+        <Text style={layoutBootStyles.hint}>加载中…</Text>
+      </View>
+    );
+  }
 
   return (
     <ErrorBoundary>
@@ -183,3 +214,16 @@ export default function RootLayout() {
     </ErrorBoundary>
   );
 }
+
+const layoutBootStyles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  hint: {
+    marginTop: 12,
+    color: '#757575',
+  },
+});
