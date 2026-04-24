@@ -172,6 +172,11 @@ export default function InboundScreen() {
         batteryHealth: batteryHealth ? (parseInt(batteryHealth, 10) || null) : null,
       });
 
+      if (!result.success || !result.deviceId) {
+        Alert.alert('入库失败', result.success ? '未获取设备ID' : '服务器返回失败');
+        return;
+      }
+
       Alert.alert('入库成功', `设备ID: ${result.deviceId}`, [
         { text: '继续入库', onPress: resetForm },
         { text: '查看库存', onPress: () => router.push('/(tabs)/inventory' as never) },
