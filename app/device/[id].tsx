@@ -166,7 +166,7 @@ export default function DeviceDetailScreen() {
             onPress={async () => {
               setPrinting(true);
               try {
-                await printerService.printInboundReceipt({
+                const ok = await printerService.printInboundReceipt({
                   sn: device.sn,
                   skuName: device.Sku?.name ?? '未知',
                   unitCost: device.DevicePricing?.unitCost ?? '0',
@@ -174,6 +174,9 @@ export default function DeviceDetailScreen() {
                   operatorName: user?.name ?? '',
                   date: formatDate(new Date().toISOString()),
                 });
+                if (!ok) {
+                  Alert.alert('打印失败', '请检查打印机连接');
+                }
               } catch (err) {
                 Alert.alert('打印失败', err instanceof Error ? err.message : '请检查打印机连接');
               } finally {

@@ -12,9 +12,9 @@ export async function quickInbound(data: {
   skuId: string;
   storeId: string;
   organizationId: string;
-  unitCost: string;
-  peerPrice?: string;
-  retailPrice?: string;
+  unitCost: number;
+  peerPrice?: number | null;
+  retailPrice?: number | null;
   condition?: string;
   channel?: string;
   sourceType?: string;

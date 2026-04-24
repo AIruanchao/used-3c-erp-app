@@ -130,6 +130,7 @@ export default function InboundScreen() {
     setCondition('');
     setChannel('');
     setBatteryHealth('');
+    setSourceType('TRADE_IN');
     setStep('scan');
   }, []);
 
@@ -171,9 +172,9 @@ export default function InboundScreen() {
         organizationId,
         skuId: skuId,
         sn: sn.trim(),
-        unitCost: unitCost,
-        peerPrice: peerPrice || undefined,
-        retailPrice: retailPrice || undefined,
+        unitCost: parseFloat(unitCost),
+        peerPrice: peerPrice ? parseFloat(peerPrice) : undefined,
+        retailPrice: retailPrice ? parseFloat(retailPrice) : undefined,
         condition: condition || undefined,
         channel: channel || undefined,
         sourceType: sourceType,

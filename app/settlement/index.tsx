@@ -28,7 +28,7 @@ export default function SettlementScreen() {
     if (printing) return;
     setPrinting(true);
     try {
-      await printerService.printDailySettlement({
+      const ok = await printerService.printDailySettlement({
         storeName: storeName ?? '',
         date: formatDate(new Date().toISOString()),
         totalSales: yuan(report?.sales.amount ?? 0),
@@ -36,6 +36,9 @@ export default function SettlementScreen() {
         deviceCount: report?.purchase.count ?? 0,
         repairCount: report?.sales.count ?? 0,
       });
+      if (!ok) {
+        Alert.alert('打印失败', '请检查打印机连接');
+      }
     } catch (err) {
       Alert.alert('打印失败', err instanceof Error ? err.message : '请检查打印机连接');
     } finally {
