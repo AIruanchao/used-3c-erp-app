@@ -32,6 +32,11 @@ export async function createRepair(data: {
   return res.data;
 }
 
+export interface RepairActionResult {
+  ok: boolean;
+  error?: string;
+}
+
 export async function quoteRepair(
   repairId: string,
   data: {
@@ -47,12 +52,12 @@ export async function quoteRepair(
     repairMode?: string;
     estimatedHours?: number;
   },
-): Promise<{ ok: boolean }> {
+): Promise<RepairActionResult> {
   const res = await api.post('/api/repair/quote', { orderId: repairId, ...data });
   return res.data;
 }
 
-export async function startRepair(repairId: string, technicianId?: string): Promise<{ ok: boolean }> {
+export async function startRepair(repairId: string, technicianId?: string): Promise<RepairActionResult> {
   const res = await api.post('/api/repair/start', {
     orderId: repairId,
     technicianId: technicianId || undefined,
@@ -60,7 +65,7 @@ export async function startRepair(repairId: string, technicianId?: string): Prom
   return res.data;
 }
 
-export async function acceptRepairQuote(repairId: string): Promise<{ ok: boolean }> {
+export async function acceptRepairQuote(repairId: string): Promise<RepairActionResult> {
   const res = await api.post('/api/repair/accept', { orderId: repairId });
   return res.data;
 }
@@ -68,17 +73,17 @@ export async function acceptRepairQuote(repairId: string): Promise<{ ok: boolean
 export async function completeRepair(
   repairId: string,
   data?: { repairNotes?: string },
-): Promise<{ ok: boolean }> {
+): Promise<RepairActionResult> {
   const res = await api.post('/api/repair/complete', { orderId: repairId, ...data });
   return res.data;
 }
 
-export async function qcRepair(repairId: string): Promise<{ ok: boolean }> {
+export async function qcRepair(repairId: string): Promise<RepairActionResult> {
   const res = await api.post('/api/repair/qc', { orderId: repairId, qcStatus: 'PASS' });
   return res.data;
 }
 
-export async function deliverRepair(repairId: string): Promise<{ ok: boolean }> {
+export async function deliverRepair(repairId: string): Promise<RepairActionResult> {
   const res = await api.post('/api/repair/deliver', { orderId: repairId, pickupMode: 'SELF' });
   return res.data;
 }

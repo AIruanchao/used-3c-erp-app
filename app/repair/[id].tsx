@@ -30,7 +30,7 @@ export default function RepairDetailScreen() {
     if (!id || actionLoading) return;
     setActionLoading(true);
     try {
-      let result: { ok: boolean };
+      let result: { ok: boolean; error?: string };
       switch (action) {
         case 'quote':
           setShowQuoteDialog(true);
@@ -39,27 +39,27 @@ export default function RepairDetailScreen() {
           // If QUOTED, must accept first then start
           if (currentStatus === 'QUOTED') {
             const acceptRes = await acceptRepairQuote(id);
-            if (!acceptRes.ok) { Alert.alert('失败', '接受报价失败'); break; }
+            if (!acceptRes.ok) { Alert.alert('失败', acceptRes.error ?? '接受报价失败'); break; }
             setCurrentStatus('ACCEPTED');
           }
           result = await startRepair(id, userId);
           if (result.ok) { Alert.alert('成功', '已开始维修'); setCurrentStatus('IN_REPAIR'); }
-          else { Alert.alert('失败', '操作失败'); }
+          else { Alert.alert('失败', result.error ?? '操作失败'); }
           break;
         case 'complete':
           result = await completeRepair(id);
           if (result.ok) { Alert.alert('成功', '维修完成'); setCurrentStatus('COMPLETED'); }
-          else { Alert.alert('失败', '操作失败'); }
+          else { Alert.alert('失败', result.error ?? '操作失败'); }
           break;
         case 'qc':
           result = await qcRepair(id);
           if (result.ok) { Alert.alert('成功', '质检通过'); setCurrentStatus('WAITING_PICKUP'); }
-          else { Alert.alert('失败', '操作失败'); }
+          else { Alert.alert('失败', result.error ?? '操作失败'); }
           break;
         case 'deliver':
           result = await deliverRepair(id);
           if (result.ok) { Alert.alert('成功', '已安排交付'); setCurrentStatus('DELIVERING'); }
-          else { Alert.alert('失败', '操作失败'); }
+          else { Alert.alert('失败', result.error ?? '操作失败'); }
           break;
       }
     } catch (err) {
@@ -104,7 +104,7 @@ export default function RepairDetailScreen() {
         laborCost: labor,
       });
       if (!result.ok) {
-        Alert.alert('报价失败', '服务器返回失败');
+        Alert.alert('报价失败', result.error ?? '服务器返回失败');
         return;
       }
       setShowQuoteDialog(false);
