@@ -1,4 +1,5 @@
 import type { ExpoConfig, ConfigContext } from 'expo/config';
+import { APP_DISPLAY_NAME } from './lib/constants';
 
 export default ({ config }: ConfigContext): ExpoConfig => {
   const sentryDsn = process.env['EXPO_PUBLIC_SENTRY_DSN'] ?? '';
@@ -15,7 +16,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
 
   return {
     ...config,
-    name: '嫩叶ERP',
+    name: APP_DISPLAY_NAME,
     slug: 'used-3c-erp-app',
     version: '1.0.0',
     orientation: 'portrait',

@@ -13,7 +13,7 @@ import { useRouter } from 'expo-router';
 import { useAuthStore, type StoreInfo } from '../../stores/auth-store';
 import { loginWithEmail, getUserStores } from '../../services/auth-service';
 import { setAuthSessionCookie } from '../../lib/storage';
-import { COMPANY_NAME } from '../../lib/constants';
+import { APP_DISPLAY_NAME, COMPANY_NAME } from '../../lib/constants';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -74,7 +74,7 @@ export default function LoginScreen() {
     >
       <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.appName}>嫩叶ERP</Text>
+          <Text style={styles.appName}>{APP_DISPLAY_NAME}</Text>
           <Text style={styles.companyName}>{COMPANY_NAME}</Text>
         </View>
 

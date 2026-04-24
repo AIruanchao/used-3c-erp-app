@@ -3,7 +3,7 @@ import { Text, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Card, List, Switch, Divider, Button } from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAppStore } from '../stores/app-store';
-import { COMPANY_NAME } from '../lib/constants';
+import { APP_DISPLAY_NAME, COMPANY_NAME } from '../lib/constants';
 import { printerService } from '../services/printer-service';
 
 export default function SettingsScreen() {
@@ -131,7 +131,9 @@ export default function SettingsScreen() {
       <Card style={styles.card}>
         <Card.Content>
           <Text style={styles.aboutTitle}>关于</Text>
-          <Text style={styles.aboutText}>嫩叶ERP - 二手3C管理系统</Text>
+          <Text style={styles.aboutText}>
+            {APP_DISPLAY_NAME} - 二手3C管理系统
+          </Text>
           <Text style={styles.aboutText}>版本: 1.0.0</Text>
           <Text style={styles.aboutText}>公司: {COMPANY_NAME}</Text>
         </Card.Content>

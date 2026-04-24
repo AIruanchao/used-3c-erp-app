@@ -72,6 +72,9 @@ export const DISPOSITION_OPTIONS = [
 /** Max photos */
 export const MAX_PHOTOS = 13;
 
+/** Shown on launcher icon label and in-app title */
+export const APP_DISPLAY_NAME = '咖机汇SVIP';
+
 /** Company name */
 export const COMPANY_NAME = '安徽嫩叶科技有限公司';
 
