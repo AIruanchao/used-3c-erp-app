@@ -4,6 +4,7 @@ import Constants from 'expo-constants';
 import {
   getAuthSessionCookie,
   getAuthToken,
+  getApiBaseUrl,
   removeAuthSessionCookie,
   removeAuthToken,
 } from './storage';
@@ -28,7 +29,7 @@ function getExtraApiBaseUrl(): string | undefined {
  * 3) Dev default (Android emulator can reach host via 10.0.2.2)
  * 4) Prod default (legacy)
  */
-const API_BASE = (() => {
+const DEFAULT_API_BASE = (() => {
   const fromEnv = process.env['EXPO_PUBLIC_API_BASE']?.trim();
   if (fromEnv) return normalizeApiBaseUrl(fromEnv);
 
@@ -42,13 +43,19 @@ const API_BASE = (() => {
 })();
 
 export const api = axios.create({
-  baseURL: API_BASE,
+  baseURL: DEFAULT_API_BASE,
   timeout: 15000,
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true,
 });
 
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+  // Allow overriding API base at runtime (persisted in AsyncStorage and hydrated at boot).
+  const runtimeBase = getApiBaseUrl();
+  if (runtimeBase) {
+    config.baseURL = normalizeApiBaseUrl(runtimeBase);
+  }
+
   // React Native doesn't reliably manage cookies, so we inject them manually.
   // Prefer full cookie header ("name=value; name2=value2") when available.
   const sessionCookieHeader = getAuthSessionCookie();
@@ -118,4 +125,4 @@ api.interceptors.response.use(
   }
 );
 
-export { API_BASE };
+export const API_BASE = DEFAULT_API_BASE;

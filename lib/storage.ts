@@ -25,6 +25,7 @@ export const STORAGE_KEYS = {
   THEME: 'theme',
   SCAN_HISTORY: 'scan_history',
   OFFLINE_QUEUE: 'offline_queue',
+  API_BASE_URL: 'api_base_url',
 } as const;
 
 const ALL_PERSISTED_KEYS: string[] = [...Object.values(STORAGE_KEYS), ...EXTRA_KEYS];
@@ -160,4 +161,20 @@ export function setSelectedOrg(orgId: string): void {
 
 export function getSelectedOrg(): string | undefined {
   return mem.get(STORAGE_KEYS.SELECTED_ORG);
+}
+
+export function getApiBaseUrl(): string | undefined {
+  const v = mem.get(STORAGE_KEYS.API_BASE_URL);
+  return v && v.trim() ? v : undefined;
+}
+
+export function setApiBaseUrl(url: string): void {
+  const v = url.trim();
+  mem.set(STORAGE_KEYS.API_BASE_URL, v);
+  void AsyncStorage.setItem(k(STORAGE_KEYS.API_BASE_URL), v);
+}
+
+export function removeApiBaseUrl(): void {
+  mem.delete(STORAGE_KEYS.API_BASE_URL);
+  void AsyncStorage.removeItem(k(STORAGE_KEYS.API_BASE_URL));
 }

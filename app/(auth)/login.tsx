@@ -14,6 +14,7 @@ import { useAuthStore, type StoreInfo } from '../../stores/auth-store';
 import { loginWithEmail, getUserStores } from '../../services/auth-service';
 import { setAuthSessionCookie } from '../../lib/storage';
 import { APP_DISPLAY_NAME, COMPANY_NAME } from '../../lib/constants';
+import { API_BASE } from '../../lib/api';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -76,6 +77,9 @@ export default function LoginScreen() {
         <View style={styles.header}>
           <Text style={styles.appName}>{APP_DISPLAY_NAME}</Text>
           <Text style={styles.companyName}>{COMPANY_NAME}</Text>
+          <Text style={styles.apiHint} numberOfLines={1}>
+            服务器: {API_BASE}
+          </Text>
         </View>
 
         <View style={styles.form}>
@@ -138,6 +142,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#757575',
     marginTop: 8,
+  },
+  apiHint: {
+    fontSize: 12,
+    color: '#9e9e9e',
+    marginTop: 8,
+    maxWidth: 280,
   },
   form: {
     gap: 12,

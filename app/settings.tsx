@@ -1,9 +1,11 @@
 import React, { useState, useCallback } from 'react';
-import { Text, StyleSheet, ScrollView, Alert } from 'react-native';
-import { Card, List, Switch, Divider, Button } from 'react-native-paper';
+import { Text, StyleSheet, ScrollView, Alert, View } from 'react-native';
+import { Card, List, Switch, Divider, Button, TextInput } from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAppStore } from '../stores/app-store';
 import { APP_DISPLAY_NAME, COMPANY_NAME } from '../lib/constants';
+import { API_BASE } from '../lib/api';
+import { getApiBaseUrl, setApiBaseUrl, removeApiBaseUrl } from '../lib/storage';
 import { printerService } from '../services/printer-service';
 
 export default function SettingsScreen() {
@@ -12,6 +14,7 @@ export default function SettingsScreen() {
   const [scanning, setScanning] = useState(false);
   const [printers, setPrinters] = useState<Array<{ id: string; name: string | null }>>([]);
   const [connected, setConnected] = useState(printerService.isConnected());
+  const [apiBaseDraft, setApiBaseDraft] = useState(getApiBaseUrl() ?? '');
 
   // Refresh connection state when screen gains focus
   useFocusEffect(
@@ -58,6 +61,52 @@ export default function SettingsScreen() {
 
   return (
     <ScrollView style={styles.container}>
+      {/* API Base */}
+      <Card style={styles.card}>
+        <Card.Title title="服务器地址" titleStyle={styles.cardTitle} />
+        <Card.Content>
+          <Text style={styles.aboutText}>默认: {API_BASE}</Text>
+          <TextInput
+            mode="outlined"
+            label="自定义 API Base（可选）"
+            placeholder="https://your-domain.com"
+            value={apiBaseDraft}
+            onChangeText={setApiBaseDraft}
+            autoCapitalize="none"
+            autoCorrect={false}
+            style={{ marginTop: 8 }}
+          />
+          <View style={{ flexDirection: 'row', gap: 12, marginTop: 12 }}>
+            <Button
+              mode="contained"
+              onPress={() => {
+                const v = apiBaseDraft.trim();
+                if (!v) {
+                  Alert.alert('提示', '请输入 API Base，或点击“清除自定义”');
+                  return;
+                }
+                setApiBaseUrl(v);
+                Alert.alert('已保存', '已保存服务器地址。请返回登录页重试。');
+              }}
+              accessibilityLabel="保存服务器地址"
+            >
+              保存
+            </Button>
+            <Button
+              mode="outlined"
+              onPress={() => {
+                removeApiBaseUrl();
+                setApiBaseDraft('');
+                Alert.alert('已清除', '已恢复为默认服务器地址。');
+              }}
+              accessibilityLabel="清除自定义服务器地址"
+            >
+              清除自定义
+            </Button>
+          </View>
+        </Card.Content>
+      </Card>
+
       {/* Theme */}
       <Card style={styles.card}>
         <List.Item
