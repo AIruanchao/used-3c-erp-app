@@ -1,4 +1,4 @@
-import { installCrashLogger, checkLastCrash } from '../lib/crash-logger';
+import { installCrashLogger, checkLastCrash, autoUploadCrashLogs } from '../lib/crash-logger';
 import { Stack } from 'expo-router';
 import { PaperProvider, DefaultTheme, MD3DarkTheme } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
@@ -62,6 +62,12 @@ export default function RootLayout() {
       }
       if (!cancelled) {
         setStorageReady(true);
+        // 🚀 自动回传崩溃日志（不阻塞启动，即使失败也不影响）
+        autoUploadCrashLogs().then(({ uploaded }) => {
+          if (uploaded > 0) {
+            console.log('[CrashLogger] 📤 已上传', uploaded, '条崩溃日志');
+          }
+        }).catch(() => {});
       }
     })();
     return () => {
