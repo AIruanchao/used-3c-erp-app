@@ -7,7 +7,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ...config,
     name: APP_DISPLAY_NAME,
     slug: 'used-3c-erp-app',
-    version: '1.0.1',
+    version: '0.1.0',
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'automatic',
