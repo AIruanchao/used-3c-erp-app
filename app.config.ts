@@ -7,7 +7,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ...config,
     name: APP_DISPLAY_NAME,
     slug: 'used-3c-erp-app',
-    version: '0.1.0',
+    version: '1.0.3',
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'automatic',
@@ -33,6 +33,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       versionCode: 3,
       allowBackup: false,
       permissions: [
+        'android.permission.CAMERA',
         'android.permission.INTERNET',
         'android.permission.POST_NOTIFICATIONS',
         'android.permission.VIBRATE',
@@ -41,6 +42,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     plugins: [
       'expo-router',
+      ['expo-camera', { barcodeScannerEnabled: true }],
     ],
     extra: {
       eas: {
