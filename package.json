@@ -4,8 +4,8 @@
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
     "log-server": "node scripts/log-server.mjs",
@@ -23,7 +23,6 @@
     "babel-preset-expo": "~54.0.10",
     "expo": "~54.0.33",
     "expo-application": "~7.0.8",
-    "expo-camera": "~17.0.10",
     "expo-constants": "~18.0.13",
     "expo-device": "~8.0.10",
     "expo-linking": "~8.0.11",
