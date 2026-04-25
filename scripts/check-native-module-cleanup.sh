@@ -15,7 +15,7 @@ fi
 echo "[pre-commit] 检查原生模块移除完整性..."
 
 # 获取被删除的 expo-* 和 react-native-* 模块
-REMOVED=$(git diff --cached package.json | grep '^-.*"expo-\|^-"react-native-' | \
+REMOVED=$(git diff --cached package.json | grep '^-.*"expo-\|^-"react-native-' || true | \
   sed 's/.*"\(expo-[^"]*\|react-native-[^"]*\)".*/\1/' | sort -u)
 
 if [ -z "$REMOVED" ]; then

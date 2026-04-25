@@ -81,10 +81,10 @@ export default function InboundScreen() {
   }, [modelId]);
 
   const onScan = useCallback(
-    async (code: string, format: string) => {
+    async (code: string) => {
       if (scanLoading) return;
       setScanLoading(true);
-      handleBarcodeScanned(code, format);
+      handleBarcodeScanned(code, 'manual');
       setSn(code);
 
       if (!storeId || !organizationId) {

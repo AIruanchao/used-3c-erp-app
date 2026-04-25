@@ -27,7 +27,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         foregroundImage: './assets/adaptive-icon.png',
         backgroundColor: '#e8e8e8',
       },
-      edgeToEdgeEnabled: false,
+      // Expo SDK 54 / Android 16: edge-to-edge is enabled for all apps.
+      edgeToEdgeEnabled: true,
       package: 'com.nenie.erp',
       versionCode: 3,
       allowBackup: false,

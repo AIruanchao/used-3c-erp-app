@@ -31,7 +31,7 @@ if [ -f "package.json" ]; then
       process.exit(1);
     }
     console.log('ok');
-  " 2>/dev/null)
+  " 2>/dev/null || echo "missing")
   if [ "$OVERRIDES_OK" != "ok" ]; then
     echo "⚠️  package.json overrides 中缺少 reanimated/worklets 排除配置"
   fi
