@@ -1,3 +1,4 @@
+import { installCrashLogger, checkLastCrash } from '../lib/crash-logger';
 import { Stack } from 'expo-router';
 import { PaperProvider, DefaultTheme, MD3DarkTheme } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
@@ -16,18 +17,8 @@ import { useOffline } from '../hooks/useOffline';
 import { startAppLogging } from '../services/logging-service';
 import '../i18n';
 
-// Global error handler — keep chain to RN; log in dev only.
-if (typeof ErrorUtils !== 'undefined') {
-  const originalHandler = ErrorUtils.getGlobalHandler?.();
-  ErrorUtils.setGlobalHandler((error: Error, isFatal?: boolean) => {
-    if (__DEV__) {
-      console.error('[global]', error, isFatal);
-    }
-    if (originalHandler) {
-      originalHandler(error, isFatal ?? false);
-    }
-  });
-}
+// 🛡️ 崩溃日志捕获器 — 最早安装，确保所有异常都被记录
+installCrashLogger();
 
 try {
   startAppLogging();
@@ -190,6 +181,10 @@ export default function RootLayout() {
             <Stack.Screen
               name="settlement/index"
               options={{ headerShown: true, title: '日结' }}
+            />
+            <Stack.Screen
+              name="crash-logs"
+              options={{ headerShown: true, title: '🐛 崩溃日志' }}
             />
           </Stack>
         </PaperProvider>
