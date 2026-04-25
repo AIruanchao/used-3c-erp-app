@@ -57,7 +57,9 @@
   "overrides": {
     "react": "19.2.5",
     "react-dom": "19.2.5",
-    "react-test-renderer": "19.2.5"
+    "react-test-renderer": "19.2.5",
+    "react-native-reanimated": "npm:empty-npm-package@1.0.0",
+    "react-native-worklets": "npm:empty-npm-package@1.0.0"
   },
   "expo": {
     "install": {

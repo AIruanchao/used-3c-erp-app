@@ -8,13 +8,15 @@
       "developmentClient": true,
       "distribution": "internal",
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "preBuildCommand": "bash scripts/eas-pre-build-check.sh"
       }
     },
     "preview": {
       "distribution": "internal",
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "preBuildCommand": "bash scripts/eas-pre-build-check.sh"
       },
       "env": {
         "NPM_CONFIG_LEGACY_PEER_DEPS": "true"
@@ -22,7 +24,8 @@
     },
     "production": {
       "android": {
-        "buildType": "app-bundle"
+        "buildType": "app-bundle",
+        "preBuildCommand": "bash scripts/eas-pre-build-check.sh"
       },
       "env": {
         "NPM_CONFIG_LEGACY_PEER_DEPS": "true"
