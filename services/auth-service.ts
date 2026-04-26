@@ -50,8 +50,22 @@ export async function loginWithEmail(
   removeAuthToken();
   removeAuthSessionCookie();
 
-  const csrfRes = await api.get('/api/auth/csrf');
-  const csrfToken = (csrfRes.data as { csrfToken?: string })?.csrfToken;
+  // Use native fetch for CSRF to bypass potential axios/Android 16 compatibility issues
+  let csrfToken: string | undefined;
+  try {
+    const BASE = process.env['EXPO_PUBLIC_API_BASE']?.trim() || 'https://erp.nenie.vip';
+    const fetchRes = await fetch(`${BASE}/api/auth/csrf`, {
+      headers: { 'Accept': 'application/json' },
+    });
+    if (!fetchRes.ok) throw new Error(`CSRF请求失败: ${fetchRes.status}`);
+    const csrfData = await fetchRes.json();
+    csrfToken = csrfData.csrfToken;
+  } catch (err) {
+    // Fallback to axios if fetch fails too
+    console.warn('[auth] fetch CSRF failed, falling back to axios:', err);
+    const csrfRes = await api.get('/api/auth/csrf');
+    csrfToken = (csrfRes.data as { csrfToken?: string })?.csrfToken;
+  }
   if (!csrfToken) throw new Error('获取CSRF令牌失败');
 
   // Avoid relying on URLSearchParams availability in RN runtimes.

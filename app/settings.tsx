@@ -115,11 +115,41 @@ export default function SettingsScreen() {
                 if (connTesting) return;
                 setConnTesting(true);
                 try {
+                  // Try native fetch first (avoids potential axios/Android 16 issues)
+                  const BASE_URL = 'https://erp.nenie.vip';
+                  let fetchOk = false;
+                  let testMsg = '';
                   const started = Date.now();
-                  const res = await api.get('/api/auth/csrf');
-                  const ms = Date.now() - started;
-                  const token = (res.data as { csrfToken?: string })?.csrfToken ?? '(no csrfToken)';
-                  Alert.alert('连接正常', `GET /api/auth/csrf 成功（${ms}ms）\n${token}`);
+                  try {
+                    const res = await fetch(`${BASE_URL}/api/auth/csrf`, {
+                      headers: { 'Accept': 'application/json' },
+                    });
+                    const ms = Date.now() - started;
+                    if (res.ok) {
+                      const data = await res.json();
+                      fetchOk = true;
+                      testMsg = `fetch ${ms}ms OK: ${data.csrfToken}`;
+                    } else {
+                      testMsg = `fetch HTTP ${res.status} (${ms}ms)`;
+                    }
+                  } catch (e: unknown) {
+                    const ms = Date.now() - started;
+                    testMsg = `fetch err: ${e instanceof Error ? e.message : String(e)} (${ms}ms)`;
+                  }
+                  if (fetchOk) {
+                    Alert.alert('连接正常', testMsg);
+                  } else {
+                    // fallback to axios
+                    try {
+                      const res2 = await api.get('/api/auth/csrf');
+                      const ms2 = Date.now() - started;
+                      const token = (res2.data as { csrfToken?: string })?.csrfToken ?? '';
+                      Alert.alert('连接正常', `axios ${ms2}ms OK: ${token}`);
+                    } catch (e2: unknown) {
+                      const eMsg = e2 instanceof Error ? e2.message : String(e2);
+                      Alert.alert('连接失败', `fetch: ${testMsg}\naxios: ${eMsg}`);
+                    }
+                  }
                 } catch (e: unknown) {
                   const msg =
                     e && typeof e === 'object' && 'message' in e
