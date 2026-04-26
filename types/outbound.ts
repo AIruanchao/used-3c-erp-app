@@ -59,5 +59,11 @@ export interface OutboundDetail {
   finalTotal: string | number;
   totalPaid: string | number;
   remainAmount: string | number;
-  payments: Array<{ method: string; amount: string | number }>;
+  /** 与组织收款通道表一致的展示名；后端 GET /api/outbound/print 已带 */
+  payments: Array<{
+    method: string;
+    amount: string | number;
+    note?: string | null;
+    methodLabel?: string;
+  }>;
 }

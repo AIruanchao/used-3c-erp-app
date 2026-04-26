@@ -126,6 +126,24 @@ const paperTheme = useTheme();
         />
         <Divider />
         <List.Item
+          title="收款方式"
+          description="全端同步：名称、启停、自定义通道"
+          left={(props) => <List.Icon {...props} icon="bank-transfer" />}
+          right={(props) => <List.Icon {...props} icon="chevron-right" />}
+          onPress={() => router.push('/payment-channels' as never)}
+          accessibilityLabel="收款方式"
+        />
+        <Divider />
+        <List.Item
+          title="资金账户"
+          description="收款/付款/通用，与收银与入库出账一致"
+          left={(props) => <List.Icon {...props} icon="wallet" />}
+          right={(props) => <List.Icon {...props} icon="chevron-right" />}
+          onPress={() => router.push('/cash-accounts' as never)}
+          accessibilityLabel="资金账户"
+        />
+        <Divider />
+        <List.Item
           title="入库记录"
           left={(props) => <List.Icon {...props} icon="history" />}
           right={(props) => <List.Icon {...props} icon="chevron-right" />}

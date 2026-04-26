@@ -9,6 +9,8 @@ import { QueryError } from '../../components/common/QueryError';
 import { AmountText } from '../../components/finance/AmountText';
 import { formatDate } from '../../lib/utils';
 import { useAuth } from '../../hooks/useAuth';
+import { getPaymentMethodLabel } from '../../lib/payment-method-labels';
+import { useOrgPaymentLabelMap } from '../../hooks/useOrgPaymentLabelMap';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { PreOrderStatus } from '../../types/pre-order';
 
@@ -23,7 +25,8 @@ export default function PreOrderDetailScreen() {
   const theme = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { storeId } = useAuth();
+  const { storeId, organizationId } = useAuth();
+  const labelByCode = useOrgPaymentLabelMap(organizationId);
   const qc = useQueryClient();
 
   const { data, isLoading, isError, refetch, isRefetching } = useQuery({
@@ -123,6 +126,14 @@ export default function PreOrderDetailScreen() {
               titleStyle={{ color: theme.colors.onSurfaceVariant }}
               right={() => (data.depositAmount != null ? <AmountText value={data.depositAmount} /> : <Text>—</Text>)}
             />
+            {data.depositMethod ? (
+              <List.Item
+                title="定金方式"
+                titleStyle={{ color: theme.colors.onSurfaceVariant }}
+                description={getPaymentMethodLabel(data.depositMethod, null, labelByCode)}
+                descriptionStyle={{ color: theme.colors.onSurface }}
+              />
+            ) : null}
             <List.Item
               title="已付定金"
               titleStyle={{ color: theme.colors.onSurfaceVariant }}

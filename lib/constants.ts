@@ -35,14 +35,11 @@ export const CHANNEL_OPTIONS = [
   '其他',
 ] as const;
 
-/** Settlement methods */
-export const SETTLEMENT_METHODS = [
-  { value: 'CASH', label: '现金' },
-  { value: 'WECHAT', label: '微信' },
-  { value: 'ALIPAY', label: '支付宝' },
-  { value: 'BANK_TRANSFER', label: '银行转账' },
-  { value: 'OTHER', label: '其他' },
-] as const;
+/** 结算/收款下拉与主站 `payment-method-labels` 一致 */
+export {
+  CASHIER_PAYMENT_SELECT_OPTIONS as PAYMENT_METHODS,
+  CASHIER_PAYMENT_DROPDOWN_OPTIONS as SETTLEMENT_METHODS,
+} from './payment-method-labels';
 
 /** Source channels */
 export const SOURCE_CHANNELS = [
@@ -119,15 +116,6 @@ export const LEDGER_TYPE_LABELS: Record<string, string> = {
   TRANSFER: '转账',
   OTHER: '其他',
 };
-
-/** Payment methods for payment */
-export const PAYMENT_METHODS = [
-  { value: 'WECHAT', label: '微信支付' },
-  { value: 'ALIPAY', label: '支付宝' },
-  { value: 'CASH', label: '现金' },
-  { value: 'BANK_TRANSFER', label: '银行转账' },
-  { value: 'OTHER', label: '其他' },
-] as const;
 
 /** Page size for pagination */
 export const PAGE_SIZE = 20;

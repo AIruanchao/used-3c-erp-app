@@ -163,6 +163,14 @@ export default function RootLayout() {
               options={{ headerShown: true, title: '收银台' }}
             />
             <Stack.Screen
+              name="payment-channels"
+              options={{ headerShown: true, title: '收款方式' }}
+            />
+            <Stack.Screen
+              name="cash-accounts"
+              options={{ headerShown: true, title: '资金账户' }}
+            />
+            <Stack.Screen
               name="customer/index"
               options={{ headerShown: true, title: '客户列表' }}
             />

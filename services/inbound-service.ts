@@ -22,6 +22,7 @@ export async function quickInbound(data: {
   batteryHealth?: number | null;
   supplierId?: string;
   remark?: string;
+  payOnSite?: { paymentMethod: string; cashAccountId: string } | null;
 }): Promise<QuickInboundResult> {
   return offlinePost<QuickInboundResult>('/api/devices/quick-inbound', data as Record<string, unknown>);
 }

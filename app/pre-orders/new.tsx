@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import {
   TextInput,
@@ -9,13 +9,15 @@ import {
   Switch,
   HelperText,
   IconButton,
-  SegmentedButtons,
+  Menu,
 } from 'react-native-paper';
 import { useRouter, Stack } from 'expo-router';
 import { useAuth } from '../../hooks/useAuth';
 import { createPreOrder } from '../../services/pre-order-service';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { isValidPhone } from '../../lib/utils';
+import { CASHIER_PAYMENT_DROPDOWN_OPTIONS } from '../../lib/payment-method-labels';
+import { fetchActivePosMethodOptions } from '../../lib/org-payment-channels';
 
 type Line = {
   modelName: string;
@@ -24,14 +26,6 @@ type Line = {
   quantity: string;
   unitPrice: string;
 };
-
-const DEPOSIT_METHODS = [
-  { value: 'WECHAT', label: '微信' },
-  { value: 'ALIPAY', label: '支付宝' },
-  { value: 'CASH', label: '现金' },
-  { value: 'BANK_TRANSFER', label: '银行' },
-  { value: 'OTHER', label: '其他' },
-];
 
 function emptyLine(): Line {
   return {
@@ -47,14 +41,20 @@ export default function NewPreOrderScreen() {
   const theme = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { storeId } = useAuth();
+  const { storeId, organizationId } = useAuth();
 
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerId, setCustomerId] = useState('');
   const [lines, setLines] = useState<Line[]>([emptyLine()]);
   const [depositAmount, setDepositAmount] = useState('');
-  const [depositMethod, setDepositMethod] = useState('WECHAT');
+  const [methodOptions, setMethodOptions] = useState(() =>
+    CASHIER_PAYMENT_DROPDOWN_OPTIONS.map((m) => ({ value: m.value, label: m.label })),
+  );
+  const [depositMethod, setDepositMethod] = useState(
+    CASHIER_PAYMENT_DROPDOWN_OPTIONS[0]?.value ?? 'WECHAT',
+  );
+  const [depositMenuOpen, setDepositMenuOpen] = useState(false);
   const [depositPaid, setDepositPaid] = useState(false);
   const [quoteType, setQuoteType] = useState('');
   const [quoteAmount, setQuoteAmount] = useState('');
@@ -62,6 +62,21 @@ export default function NewPreOrderScreen() {
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!organizationId) return;
+    let alive = true;
+    fetchActivePosMethodOptions(organizationId)
+      .then((opts) => {
+        if (!alive || !opts.length) return;
+        setMethodOptions(opts);
+        setDepositMethod((prev) => (opts.some((o) => o.value === prev) ? prev : opts[0]!.value));
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [organizationId]);
 
   const updateLine = useCallback((i: number, patch: Partial<Line>) => {
     setLines((ls) => {
@@ -237,12 +252,31 @@ export default function NewPreOrderScreen() {
           mode="outlined"
           style={styles.in}
         />
-        <Text style={{ color: theme.colors.onSurfaceVariant }}>定金方式</Text>
-        <SegmentedButtons
-          value={depositMethod}
-          onValueChange={setDepositMethod}
-          buttons={DEPOSIT_METHODS.map((d) => ({ value: d.value, label: d.label }))}
-        />
+        <Text style={{ color: theme.colors.onSurfaceVariant }}>定金方式（与门店启用通道一致）</Text>
+        <Menu
+          visible={depositMenuOpen}
+          onDismiss={() => setDepositMenuOpen(false)}
+          anchor={
+            <Button
+              mode="outlined"
+              onPress={() => setDepositMenuOpen(true)}
+              style={styles.in}
+            >
+              {methodOptions.find((o) => o.value === depositMethod)?.label ?? depositMethod}
+            </Button>
+          }
+        >
+          {methodOptions.map((o) => (
+            <Menu.Item
+              key={o.value}
+              onPress={() => {
+                setDepositMethod(o.value);
+                setDepositMenuOpen(false);
+              }}
+              title={o.label}
+            />
+          ))}
+        </Menu>
         <View style={styles.rowSwitch}>
           <Text style={{ color: theme.colors.onSurface }}>已付定金</Text>
           <Switch value={depositPaid} onValueChange={setDepositPaid} />

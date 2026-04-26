@@ -9,6 +9,8 @@ import { LoadingScreen } from '../../components/common/LoadingScreen';
 import { QueryError } from '../../components/common/QueryError';
 import { AmountText } from '../../components/finance/AmountText';
 import { formatDate } from '../../lib/utils';
+import { getPaymentMethodLabel } from '../../lib/payment-method-labels';
+import { useOrgPaymentLabelMap } from '../../hooks/useOrgPaymentLabelMap';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function OutboundDetailScreen() {
@@ -17,6 +19,7 @@ export default function OutboundDetailScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { organizationId } = useAuth();
+  const labelByCode = useOrgPaymentLabelMap(organizationId);
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['outboundPrint', id, organizationId],
@@ -173,7 +176,9 @@ export default function OutboundDetailScreen() {
             <Card.Content>
               {data.payments.map((p, i) => (
                 <View key={`p-${i}`} style={styles.sumRow}>
-                  <Text style={{ color: theme.colors.onSurface }}>{p.method}</Text>
+                  <Text style={{ color: theme.colors.onSurface }}>
+                    {p.methodLabel ?? getPaymentMethodLabel(p.method, p.note, labelByCode)}
+                  </Text>
                   <AmountText value={p.amount} />
                 </View>
               ))}

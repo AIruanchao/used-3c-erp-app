@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { Button, Card, Chip, SegmentedButtons, useTheme } from 'react-native-paper';
+import { Button, Card, Chip, SegmentedButtons, Switch, useTheme } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../hooks/useAuth';
@@ -19,6 +19,8 @@ import { quickInbound, checkImei, getSkuInfo } from '../../services/inbound-serv
 import { CONDITION_OPTIONS, CHANNEL_OPTIONS, INVENTORY_STATUS_LABELS } from '../../lib/constants';
 import { getErrorMessage } from '../../lib/errors';
 import { isValidMoneyInput, moneyToNumber } from '../../lib/utils';
+import { fetchActivePosMethodOptions } from '../../lib/org-payment-channels';
+import { fetchCashAccountsForFlow, type CashAccountRow } from '../../lib/cash-accounts-api';
 import { BarcodeScannerView } from '../../components/scanner/BarcodeScannerView';
 import { ScanResultCard } from '../../components/scanner/ScanResultCard';
 
@@ -50,10 +52,36 @@ export default function InboundScreen() {
   const [skuLoading, setSkuLoading] = useState(false);
   const [scanLoading, setScanLoading] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
+  const [payOnSite, setPayOnSite] = useState(false);
+  const [payMethod, setPayMethod] = useState('WECHAT');
+  const [payAccountId, setPayAccountId] = useState('');
+  const [payMethodOpts, setPayMethodOpts] = useState<{ value: string; label: string }[]>([]);
+  const [payAccounts, setPayAccounts] = useState<CashAccountRow[]>([]);
 
   React.useEffect(() => {
     loadOfflineCache();
   }, [loadOfflineCache]);
+
+  useEffect(() => {
+    if (!organizationId || !storeId) return;
+    let alive = true;
+    Promise.all([
+      fetchActivePosMethodOptions(organizationId),
+      fetchCashAccountsForFlow(organizationId, storeId, 'PAY'),
+    ])
+      .then(([methods, accounts]) => {
+        if (!alive) return;
+        if (methods.length) {
+          setPayMethodOpts(methods);
+          setPayMethod((prev) => (methods.some((m) => m.value === prev) ? prev : methods[0]!.value));
+        }
+        setPayAccounts(accounts);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [organizationId, storeId]);
 
   const handleLookupSku = useCallback(async () => {
     if (!modelId.trim()) {
@@ -142,6 +170,8 @@ export default function InboundScreen() {
     setChannel('');
     setBatteryHealth('');
     setSourceType('TRADE_IN');
+    setPayOnSite(false);
+    setPayAccountId('');
     setStep('scan');
   }, []);
 
@@ -176,6 +206,18 @@ export default function InboundScreen() {
       Alert.alert('错误', '零售价不能为负数');
       return;
     }
+    if (payOnSite) {
+      if (!payMethod || !payAccountId) {
+        Alert.alert('错误', '现场付款请选择支付方式与付款资金账户（「仅付款」或「通用」）');
+        return;
+      }
+      const cost = moneyToNumber(unitCost);
+      const acc = payAccounts.find((a) => a.id === payAccountId);
+      if (acc && Number(acc.balance) < cost) {
+        Alert.alert('错误', '所选资金账户余额不足，无法现场付款');
+        return;
+      }
+    }
     let parsedBatteryHealth: number | null = null;
     if (batteryHealth) {
       const bh = parseInt(batteryHealth, 10);
@@ -200,6 +242,10 @@ export default function InboundScreen() {
         channel: channel.trim() || undefined,
         sourceType: sourceType,
         batteryHealth: parsedBatteryHealth,
+        payOnSite:
+          payOnSite && payMethod && payAccountId
+            ? { paymentMethod: payMethod, cashAccountId: payAccountId }
+            : undefined,
       });
 
       if (!result.success || !result.deviceId) {
@@ -235,6 +281,10 @@ export default function InboundScreen() {
     channel,
     sourceType,
     batteryHealth,
+    payOnSite,
+    payMethod,
+    payAccountId,
+    payAccounts,
     router,
     resetForm,
     queryClient,
@@ -453,6 +503,52 @@ export default function InboundScreen() {
                   ]}
                 />
 
+                <View style={styles.payOnSiteRow}>
+                  <Text style={{ color: theme.colors.onSurface, flex: 1 }}>现场付款（从资金账户扣减）</Text>
+                  <Switch value={payOnSite} onValueChange={setPayOnSite} />
+                </View>
+                {payOnSite ? (
+                  <Text style={{ fontSize: 12, color: theme.colors.onSurfaceVariant, marginBottom: 8 }}>
+                    与 Web 共用资金账户；请选择「仅付款」或「通用」账户
+                  </Text>
+                ) : null}
+                {payOnSite ? (
+                  <>
+                    <Text style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>支付方式</Text>
+                    <View style={styles.chipRow}>
+                      {payMethodOpts.map((m) => (
+                        <Chip
+                          key={m.value}
+                          selected={payMethod === m.value}
+                          onPress={() => setPayMethod(m.value)}
+                          style={[styles.chip, payMethod === m.value && { backgroundColor: '#FF6D00' }]}
+                          selectedColor={payMethod === m.value ? '#fff' : undefined}
+                          compact
+                        >
+                          {m.label}
+                        </Chip>
+                      ))}
+                    </View>
+                    <Text style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>付款资金账户</Text>
+                    <Button
+                      mode="outlined"
+                      onPress={() => {
+                        Alert.alert('付款资金账户', undefined, [
+                          ...payAccounts.map((a) => ({
+                            text: `${a.name}（¥${Number(a.balance).toFixed(2)}）`,
+                            onPress: () => setPayAccountId(a.id),
+                          })),
+                          { text: '取消', style: 'cancel' },
+                        ]);
+                      }}
+                    >
+                      {payAccountId
+                        ? (payAccounts.find((a) => a.id === payAccountId)?.name ?? '已选')
+                        : '选择账户'}
+                    </Button>
+                  </>
+                ) : null}
+
                 <Button
                   mode="contained"
                   onPress={handleSubmit}
@@ -538,6 +634,13 @@ const styles = StyleSheet.create({
   },
   submitBtn: {
     marginTop: 16,
+  },
+  payOnSiteRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 12,
+    marginBottom: 4,
   },
   skuRow: {
     flexDirection: 'row',
