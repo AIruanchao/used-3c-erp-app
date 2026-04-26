@@ -1,109 +1,183 @@
 import React, { useCallback, useState } from 'react';
-import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
-import { FAB } from 'react-native-paper';
+import { View, StyleSheet, RefreshControl, TextInput } from 'react-native';
+import { Card, Text, useTheme } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../hooks/useAuth';
-import { searchDevice } from '../../services/inventory-service';
 import { SearchBar } from '../../components/common/SearchBar';
-import { DeviceCard } from '../../components/device/DeviceCard';
 import { EmptyState } from '../../components/common/EmptyState';
 import { QueryError } from '../../components/common/QueryError';
-import { INVENTORY_STATUS_LABELS } from '../../lib/constants';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
-import { useQuery } from '@tanstack/react-query';
+import { FlashList } from '../../components/ui/TypedFlashList';
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { getOutboundList } from '../../services/outbound-service';
+import type { OutboundItem } from '../../types/outbound';
+import { AmountText } from '../../components/finance/AmountText';
+import { formatDate } from '../../lib/utils';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-export default function OutboundScreen() {
+const PAGE_SIZE = 20;
+
+export default function OutboundListScreen() {
+  const theme = useTheme();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { organizationId, storeId } = useAuth();
   const [search, setSearch] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
-  const { data: device, isLoading, isError, refetch, isRefetching } = useQuery({
-    queryKey: ['outboundSearch', storeId, organizationId, search],
-    queryFn: () =>
-      searchDevice({
-        q: search,
-        storeId: storeId ?? '',
-        organizationId: organizationId ?? '',
-      }),
-    enabled: !!search && !!organizationId,
+  const query = useInfiniteQuery({
+    queryKey: ['outboundList', organizationId, storeId, search, startDate, endDate],
+    queryFn: async ({ pageParam }) => {
+      if (!organizationId || !storeId) {
+        return {
+          items: [] as OutboundItem[],
+          total: 0,
+          page: 1,
+          pageSize: PAGE_SIZE,
+          totalPages: 0,
+        };
+      }
+      return getOutboundList({
+        organizationId,
+        storeId,
+        page: pageParam as number,
+        pageSize: PAGE_SIZE,
+        keyword: search || undefined,
+        startDate: startDate.trim() || undefined,
+        endDate: endDate.trim() || undefined,
+      });
+    },
+    initialPageParam: 1,
+    getNextPageParam: (last) =>
+      last.page < last.totalPages ? last.page + 1 : undefined,
+    enabled: !!organizationId && !!storeId,
   });
 
-  const handleDevicePress = useCallback(
-    (id: string) => {
-      router.push(`/device/${id}` as never);
-    },
-    [router],
+  const items = query.data?.pages.flatMap((p) => p.items) ?? [];
+  const loadMore = useCallback(() => {
+    if (query.hasNextPage && !query.isFetchingNextPage) {
+      void query.fetchNextPage();
+    }
+  }, [query]);
+
+  const renderItem = useCallback(
+    ({ item }: { item: OutboundItem }) => (
+      <Card
+        style={styles.card}
+        mode="outlined"
+        onPress={() => router.push(`/outbound/${item.id}` as never)}
+      >
+        <Card.Content>
+          <View style={styles.cardRow}>
+            <View style={styles.cardLeft}>
+              <Text style={[styles.orderNo, { color: theme.colors.onSurface }]} numberOfLines={1}>
+                {item.orderNo}
+              </Text>
+              <Text style={[styles.sub, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>
+                {item.customerName}
+                {item.customerPhone ? ` · ${item.customerPhone}` : ''}
+              </Text>
+              <Text style={[styles.sub, { color: theme.colors.outline }]}>
+                {formatDate(item.createdAt, 'YYYY-MM-DD HH:mm')} · 设备 {item.deviceCount} 台
+              </Text>
+              {item.paymentSummary ? (
+                <Text
+                  style={[styles.pay, { color: theme.colors.onSurfaceVariant }]}
+                  numberOfLines={2}
+                >
+                  {item.paymentSummary}
+                </Text>
+              ) : null}
+              {item.receivableAmount != null && Number(String(item.receivableAmount)) > 0 ? (
+                <View style={styles.dueRow}>
+                  <Text style={{ color: theme.colors.tertiary, fontSize: 12, marginRight: 4 }}>待收</Text>
+                  <AmountText value={item.receivableAmount} colorize />
+                </View>
+              ) : null}
+            </View>
+            <View style={styles.cardRight}>
+              <AmountText value={item.totalAmount} style={{ color: theme.colors.onSurface }} />
+            </View>
+          </View>
+        </Card.Content>
+      </Card>
+    ),
+    [router, theme],
   );
 
+  if (!organizationId || !storeId) {
+    return <LoadingScreen message="加载门店信息…" />;
+  }
+
+  if (query.isLoading) return <LoadingScreen />;
+  if (query.isError) {
+    return <QueryError message="加载出库记录失败" onRetry={() => query.refetch()} />;
+  }
+
   return (
-    <View style={styles.container}>
-      <SearchBar onSearch={setSearch} placeholder="搜索SN/型号..." />
-
-      <ScrollView
-        style={styles.scroll}
-        refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-        }
-        contentContainerStyle={styles.scrollContent}
-      >
-        {isLoading && search ? (
-          <LoadingScreen message="搜索中..." />
-        ) : isError ? (
-          <QueryError message="搜索失败" onRetry={() => refetch()} />
-        ) : search && !device ? (
-          <EmptyState
-            icon="magnify-close"
-            title="未找到设备"
-            subtitle={`没有匹配 "${search}" 的在库设备`}
-          />
-        ) : device && device.inventoryStatus === 'IN_STOCK' ? (
-          <View style={styles.resultSection}>
-            <DeviceCard device={device} onPress={handleDevicePress} />
-          </View>
-        ) : search && device && device.inventoryStatus !== 'IN_STOCK' ? (
-          <EmptyState
-            icon="package-variant-closed-remove"
-            title="设备不可出库"
-            subtitle={`该设备状态为「${INVENTORY_STATUS_LABELS[device.inventoryStatus] ?? device.inventoryStatus}」，只有「在库」设备可出库`}
-          />
-        ) : (
-          <EmptyState
-            icon="package-up"
-            title="搜索出库设备"
-            subtitle="输入SN搜索在库设备，然后前往收银"
-          />
-        )}
-      </ScrollView>
-
-      <FAB
-        icon="barcode-scan"
-        label="扫码出库"
-        style={styles.fab}
-        onPress={() => router.push('/cashier' as never)}
-        accessibilityLabel="扫码出库"
-      />
+    <View style={[styles.root, { backgroundColor: theme.colors.background, paddingBottom: insets.bottom }]}>
+      <SearchBar onSearch={setSearch} placeholder="订单号/客户/手机号" />
+      <View style={styles.filterRow}>
+        <TextInput
+          placeholder="开始 YYYY-MM-DD"
+          value={startDate}
+          onChangeText={setStartDate}
+          placeholderTextColor={theme.colors.onSurfaceVariant}
+          style={[
+            styles.dateInput,
+            { color: theme.colors.onSurface, borderColor: theme.colors.outlineVariant, backgroundColor: theme.colors.surface },
+          ]}
+        />
+        <TextInput
+          placeholder="结束 YYYY-MM-DD"
+          value={endDate}
+          onChangeText={setEndDate}
+          placeholderTextColor={theme.colors.onSurfaceVariant}
+          style={[
+            styles.dateInput,
+            { color: theme.colors.onSurface, borderColor: theme.colors.outlineVariant, backgroundColor: theme.colors.surface },
+          ]}
+        />
+      </View>
+      {items.length === 0 ? (
+        <EmptyState icon="package-up" title="暂无出库记录" subtitle="可调整日期或搜索条件" />
+      ) : (
+        <FlashList
+          data={items}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.3}
+          estimatedItemSize={96}
+          refreshControl={
+            <RefreshControl refreshing={query.isRefetching} onRefresh={() => query.refetch()} />
+          }
+          contentContainerStyle={styles.listContent}
+        />
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  root: { flex: 1 },
+  filterRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, paddingBottom: 8 },
+  dateInput: {
     flex: 1,
-    backgroundColor: '#fafafa',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    fontSize: 14,
   },
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 80,
-  },
-  resultSection: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-  },
-  fab: {
-    position: 'absolute',
-    bottom: 72,
-    right: 16,
-  },
+  listContent: { paddingBottom: 24, paddingTop: 4 },
+  card: { marginHorizontal: 16, marginVertical: 4 },
+  cardRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  cardLeft: { flex: 1, marginRight: 8 },
+  cardRight: { alignItems: 'flex-end' },
+  orderNo: { fontSize: 16, fontWeight: '600' },
+  sub: { fontSize: 13, marginTop: 4 },
+  pay: { fontSize: 12, marginTop: 4, lineHeight: 16 },
+  dueRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
 });

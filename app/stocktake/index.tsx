@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { View, StyleSheet, Alert, RefreshControl } from 'react-native';
-import { Card, Text, Button, FAB, Dialog, Portal, TextInput } from 'react-native-paper';
+import {  Card, Text, Button, FAB, Dialog, Portal, TextInput, useTheme } from 'react-native-paper';
 import { FlashList } from '@shopify/flash-list';
 import { useAuth } from '../../hooks/useAuth';
 import { getStocktakeSessions, createStocktake } from '../../services/inventory-service';
@@ -18,6 +18,8 @@ interface StocktakeSession {
 }
 
 export default function StocktakeScreen() {
+  const theme = useTheme();
+
   const { storeId, organizationId } = useAuth();
   const [showNew, setShowNew] = useState(false);
   const [scope, setScope] = useState('FULL');
@@ -61,9 +63,9 @@ export default function StocktakeScreen() {
         <Card.Content>
           <View style={styles.row}>
             <Text style={styles.status}>{item.status}</Text>
-            <Text style={styles.date}>{formatDate(item.createdAt, 'MM-DD HH:mm')}</Text>
+            <Text style={[styles.date, { color: theme.colors.onSurfaceVariant }]}>{formatDate(item.createdAt, 'MM-DD HH:mm')}</Text>
           </View>
-          <Text style={styles.scope}>范围: {item.scope}</Text>
+          <Text style={[styles.scope, { color: theme.colors.onSurfaceVariant }]}>范围: {item.scope}</Text>
         </Card.Content>
       </Card>
     ),
@@ -74,7 +76,7 @@ export default function StocktakeScreen() {
   if (isError) return <QueryError onRetry={() => refetch()} />;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {items.length === 0 ? (
         <EmptyState icon="clipboard-check" title="暂无盘点记录" />
       ) : (

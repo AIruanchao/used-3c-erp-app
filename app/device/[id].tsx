@@ -40,7 +40,7 @@ export default function DeviceDetailScreen() {
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
       refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
     >
       {/* Header */}
@@ -162,6 +162,20 @@ export default function DeviceDetailScreen() {
           </Button>
           <Button
             mode="outlined"
+            icon="clipboard-check"
+            onPress={() =>
+              router.push({
+                pathname: '/inspection/[deviceId]',
+                params: { deviceId: device.id, sn: device.sn, model: skuName },
+              } as never)
+            }
+            style={styles.actionBtn}
+            accessibilityLabel="填写检测报告"
+          >
+            检测报告
+          </Button>
+          <Button
+            mode="outlined"
             icon="printer"
             loading={printing}
             disabled={printing}
@@ -222,17 +236,17 @@ const styles = StyleSheet.create({
   },
   brand: {
     fontSize: 13,
-    color: theme.colors.onSurfaceVariant,
+    color: '#9e9e9e',
   },
   model: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: theme.colors.onSurface,
+    color: '#ffffff',
     marginTop: 2,
   },
   sn: {
     fontSize: 14,
-    color: theme.colors.onSurfaceVariant,
+    color: '#9e9e9e',
     fontFamily: 'Courier',
     marginTop: 4,
   },
@@ -247,7 +261,7 @@ const styles = StyleSheet.create({
   },
   priceLabel: {
     fontSize: 12,
-    color: theme.colors.onSurfaceVariant,
+    color: '#9e9e9e',
     marginBottom: 4,
   },
   priceValue: {

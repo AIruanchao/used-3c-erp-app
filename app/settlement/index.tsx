@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl, Alert } from 'react-native';
-import { Card, Divider, Button } from 'react-native-paper';
+import {  Card, Divider, Button, useTheme } from 'react-native-paper';
 import { useAuth } from '../../hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { getDailyReport } from '../../services/stats-service';
@@ -11,6 +11,8 @@ import { formatDate, yuan } from '../../lib/utils';
 import { COMPANY_NAME } from '../../lib/constants';
 
 export default function SettlementScreen() {
+  const theme = useTheme();
+
   const { storeId, organizationId, storeName } = useAuth();
   const [printing, setPrinting] = useState(false);
 
@@ -55,24 +57,24 @@ export default function SettlementScreen() {
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
       refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
     >
       <Card style={styles.card} mode="elevated">
         <Card.Title title={`日结单 - ${today}`} titleStyle={styles.cardTitle} />
         <Card.Content>
-          <Text style={styles.storeName}>{storeName ?? '未选择门店'}</Text>
+          <Text style={[styles.storeName, { color: theme.colors.onSurfaceVariant }]}>{storeName ?? '未选择门店'}</Text>
           <Divider style={styles.divider} />
 
           <View style={styles.metricRow}>
             <View style={styles.metric}>
-              <Text style={styles.metricLabel}>销售额</Text>
-              <Text style={[styles.metricValue, { color: '#2e7d32' }]}>
+              <Text style={[styles.metricLabel, { color: theme.colors.onSurfaceVariant }]}>销售额</Text>
+              <Text style={[styles.metricValue, { color: theme.colors.primary }]}>
                 {yuan(report?.sales.amount ?? 0)}
               </Text>
             </View>
             <View style={styles.metric}>
-              <Text style={styles.metricLabel}>采购额</Text>
+              <Text style={[styles.metricLabel, { color: theme.colors.onSurfaceVariant }]}>采购额</Text>
               <Text style={styles.metricValue}>
                 {yuan(report?.purchase.cost ?? 0)}
               </Text>
@@ -83,12 +85,12 @@ export default function SettlementScreen() {
 
           <View style={styles.metricRow}>
             <View style={styles.metric}>
-              <Text style={styles.metricLabel}>入库</Text>
-              <Text style={styles.countValue}>{report?.purchase.count ?? 0} 台</Text>
+              <Text style={[styles.metricLabel, { color: theme.colors.onSurfaceVariant }]}>入库</Text>
+              <Text style={[styles.countValue, { color: theme.colors.onSurface }]}>{report?.purchase.count ?? 0} 台</Text>
             </View>
             <View style={styles.metric}>
-              <Text style={styles.metricLabel}>出库</Text>
-              <Text style={styles.countValue}>{report?.sales.count ?? 0} 台</Text>
+              <Text style={[styles.metricLabel, { color: theme.colors.onSurfaceVariant }]}>出库</Text>
+              <Text style={[styles.countValue, { color: theme.colors.onSurface }]}>{report?.sales.count ?? 0} 台</Text>
             </View>
           </View>
 
@@ -96,14 +98,14 @@ export default function SettlementScreen() {
 
           <View style={styles.metricRow}>
             <View style={styles.metric}>
-              <Text style={styles.metricLabel}>净现金流</Text>
-              <Text style={[styles.metricValue, { color: (report?.netCashFlow ?? 0) >= 0 ? '#2e7d32' : '#e53935' }]}>
+              <Text style={[styles.metricLabel, { color: theme.colors.onSurfaceVariant }]}>净现金流</Text>
+              <Text style={[styles.metricValue, { color: (report?.netCashFlow ?? 0) >= 0 ? theme.colors.primary : theme.colors.error }]}>
                 {yuan(report?.netCashFlow ?? 0)}
               </Text>
             </View>
             <View style={styles.metric}>
-              <Text style={styles.metricLabel}>库存预警</Text>
-              <Text style={styles.countValue}>{report?.stockAgeWarning ?? 0}</Text>
+              <Text style={[styles.metricLabel, { color: theme.colors.onSurfaceVariant }]}>库存预警</Text>
+              <Text style={[styles.countValue, { color: theme.colors.onSurface }]}>{report?.stockAgeWarning ?? 0}</Text>
             </View>
           </View>
         </Card.Content>
@@ -113,7 +115,7 @@ export default function SettlementScreen() {
         打印日结单
       </Button>
 
-      <Text style={styles.footer}>{COMPANY_NAME}</Text>
+      <Text style={[styles.footer, { color: theme.colors.onSurfaceVariant }]}>{COMPANY_NAME}</Text>
     </ScrollView>
   );
 }

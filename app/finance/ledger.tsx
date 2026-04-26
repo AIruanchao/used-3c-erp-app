@@ -6,10 +6,12 @@ import { useAuth } from '../../hooks/useAuth';
 import { getDailyReport } from '../../services/stats-service';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
 import { formatDate, yuan } from '../../lib/utils';
-import { Card, Text } from 'react-native-paper';
+import {  Card, Text, useTheme } from 'react-native-paper';
 import { useQuery } from '@tanstack/react-query';
 
 export default function LedgerScreen() {
+  const theme = useTheme();
+
   const { storeId, organizationId } = useAuth();
 
   const { data: report, isLoading, isError, refetch, isRefetching } = useQuery({
@@ -32,19 +34,19 @@ export default function LedgerScreen() {
     >
       <Card style={styles.card} mode="outlined">
         <Card.Content>
-          <Text style={styles.title}>今日记账概览</Text>
-          <Text style={styles.date}>{formatDate(new Date().toISOString())}</Text>
+          <Text style={[styles.title, { color: theme.colors.onSurface }]}>今日记账概览</Text>
+          <Text style={[styles.date, { color: theme.colors.onSurfaceVariant }]}>{formatDate(new Date().toISOString())}</Text>
           <View style={styles.row}>
-            <Text style={styles.label}>销售收入</Text>
-            <Text style={[styles.value, { color: '#2e7d32' }]}>{yuan(report?.sales.amount ?? 0)}</Text>
+            <Text style={[styles.label, { color: theme.colors.onSurfaceVariant }]}>销售收入</Text>
+            <Text style={[styles.value, { color: theme.colors.primary }]}>{yuan(report?.sales.amount ?? 0)}</Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.label}>采购成本</Text>
+            <Text style={[styles.label, { color: theme.colors.onSurfaceVariant }]}>采购成本</Text>
             <Text style={styles.value}>{yuan(report?.purchase.cost ?? 0)}</Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.label}>净现金流</Text>
-            <Text style={[styles.value, { color: (report?.netCashFlow ?? 0) >= 0 ? '#2e7d32' : '#e53935' }]}>
+            <Text style={[styles.label, { color: theme.colors.onSurfaceVariant }]}>净现金流</Text>
+            <Text style={[styles.value, { color: (report?.netCashFlow ?? 0) >= 0 ? theme.colors.primary : theme.colors.error }]}>
               {yuan(report?.netCashFlow ?? 0)}
             </Text>
           </View>

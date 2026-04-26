@@ -1,14 +1,16 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { FAB } from 'react-native-paper';
+import {  FAB, useTheme } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { EmptyState } from '../../components/common/EmptyState';
 
 export default function RepairListScreen() {
+  const theme = useTheme();
+
   const router = useRouter();
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <EmptyState
         icon="wrench"
         title="维修工单"

@@ -1,19 +1,21 @@
 import React, { useState, useCallback } from 'react';
 import { View, StyleSheet, RefreshControl } from 'react-native';
-import { Card, Text } from 'react-native-paper';
+import { Card, Text, useTheme, FAB } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { FlashList } from '@shopify/flash-list';
-import { getCustomers } from '../../services/finance-service';
+import { listCustomers } from '../../services/customer-service';
 import { SearchBar } from '../../components/common/SearchBar';
 import { AmountText } from '../../components/finance/AmountText';
 import { EmptyState } from '../../components/common/EmptyState';
 import { QueryError } from '../../components/common/QueryError';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
-import type { CustomerItem } from '../../types/finance';
+import type { CustomerListItem } from '../../types/customer';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../../hooks/useAuth';
 
 export default function CustomerListScreen() {
+  const theme = useTheme();
+
   const router = useRouter();
   const { storeId, organizationId } = useAuth();
   const [search, setSearch] = useState('');
@@ -21,19 +23,20 @@ export default function CustomerListScreen() {
   const { data, isLoading, isError, refetch, isRefetching } = useQuery({
     queryKey: ['customers', storeId, organizationId, search],
     queryFn: () =>
-      getCustomers({
-        storeId: storeId ?? undefined,
-        organizationId: organizationId ?? undefined,
-        q: search || undefined,
-        take: 30,
+      listCustomers({
+        storeId: storeId ?? '',
+        organizationId: organizationId ?? '',
+        keyword: search || undefined,
+        pageSize: 30,
+        page: 1,
       }),
     enabled: !!storeId && !!organizationId,
   });
 
-  const items: CustomerItem[] = data?.items ?? [];
+  const items: CustomerListItem[] = data?.items ?? [];
 
   const renderItem = useCallback(
-    ({ item: customer }: { item: CustomerItem }) => (
+    ({ item: customer }: { item: CustomerListItem }) => (
       <Card
         style={styles.card}
         mode="outlined"
@@ -43,8 +46,8 @@ export default function CustomerListScreen() {
         <Card.Content>
           <View style={styles.row}>
             <View>
-              <Text style={styles.name} numberOfLines={1}>{customer.name}</Text>
-              <Text style={styles.phone}>{customer.phone || '未留电话'}</Text>
+              <Text style={[styles.name, { color: theme.colors.onSurface }]} numberOfLines={1}>{customer.name}</Text>
+              <Text style={[styles.phone, { color: theme.colors.onSurfaceVariant }]}>{customer.phone || '未留电话'}</Text>
             </View>
             <View style={styles.right}>
               <Text style={styles.level}>{customer.memberLevel ?? customer.tier ?? ''}</Text>
@@ -61,7 +64,7 @@ export default function CustomerListScreen() {
   if (isError) return <QueryError onRetry={() => refetch()} />;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <SearchBar onSearch={setSearch} placeholder="搜索客户名/手机号..." />
       {items.length === 0 ? (
         <EmptyState icon="account-group" title="暂无客户" />
@@ -76,13 +79,20 @@ export default function CustomerListScreen() {
           contentContainerStyle={styles.listContent}
         />
       )}
+      <FAB
+        icon="account-plus"
+        style={[styles.fab, { backgroundColor: theme.colors.primary }]}
+        onPress={() => router.push('/customer/new' as never)}
+        accessibilityLabel="新建客户"
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fafafa' },
-  listContent: { paddingBottom: 16 },
+  listContent: { paddingBottom: 88 },
+  fab: { position: 'absolute', right: 16, bottom: 24 },
   card: { marginHorizontal: 16, marginVertical: 4 },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   name: { fontSize: 15, fontWeight: '600', color: '#212121' },

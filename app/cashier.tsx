@@ -9,7 +9,7 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import { Button, Card, Chip, Divider } from 'react-native-paper';
+import {  Button, Card, Chip, Divider, useTheme } from 'react-native-paper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../hooks/useAuth';
@@ -22,6 +22,8 @@ import { getErrorMessage } from '../lib/errors';
 import { isValidMoneyInput, moneyToNumber } from '../lib/utils';
 
 export default function CashierScreen() {
+  const theme = useTheme();
+
   const router = useRouter();
   const queryClient = useQueryClient();
   const { storeId, organizationId } = useAuth();
@@ -128,7 +130,7 @@ export default function CashierScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       {showScanner ? (
@@ -156,7 +158,7 @@ export default function CashierScreen() {
                 扫描设备
               </Button>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { borderColor: theme.colors.outline }]}
                 placeholder="设备SN"
                 value={deviceSn}
                 onChangeText={(text) => {
@@ -168,7 +170,7 @@ export default function CashierScreen() {
                 editable={!loading}
               />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]}
                 placeholder="销售价格 *"
                 value={salePrice}
                 onChangeText={setSalePrice}
@@ -188,7 +190,8 @@ export default function CashierScreen() {
                     key={method.value}
                     selected={paymentMethod === method.value}
                     onPress={() => setPaymentMethod(method.value)}
-                    style={styles.chip}
+                    style={[styles.chip, paymentMethod === method.value && { backgroundColor: '#FF6D00' }]}
+                    selectedColor={paymentMethod === method.value ? '#fff' : undefined}
                     accessibilityLabel={method.label}
                   >
                     {method.label}

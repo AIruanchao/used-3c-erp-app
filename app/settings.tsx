@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { Text, StyleSheet, ScrollView, Alert, View } from 'react-native';
-import { Card, List, Switch, Divider, Button, TextInput } from 'react-native-paper';
+import {  Card, List, Switch, Divider, Button, TextInput, useTheme } from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAppStore } from '../stores/app-store';
 import { APP_DISPLAY_NAME, COMPANY_NAME } from '../lib/constants';
@@ -10,6 +10,8 @@ import { printerService } from '../services/printer-service';
 import { api } from '../lib/api';
 
 export default function SettingsScreen() {
+  const paperTheme = useTheme();
+
   const theme = useAppStore((s) => s.theme);
   const setTheme = useAppStore((s) => s.setTheme);
   const [scanning, setScanning] = useState(false);
@@ -62,12 +64,12 @@ export default function SettingsScreen() {
   }, []);
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
       {/* API Base */}
       <Card style={styles.card}>
         <Card.Title title="服务器地址" titleStyle={styles.cardTitle} />
         <Card.Content>
-          <Text style={styles.aboutText}>默认: {API_BASE}</Text>
+          <Text style={[styles.aboutText, { color: paperTheme.colors.onSurfaceVariant }]}>默认: {API_BASE}</Text>
           <TextInput
             mode="outlined"
             label="自定义 API Base（可选）"
@@ -243,12 +245,12 @@ export default function SettingsScreen() {
       {/* About */}
       <Card style={styles.card}>
         <Card.Content>
-          <Text style={styles.aboutTitle}>关于</Text>
-          <Text style={styles.aboutText}>
+          <Text style={[styles.aboutTitle, { color: paperTheme.colors.onSurface }]}>关于</Text>
+          <Text style={[styles.aboutText, { color: paperTheme.colors.onSurfaceVariant }]}>
             {APP_DISPLAY_NAME} - 二手3C管理系统
           </Text>
-          <Text style={styles.aboutText}>版本: 1.0.0</Text>
-          <Text style={styles.aboutText}>公司: {COMPANY_NAME}</Text>
+          <Text style={[styles.aboutText, { color: paperTheme.colors.onSurfaceVariant }]}>版本: 1.0.0</Text>
+          <Text style={[styles.aboutText, { color: paperTheme.colors.onSurfaceVariant }]}>公司: {COMPANY_NAME}</Text>
         </Card.Content>
       </Card>
     </ScrollView>

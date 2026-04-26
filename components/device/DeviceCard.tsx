@@ -14,26 +14,28 @@ interface DeviceCardProps {
 export const DeviceCard = React.memo(function DeviceCard({
   device,
   onPress,
-  const theme = useTheme();
 }: DeviceCardProps) {
+  const theme = useTheme();
   const skuName = device.Sku?.name ?? device.Sku?.Model?.name ?? '未知型号';
   const brandName = device.Sku?.Model?.Brand?.name ?? '';
 
   return (
     <TouchableOpacity onPress={() => onPress(device.id)} activeOpacity={0.7} accessibilityLabel={skuName}>
-      <Card style={styles.card} mode="elevated">
+      <Card style={[styles.card, { backgroundColor: theme.colors.surface }]} mode="elevated">
         <Card.Content>
           <View style={styles.header}>
             <View style={styles.titleRow}>
-              <Text style={styles.brandText}>{brandName}</Text>
-              <Text style={styles.skuName} numberOfLines={1}>
+              <Text style={[styles.brandText, { color: theme.colors.onSurfaceVariant }]}>
+                {brandName}
+              </Text>
+              <Text style={[styles.skuName, { color: theme.colors.onSurface }]} numberOfLines={1}>
                 {skuName}
               </Text>
             </View>
             <DeviceStatusBadge status={device.inventoryStatus} />
           </View>
           <View style={styles.details}>
-            <Text style={styles.sn} numberOfLines={1}>SN: {device.sn}</Text>
+            <Text style={[styles.sn, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>SN: {device.sn}</Text>
             {device.DevicePricing && (
               <View style={styles.priceRow}>
                 {device.DevicePricing.retailPrice && (
@@ -53,7 +55,7 @@ export const DeviceCard = React.memo(function DeviceCard({
               </View>
             )}
             {device.inboundAt && (
-              <Text style={styles.date}>
+              <Text style={[styles.date, { color: theme.colors.onSurfaceVariant }]}>
                 入库: {formatDate(device.inboundAt)}
               </Text>
             )}
@@ -80,19 +82,16 @@ const styles = StyleSheet.create({
   },
   brandText: {
     fontSize: 12,
-    color: theme.colors.onSurfaceVariant,
   },
   skuName: {
     fontSize: 15,
     fontWeight: '600',
-    color: theme.colors.onSurface,
   },
   details: {
     marginTop: 8,
   },
   sn: {
     fontSize: 13,
-    color: theme.colors.onSurfaceVariant,
     fontFamily: 'Courier',
   },
   priceRow: {
@@ -105,7 +104,6 @@ const styles = StyleSheet.create({
   },
   date: {
     fontSize: 12,
-    color: theme.colors.onSurfaceVariant,
     marginTop: 4,
   },
 });

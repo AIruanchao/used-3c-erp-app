@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
-import { Card, IconButton, Divider } from 'react-native-paper';
+import { useTheme } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
@@ -14,24 +14,29 @@ interface QuickAction {
   icon: string;
   label: string;
   route: string;
-  color: string;
-  bgColor: string;
 }
 
 const QUICK_ACTIONS: QuickAction[] = [
-  { icon: 'package-down', label: '快速入库', route: '/(tabs)/inbound', color: '#4caf50', bgColor: 'rgba(76,175,80,0.08)' },
-  { icon: 'package-up', label: '出库', route: '/(tabs)/outbound', color: '#2196f3', bgColor: 'rgba(33,150,243,0.08)' },
-  { icon: 'archive', label: '库存查询', route: '/(tabs)/inventory', color: '#ff9800', bgColor: 'rgba(255,152,0,0.08)' },
-  { icon: 'cash-register', label: '收银台', route: '/cashier', color: '#e53935', bgColor: 'rgba(229,57,53,0.08)' },
-  { icon: 'wrench', label: '维修工单', route: '/repair/index', color: '#9c27b0', bgColor: 'rgba(156,39,176,0.08)' },
-  { icon: 'chart-bar', label: '统计报表', route: '/stats', color: '#00bcd4', bgColor: 'rgba(0,188,212,0.08)' },
-  { icon: 'cash-multiple', label: '财务', route: '/finance/index', color: '#795548', bgColor: 'rgba(121,85,72,0.08)' },
-  { icon: 'account-group', label: '客户', route: '/customer/index', color: '#607d8b', bgColor: 'rgba(96,125,139,0.08)' },
+  { icon: 'barcode-scan', label: '扫码入库', route: '/(tabs)/inbound' },
+  { icon: 'cash-register', label: '收银台', route: '/(tabs)/cashier' },
+  { icon: 'archive', label: '库存查询', route: '/(tabs)/inventory' },
+  { icon: 'wrench', label: '新建维修', route: '/repair/new' },
+  { icon: 'package-up', label: '出库', route: '/(tabs)/outbound' },
+  { icon: 'truck-delivery', label: '取机管理', route: '/pickup/index' },
+  { icon: 'clipboard-check', label: '交接班', route: '/handover/new' },
+  { icon: 'cog', label: '配件管理', route: '/spare-parts/index' },
+  { icon: 'clipboard-text', label: '预订单', route: '/pre-orders/index' },
+  { icon: 'bell', label: '公告', route: '/announcements/index' },
+  { icon: 'chart-bar', label: '统计报表', route: '/stats' },
+  { icon: 'cash-multiple', label: '财务', route: '/finance/index' },
+  { icon: 'account-group', label: '客户', route: '/customer/index' },
 ];
 
 export default function WorkspaceScreen() {
+  const theme = useTheme();
   const router = useRouter();
   const { storeId, organizationId, storeName, user } = useAuth();
+  const isDark = theme.dark;
 
   const { data: report, isLoading, isError, refetch, isRefetching } = useQuery({
     queryKey: ['dailyReport', storeId, organizationId],
@@ -55,224 +60,164 @@ export default function WorkspaceScreen() {
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
       refreshControl={
         <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
       }
     >
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.greeting}>
-            你好，{user?.name ?? '用户'}
+      {/* Welcome Section with Gradient-like background */}
+      <View style={[styles.welcomeSection, { backgroundColor: isDark ? '#1565c0' : '#1890ff' }]}>
+        <Text style={styles.greeting}>
+          {user?.name ? `${user?.name}，你好` : '你好'}
+        </Text>
+        <Text style={styles.storeName}>
+          {storeName ?? '嫩叶ERP'}
+        </Text>
+      </View>
+
+      {/* Stats Cards - overlapping gradient */}
+      <View style={styles.statsRow}>
+        <View style={[styles.statCard, { backgroundColor: theme.colors.surface }]}>
+          <Text style={[styles.statValue, { color: isDark ? '#e0e0e0' : '#333' }]}>
+            {report?.purchase.count ?? 0}
           </Text>
-          <Text style={styles.storeName}>{storeName ?? '未选择门店'}</Text>
+          <Text style={[styles.statLabel, { color: isDark ? '#999' : '#999' }]}>今日入库</Text>
+        </View>
+        <View style={[styles.statCard, { backgroundColor: theme.colors.surface }]}>
+          <Text style={[styles.statValue, { color: isDark ? '#e0e0e0' : '#333' }]}>
+            {report?.sales.count ?? 0}
+          </Text>
+          <Text style={[styles.statLabel, { color: isDark ? '#999' : '#999' }]}>今日销售</Text>
+        </View>
+        <View style={[styles.statCard, { backgroundColor: theme.colors.surface }]}>
+          <Text style={[styles.statValue, { color: isDark ? '#e0e0e0' : '#333' }]}>
+            {yuan(report?.sales.amount ?? 0)}
+          </Text>
+          <Text style={[styles.statLabel, { color: isDark ? '#999' : '#999' }]}>今日收入</Text>
         </View>
       </View>
 
-      {/* Daily Summary */}
-      <Card style={styles.summaryCard} mode="elevated">
-        <Card.Title title="今日概览" titleStyle={styles.cardTitle} />
-        <Card.Content>
-          <View style={styles.summaryRow}>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>销售额</Text>
-              <Text style={[styles.summaryValue, { color: '#2e7d32' }]}>
-                {yuan(report?.sales.amount ?? 0)}
-              </Text>
-            </View>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>采购额</Text>
-              <Text style={styles.summaryValue}>
-                {yuan(report?.purchase.cost ?? 0)}
-              </Text>
-            </View>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>净现金流</Text>
-              <Text style={[styles.summaryValue, { color: (report?.netCashFlow ?? 0) >= 0 ? '#2e7d32' : '#e53935' }]}>
-                {yuan(report?.netCashFlow ?? 0)}
-              </Text>
-            </View>
-          </View>
-          <Divider style={styles.divider} />
-          <View style={styles.summaryRow}>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>入库</Text>
-              <Text style={styles.summaryCount}>
-                {report?.purchase.count ?? 0} 台
-              </Text>
-            </View>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>出库</Text>
-              <Text style={styles.summaryCount}>
-                {report?.sales.count ?? 0} 台
-              </Text>
-            </View>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>库存预警</Text>
-              <Text style={[styles.summaryCount, { color: (report?.stockAgeWarning ?? 0) > 0 ? '#ff9800' : '#4caf50' }]}>
-                {report?.stockAgeWarning ?? 0}
-              </Text>
-            </View>
-          </View>
-          {(report?.profitTop5?.length ?? 0) > 0 && (
-            <>
-              <Divider style={styles.divider} />
-              <Text style={styles.profitTitle}>利润TOP5</Text>
-              {report?.profitTop5.map((item, idx) => (
-                <View key={`${item.modelName}-${idx}`} style={styles.profitRow}>
-                  <Text style={styles.profitName}>{item.modelName}</Text>
-                  <Text style={[styles.profitValue, { color: item.profit >= 0 ? '#2e7d32' : '#e53935' }]}>
-                    {yuan(item.profit)}
-                  </Text>
-                </View>
-              ))}
-            </>
-          )}
-        </Card.Content>
-      </Card>
-
-      {/* Quick Actions */}
-      <Text style={styles.sectionTitle}>快捷操作</Text>
-      <View style={styles.actionGrid}>
-        {QUICK_ACTIONS.map((action) => (
-          <TouchableOpacity
-            key={action.route}
-            style={styles.actionItem}
-            onPress={() => handleAction(action.route)}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel={action.label}
-          >
-            <View
-              style={[
-                styles.actionIcon,
-                { backgroundColor: action.bgColor },
-              ]}
+      {/* Quick Shortcuts */}
+      <View style={styles.shortcutsSection}>
+        <View style={[styles.shortcutGrid, { backgroundColor: theme.colors.surface }]}>
+          {QUICK_ACTIONS.map((action) => (
+            <TouchableOpacity
+              key={action.route}
+              style={styles.shortcutItem}
+              onPress={() => handleAction(action.route)}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={action.label}
             >
-              <IconButton
-                icon={action.icon}
-                size={24}
-                iconColor={action.color}
-              />
-            </View>
-            <Text style={styles.actionLabel}>{action.label}</Text>
-          </TouchableOpacity>
-        ))}
+              <Text style={styles.shortcutIcon}>
+                {getEmoji(action.icon)}
+              </Text>
+              <Text style={[styles.shortcutLabel, { color: isDark ? '#ccc' : '#666' }]}>
+                {action.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
 
-      <Text style={styles.footer}>{COMPANY_NAME}</Text>
+      <Text style={[styles.footer, { color: theme.colors.outline }]}>
+        {COMPANY_NAME}
+      </Text>
     </ScrollView>
   );
+}
+
+function getEmoji(icon: string): string {
+  const map: Record<string, string> = {
+    'barcode-scan': '📷',
+    'cash-register': '💰',
+    'archive': '📦',
+    'wrench': '🔧',
+    'package-up': '📤',
+    'truck-delivery': '🚚',
+    'clipboard-check': '📋',
+    'cog': '🔩',
+    'clipboard-text': '📝',
+    'bell': '🔔',
+    'chart-bar': '📊',
+    'cash-multiple': '💳',
+    'account-group': '👥',
+  };
+  return map[icon] ?? '📄';
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fafafa',
   },
-  header: {
-    padding: 16,
-    paddingTop: 8,
+  welcomeSection: {
+    padding: 32,
+    paddingBottom: 48,
   },
   greeting: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#212121',
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#ffffff',
+    marginBottom: 8,
   },
   storeName: {
-    fontSize: 14,
-    color: '#757575',
-    marginTop: 2,
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.85)',
   },
-  summaryCard: {
-    marginHorizontal: 16,
-    marginBottom: 16,
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  summaryRow: {
+  statsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    paddingHorizontal: 16,
+    marginTop: -24,
+    gap: 12,
   },
-  summaryItem: {
-    alignItems: 'center',
+  statCard: {
     flex: 1,
-  },
-  summaryLabel: {
-    fontSize: 12,
-    color: '#9e9e9e',
-    marginBottom: 4,
-  },
-  summaryValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#212121',
-  },
-  summaryCount: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#424242',
-  },
-  divider: {
-    marginVertical: 12,
-  },
-  profitTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#424242',
-    marginBottom: 4,
-  },
-  profitRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    borderRadius: 16,
+    padding: 20,
     alignItems: 'center',
-    paddingVertical: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
   },
-  profitName: {
+  statValue: {
+    fontSize: 22,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  statLabel: {
     fontSize: 13,
-    color: '#616161',
+    color: '#999999',
   },
-  profitValue: {
-    fontSize: 13,
-    fontWeight: '600',
+  shortcutsSection: {
+    paddingHorizontal: 16,
+    marginTop: 24,
   },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#424242',
-    marginHorizontal: 16,
-    marginBottom: 12,
-  },
-  actionGrid: {
+  shortcutGrid: {
+    borderRadius: 16,
+    padding: 24,
     flexDirection: 'row',
     flexWrap: 'wrap',
-    paddingHorizontal: 8,
-    marginBottom: 24,
+    gap: 16,
   },
-  actionItem: {
+  shortcutItem: {
     width: '25%',
     alignItems: 'center',
-    marginBottom: 16,
+    gap: 8,
   },
-  actionIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 4,
+  shortcutIcon: {
+    fontSize: 28,
   },
-  actionLabel: {
-    fontSize: 12,
-    color: '#616161',
+  shortcutLabel: {
+    fontSize: 13,
+    color: '#666',
     textAlign: 'center',
   },
   footer: {
     textAlign: 'center',
     fontSize: 12,
-    color: '#bdbdbd',
     paddingBottom: 16,
+    marginTop: 24,
   },
 });

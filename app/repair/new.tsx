@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { StyleSheet, TextInput, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import { Button, Card } from 'react-native-paper';
+import {  Button, Card, useTheme } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../hooks/useAuth';
@@ -9,6 +9,8 @@ import { findOrCreateCustomer } from '../../services/finance-service';
 import { getErrorMessage } from '../../lib/errors';
 
 export default function NewRepairScreen() {
+  const theme = useTheme();
+
   const router = useRouter();
   const queryClient = useQueryClient();
   const { storeId, organizationId } = useAuth();
@@ -95,21 +97,21 @@ export default function NewRepairScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <Card style={styles.card}>
           <Card.Content>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]}
               placeholder="客户姓名（可选，默认散客）"
               value={customerName}
               onChangeText={setCustomerName}
               editable={!loading}
             />
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]}
               placeholder="客户手机号（可选）"
               value={customerPhone}
               onChangeText={setCustomerPhone}
@@ -119,7 +121,7 @@ export default function NewRepairScreen() {
               editable={!loading}
             />
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]}
               placeholder="SN/IMEI（可选）"
               value={sn}
               onChangeText={setSn}
@@ -128,7 +130,7 @@ export default function NewRepairScreen() {
               editable={!loading}
             />
             <TextInput
-              style={[styles.input, styles.textArea]}
+              style={[styles.input, styles.textArea, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]}
               placeholder="故障描述 *"
               value={description}
               onChangeText={setDescription}

@@ -8,7 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { Button, HelperText } from 'react-native-paper';
+import {  Button, HelperText, useTheme } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useAuthStore, type StoreInfo } from '../../stores/auth-store';
 import { loginWithEmail, getUserStores } from '../../services/auth-service';
@@ -18,6 +18,8 @@ import { API_BASE } from '../../lib/api';
 import { getApiBaseUrl } from '../../lib/storage';
 
 export default function LoginScreen() {
+  const theme = useTheme();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -71,21 +73,21 @@ export default function LoginScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <View style={styles.content}>
         <View style={styles.header}>
           <Text style={styles.appName}>{APP_DISPLAY_NAME}</Text>
-          <Text style={styles.companyName}>{COMPANY_NAME}</Text>
-          <Text style={styles.apiHint} numberOfLines={1}>
+          <Text style={[styles.companyName, { color: theme.colors.onSurfaceVariant }]}>{COMPANY_NAME}</Text>
+          <Text style={[styles.apiHint, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>
             服务器: {API_BASE}
           </Text>
         </View>
 
         <View style={styles.form}>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { borderColor: theme.colors.outline }]}
             placeholder="邮箱"
             placeholderTextColor="#999"
             value={email}
@@ -95,7 +97,7 @@ export default function LoginScreen() {
             editable={!loading}
           />
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]}
             placeholder="密码"
             placeholderTextColor="#999"
             value={password}

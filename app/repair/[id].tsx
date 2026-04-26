@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert, TextInput } from 'react-native';
-import { Card, Button, Dialog, Portal } from 'react-native-paper';
+import {  Card, Button, Dialog, Portal, useTheme } from 'react-native-paper';
 import { useLocalSearchParams } from 'expo-router';
 import { REPAIR_STATUS_LABELS } from '../../lib/constants';
 import { quoteRepair, startRepair, completeRepair, qcRepair, deliverRepair, acceptRepairQuote } from '../../services/repair-service';
@@ -9,6 +9,8 @@ import { isValidMoneyInput, moneyToNumber } from '../../lib/utils';
 import { useAuthStore } from '../../stores/auth-store';
 
 export default function RepairDetailScreen() {
+  const theme = useTheme();
+
   const params = useLocalSearchParams<{
     id: string;
     status?: string;
@@ -133,17 +135,17 @@ export default function RepairDetailScreen() {
   const estimatedCost = params.estimatedCost;
 
   return (
-    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
+    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]} keyboardShouldPersistTaps="handled">
       <Card style={styles.card} mode="elevated">
         <Card.Content>
           <Text style={styles.status}>
             {REPAIR_STATUS_LABELS[currentStatus] ?? currentStatus}
           </Text>
-          <Text style={styles.desc}>{description ?? '无描述'}</Text>
-          {sn && <Text style={styles.sn} numberOfLines={1}>SN: {sn}</Text>}
+          <Text style={[styles.desc, { color: theme.colors.onSurface }]}>{description ?? '无描述'}</Text>
+          {sn && <Text style={[styles.sn, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>SN: {sn}</Text>}
           <Text style={styles.date}>工单ID: {id}</Text>
           {estimatedCost && (
-            <Text style={styles.cost}>估价: ¥{estimatedCost}</Text>
+            <Text style={[styles.cost, { color: theme.colors.onSurfaceVariant }]}>估价: ¥{estimatedCost}</Text>
           )}
         </Card.Content>
       </Card>
@@ -162,7 +164,7 @@ export default function RepairDetailScreen() {
             </Button>
           )}
           {currentStatus === 'REJECTED' && (
-            <Text style={styles.rejectedHint}>客户已拒绝报价，请在Web端处理</Text>
+            <Text style={[styles.rejectedHint, { color: theme.colors.error }]}>客户已拒绝报价，请在Web端处理</Text>
           )}
           {currentStatus === 'ACCEPTED' && (
             <Button mode="contained" onPress={() => handleAction('start')} loading={actionLoading} disabled={actionLoading} accessibilityLabel="开始维修">
@@ -185,10 +187,10 @@ export default function RepairDetailScreen() {
             </Button>
           )}
           {currentStatus === 'DELIVERING' && (
-            <Text style={styles.rejectedHint}>设备配送中，请在Web端完成交付确认</Text>
+            <Text style={[styles.rejectedHint, { color: theme.colors.error }]}>设备配送中，请在Web端完成交付确认</Text>
           )}
           {(currentStatus === 'CLOSED' || currentStatus === 'CANCELLED') && (
-            <Text style={styles.rejectedHint}>工单已{currentStatus === 'CLOSED' ? '关闭' : '取消'}</Text>
+            <Text style={[styles.rejectedHint, { color: theme.colors.error }]}>工单已{currentStatus === 'CLOSED' ? '关闭' : '取消'}</Text>
           )}
         </Card.Content>
       </Card>
@@ -198,7 +200,7 @@ export default function RepairDetailScreen() {
           <Dialog.Title>报价</Dialog.Title>
           <Dialog.Content>
             <TextInput
-              style={styles.quoteInput}
+              style={[styles.quoteInput, { borderColor: theme.colors.outline }]}
               placeholder="人工费 *"
               value={laborCost}
               onChangeText={setLaborCost}
@@ -206,9 +208,9 @@ export default function RepairDetailScreen() {
               returnKeyType="done"
               editable={!actionLoading}
             />
-            <Text style={styles.fieldLabel}>配件信息(可选)</Text>
+            <Text style={[styles.fieldLabel, { color: theme.colors.onSurfaceVariant }]}>配件信息(可选)</Text>
             <TextInput
-              style={styles.quoteInput}
+              style={[styles.quoteInput, { borderColor: theme.colors.outline }]}
               placeholder="配件名称"
               value={partName}
               onChangeText={setPartName}
@@ -217,7 +219,7 @@ export default function RepairDetailScreen() {
             {partName ? (
               <>
                 <TextInput
-                  style={styles.quoteInput}
+                  style={[styles.quoteInput, { borderColor: theme.colors.outline }]}
                   placeholder="配件成本"
                   value={partCost}
                   onChangeText={setPartCost}
@@ -226,7 +228,7 @@ export default function RepairDetailScreen() {
                   editable={!actionLoading}
                 />
                 <TextInput
-                  style={styles.quoteInput}
+                  style={[styles.quoteInput, { borderColor: theme.colors.outline }]}
                   placeholder="配件报价"
                   value={partPrice}
                   onChangeText={setPartPrice}

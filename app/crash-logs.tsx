@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Share, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button } from 'react-native-paper';
+import {  Button, useTheme } from 'react-native-paper';
 import { getCrashLogs, clearCrashLogs, exportCrashLogs, type CrashLog } from '../lib/crash-logger';
 
 export default function CrashLogsScreen() {
+  const theme = useTheme();
+
   const [logs, setLogs] = useState<CrashLog[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -35,8 +37,8 @@ export default function CrashLogsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.root}>
-      <View style={styles.header}>
+    <SafeAreaView style={[styles.root, { backgroundColor: theme.colors.background }]}>
+      <View style={[styles.header, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.outline }]}>
         <Text style={styles.title}>崩溃日志 ({logs.length})</Text>
         <View style={styles.actions}>
           <Button mode="text" onPress={handleExport} compact>导出</Button>
@@ -48,13 +50,13 @@ export default function CrashLogsScreen() {
       <ScrollView style={styles.list} >
         {logs.length === 0 && (
           <View style={styles.empty}>
-            <Text style={styles.emptyText}>暂无崩溃日志 ✅</Text>
+            <Text style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}>暂无崩溃日志 ✅</Text>
           </View>
         )}
         {logs.map((log) => (
-          <View key={log.id} style={[styles.card, log.isFatal && styles.cardFatal]}>
+          <View key={log.id} style={[styles.card, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }, log.isFatal && styles.cardFatal]}>
             <View style={styles.cardHeader}>
-              <Text style={styles.cardTime}>
+              <Text style={[styles.cardTime, { color: theme.colors.onSurfaceVariant }]}>
                 {new Date(log.timestamp).toLocaleString('zh-CN')}
               </Text>
               <Text style={[styles.badge, log.isFatal && styles.badgeFatal]}>
@@ -64,7 +66,7 @@ export default function CrashLogsScreen() {
             <Text style={styles.cardType}>{log.type}</Text>
             <Text style={styles.cardMsg} numberOfLines={3}>{log.message}</Text>
             {log.stack && (
-              <Text style={styles.cardStack} numberOfLines={4}>{log.stack.slice(0, 300)}</Text>
+              <Text style={[styles.cardStack, { backgroundColor: theme.colors.background, color: theme.colors.onSurfaceVariant }]} numberOfLines={4}>{log.stack.slice(0, 300)}</Text>
             )}
           </View>
         ))}

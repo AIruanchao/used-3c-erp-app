@@ -212,10 +212,8 @@ export default function InboundScreen() {
         { text: '查看库存', onPress: () => { resetForm(); router.push('/(tabs)/inventory' as never); } },
       ]);
 
-      // Reset form immediately to prevent double submission
       resetForm();
 
-      // Invalidate related queries so other screens show fresh data
       queryClient.invalidateQueries({ queryKey: ['dailyReport'] });
       queryClient.invalidateQueries({ queryKey: ['inventorySearch'] });
       queryClient.invalidateQueries({ queryKey: ['outboundSearch'] });
@@ -245,7 +243,7 @@ export default function InboundScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
@@ -270,41 +268,40 @@ export default function InboundScreen() {
           <>
             {step === 'scan' && (
               <>
-                {/* Scan Button */}
-                <Card style={styles.card} mode="outlined">
-                  <Card.Content>
+                {/* Scan Button - no Card wrapper, direct on page */}
+                <View style={styles.section}>
+                  <Button
+                    mode="contained"
+                    icon="barcode-scan"
+                    onPress={() => setShowScanner(true)}
+                    style={styles.scanBtn}
+                    accessibilityLabel="扫码入库"
+                  >
+                    扫码入库
+                  </Button>
+                  <View style={styles.manualInput}>
+                    <TextInput
+                      style={[styles.input, { borderColor: theme.colors.outline, backgroundColor: theme.colors.surface }]}
+                      placeholder="或手动输入SN/IMEI"
+                      placeholderTextColor={theme.colors.onSurfaceVariant}
+                      value={sn}
+                      onChangeText={setSn}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      editable={!scanLoading}
+                    />
                     <Button
-                      mode="contained"
-                      icon="barcode-scan"
-                      onPress={() => setShowScanner(true)}
-                      style={styles.scanBtn}
-                      accessibilityLabel="扫码入库"
+                      mode="outlined"
+                      onPress={() => {
+                        if (sn.trim()) setStep('info');
+                      }}
+                      disabled={!sn.trim()}
+                      accessibilityLabel="下一步"
                     >
-                      扫码入库
+                      下一步
                     </Button>
-                    <View style={styles.manualInput}>
-                      <TextInput
-                        style={styles.input}
-                        placeholder="或手动输入SN/IMEI"
-                        value={sn}
-                        onChangeText={setSn}
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                        editable={!scanLoading}
-                      />
-                      <Button
-                        mode="outlined"
-                        onPress={() => {
-                          if (sn.trim()) setStep('info');
-                        }}
-                        disabled={!sn.trim()}
-                        accessibilityLabel="下一步"
-                      >
-                        下一步
-                      </Button>
-                    </View>
-                  </Card.Content>
-                </Card>
+                  </View>
+                </View>
 
                 {/* Scan History */}
                 {scanResults.length > 0 && (
@@ -335,134 +332,138 @@ export default function InboundScreen() {
               </>
             )}
 
-            {/* Inbound Form */}
+            {/* Inbound Form - no Card wrapper */}
             {step === 'info' && (
-              <Card style={styles.card} mode="outlined">
-                <Card.Title title="入库信息" />
-                <Card.Content>
-                  <Text style={[styles.label, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>SN: {sn}</Text>
+              <View style={styles.section}>
+                <Text style={[styles.label, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>SN: {sn}</Text>
 
-                  {/* SKU lookup */}
-                  <Text style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>SKU查询 *</Text>
-                  <View style={styles.skuRow}>
+                {/* SKU lookup */}
+                <Text style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>SKU查询 *</Text>
+                <View style={styles.skuRow}>
                   <TextInput
-                    style={[styles.input, { flex: 1 }]}
+                    style={[styles.input, { flex: 1, borderColor: theme.colors.outline, backgroundColor: theme.colors.surface }]}
                     placeholder="输入型号ID/名称"
+                    placeholderTextColor={theme.colors.onSurfaceVariant}
                     value={modelId}
                     onChangeText={(text) => { setModelId(text); setSkuId(''); setSkuName(''); }}
                     autoCapitalize="none"
                     autoCorrect={false}
                     editable={!loading && !skuLoading}
                   />
-                    <Button
-                      mode="contained"
-                      onPress={handleLookupSku}
-                      loading={skuLoading}
-                      disabled={skuLoading || !modelId.trim()}
-                      compact
-                      accessibilityLabel="查询"
-                    >
-                      查询
-                    </Button>
-                  </View>
-                  {skuId ? (
-                    <Text style={styles.skuFound}>
-                      SKU: {skuName || skuId.slice(0, 8)}...
-                    </Text>
-                  ) : null}
-
-                  <TextInput
-                    style={styles.input}
-                    placeholder="成本价 *"
-                    value={unitCost}
-                    onChangeText={setUnitCost}
-                    keyboardType="decimal-pad"
-                    returnKeyType="done"
-                    editable={!loading}
-                  />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="同行价"
-                    value={peerPrice}
-                    onChangeText={setPeerPrice}
-                    keyboardType="decimal-pad"
-                    returnKeyType="done"
-                    editable={!loading}
-                  />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="零售价"
-                    value={retailPrice}
-                    onChangeText={setRetailPrice}
-                    keyboardType="decimal-pad"
-                    returnKeyType="done"
-                    editable={!loading}
-                  />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="电池健康度(%)"
-                    value={batteryHealth}
-                    onChangeText={setBatteryHealth}
-                    keyboardType="number-pad"
-                    maxLength={3}
-                    editable={!loading}
-                  />
-
-                  <Text style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>成色</Text>
-                  <View style={styles.chipRow}>
-                    {CONDITION_OPTIONS.map((opt) => (
-                      <Chip
-                        key={opt.value}
-                        selected={condition === opt.value}
-                        onPress={() => setCondition(condition === opt.value ? '' : opt.value)}
-                        style={styles.chip}
-                        compact
-                        accessibilityLabel={opt.value}
-                      >
-                        {opt.value}
-                      </Chip>
-                    ))}
-                  </View>
-
-                  <Text style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>渠道</Text>
-                  <View style={styles.chipRow}>
-                    {CHANNEL_OPTIONS.map((opt) => (
-                      <Chip
-                        key={opt}
-                        selected={channel === opt}
-                        onPress={() => setChannel(channel === opt ? '' : opt)}
-                        style={styles.chip}
-                        compact
-                        accessibilityLabel={opt}
-                      >
-                        {opt}
-                      </Chip>
-                    ))}
-                  </View>
-
-                  <Text style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>来源</Text>
-                  <SegmentedButtons
-                    value={sourceType}
-                    onValueChange={setSourceType}
-                    buttons={[
-                      { value: 'TRADE_IN', label: '以旧换新' },
-                      { value: 'PURCHASE', label: '采购' },
-                      { value: 'OTHER', label: '其他' },
-                    ]}
-                  />
-
                   <Button
                     mode="contained"
-                    onPress={handleSubmit}
-                    loading={loading}
-                    disabled={loading || !unitCost || !skuId}
-                    style={styles.submitBtn}
-                    accessibilityLabel="确认入库"
+                    onPress={handleLookupSku}
+                    loading={skuLoading}
+                    disabled={skuLoading || !modelId.trim()}
+                    compact
+                    accessibilityLabel="查询"
                   >
-                    确认入库
+                    查询
                   </Button>
-                </Card.Content>
-              </Card>
+                </View>
+                {skuId ? (
+                  <Text style={[styles.skuFound, { color: theme.colors.primary }]}>
+                    SKU: {skuName || skuId.slice(0, 8)}...
+                  </Text>
+                ) : null}
+
+                <TextInput
+                  style={[styles.input, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]}
+                  placeholder="成本价 *"
+                  placeholderTextColor={theme.colors.onSurfaceVariant}
+                  value={unitCost}
+                  onChangeText={setUnitCost}
+                  keyboardType="decimal-pad"
+                  returnKeyType="done"
+                  editable={!loading}
+                />
+                <TextInput
+                  style={[styles.input, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]}
+                  placeholder="同行价"
+                  placeholderTextColor={theme.colors.onSurfaceVariant}
+                  value={peerPrice}
+                  onChangeText={setPeerPrice}
+                  keyboardType="decimal-pad"
+                  returnKeyType="done"
+                  editable={!loading}
+                />
+                <TextInput
+                  style={[styles.input, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]}
+                  placeholder="零售价"
+                  placeholderTextColor={theme.colors.onSurfaceVariant}
+                  value={retailPrice}
+                  onChangeText={setRetailPrice}
+                  keyboardType="decimal-pad"
+                  returnKeyType="done"
+                  editable={!loading}
+                />
+                <TextInput
+                  style={[styles.input, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]}
+                  placeholder="电池健康度(%)"
+                  placeholderTextColor={theme.colors.onSurfaceVariant}
+                  value={batteryHealth}
+                  onChangeText={setBatteryHealth}
+                  keyboardType="number-pad"
+                  maxLength={3}
+                  editable={!loading}
+                />
+
+                <Text style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>成色</Text>
+                <View style={styles.chipRow}>
+                  {CONDITION_OPTIONS.map((opt) => (
+                    <Chip
+                      key={opt.value}
+                      selected={condition === opt.value}
+                      onPress={() => setCondition(condition === opt.value ? '' : opt.value)}
+                      style={[styles.chip, condition === opt.value && { backgroundColor: '#FF6D00' }]}
+                      selectedColor={condition === opt.value ? '#fff' : undefined}
+                      compact
+                      accessibilityLabel={opt.value}
+                    >
+                      {opt.value}
+                    </Chip>
+                  ))}
+                </View>
+
+                <Text style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>渠道</Text>
+                <View style={styles.chipRow}>
+                  {CHANNEL_OPTIONS.map((opt) => (
+                    <Chip
+                      key={opt}
+                      selected={channel === opt}
+                      onPress={() => setChannel(channel === opt ? '' : opt)}
+                      style={[styles.chip, channel === opt && { backgroundColor: '#FF6D00' }]}
+                      selectedColor={channel === opt ? '#fff' : undefined}
+                      compact
+                      accessibilityLabel={opt}
+                    >
+                      {opt}
+                    </Chip>
+                  ))}
+                </View>
+
+                <Text style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>来源</Text>
+                <SegmentedButtons
+                  value={sourceType}
+                  onValueChange={setSourceType}
+                  buttons={[
+                    { value: 'TRADE_IN', label: '以旧换新' },
+                    { value: 'PURCHASE', label: '采购' },
+                    { value: 'OTHER', label: '其他' },
+                  ]}
+                />
+
+                <Button
+                  mode="contained"
+                  onPress={handleSubmit}
+                  loading={loading}
+                  disabled={loading || !unitCost || !skuId}
+                  style={styles.submitBtn}
+                  accessibilityLabel="确认入库"
+                >
+                  确认入库
+                </Button>
+              </View>
             )}
           </>
         )}
@@ -474,10 +475,13 @@ export default function InboundScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fafafa',
   },
   scrollContent: {
     paddingBottom: 24,
+  },
+  section: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
   },
   scannerContainer: {
     height: 400,
@@ -485,9 +489,6 @@ const styles = StyleSheet.create({
   closeScannerBtn: {
     alignSelf: 'center',
     marginBottom: 8,
-  },
-  card: {
-    margin: 16,
   },
   scanBtn: {
     marginBottom: 12,
@@ -499,9 +500,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#e0e0e0',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -548,7 +547,6 @@ const styles = StyleSheet.create({
   },
   skuFound: {
     fontSize: 13,
-    color: '#2e7d32',
     fontWeight: '500',
     marginBottom: 8,
   },

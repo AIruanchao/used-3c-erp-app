@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
-import { Card, List, Switch, Divider, Button, Portal, Modal, RadioButton } from 'react-native-paper';
+import {  Card, List, Switch, Divider, Button, Portal, Modal, RadioButton, useTheme } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../hooks/useAuth';
@@ -8,6 +8,8 @@ import { useAppStore } from '../../stores/app-store';
 import { COMPANY_NAME } from '../../lib/constants';
 
 export default function ProfileScreen() {
+const paperTheme = useTheme();
+
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user, stores, currentStore, selectStore, logout } = useAuth();
@@ -51,7 +53,7 @@ export default function ProfileScreen() {
   }, [logout, router]);
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
       {/* User Info */}
       <Card style={styles.card} mode="elevated">
         <Card.Content>
@@ -62,8 +64,8 @@ export default function ProfileScreen() {
               </Text>
             </View>
             <View style={styles.userInfo}>
-              <Text style={styles.userName}>{user?.name ?? '未知用户'}</Text>
-              <Text style={styles.userEmail}>{user?.email ?? ''}</Text>
+              <Text style={[styles.userName, { color: paperTheme.colors.onSurface }]}>{user?.name ?? '未知用户'}</Text>
+              <Text style={[styles.userEmail, { color: paperTheme.colors.onSurfaceVariant }]}>{user?.email ?? ''}</Text>
             </View>
           </View>
         </Card.Content>
@@ -191,12 +193,12 @@ export default function ProfileScreen() {
         退出登录
       </Button>
 
-      <Text style={styles.footer}>{COMPANY_NAME}</Text>
-      <Text style={styles.version}>v1.0.0</Text>
+      <Text style={[styles.footer, { color: paperTheme.colors.onSurfaceVariant }]}>{COMPANY_NAME}</Text>
+      <Text style={[styles.version, { color: paperTheme.colors.outline }]}>v1.0.0</Text>
 
       <Portal>
-        <Modal visible={showStorePicker} onDismiss={() => setShowStorePicker(false)} contentContainerStyle={styles.modal}>
-          <Text style={styles.modalTitle}>选择门店</Text>
+        <Modal visible={showStorePicker} onDismiss={() => setShowStorePicker(false)} contentContainerStyle={[styles.modal, { backgroundColor: paperTheme.colors.surface }]}>
+          <Text style={[styles.modalTitle, { color: paperTheme.colors.onSurface }]}>选择门店</Text>
           <RadioButton.Group
             value={currentStore?.storeId ?? ''}
             onValueChange={(value) => {

@@ -99,11 +99,13 @@ export default function RootLayout() {
 
   const isDark =
     theme === 'dark' || (theme === 'system' && colorScheme === 'dark');
-  const paperTheme = isDark ? MD3DarkTheme : DefaultTheme;
+  const paperTheme = isDark
+    ? { ...MD3DarkTheme, colors: { ...MD3DarkTheme.colors, secondaryContainer: '#FF6D00', onSecondaryContainer: '#FFFFFF' } }
+    : { ...DefaultTheme, colors: { ...DefaultTheme.colors, secondaryContainer: '#FF6D00', onSecondaryContainer: '#FFFFFF' } };
 
   if (!storageReady) {
     return (
-      <View style={layoutBootStyles.root} accessibilityLabel="app-starting">
+      <View style={[layoutBootStyles.root, { backgroundColor: isDark ? '#121212' : '#ffffff' }]} accessibilityLabel="app-starting">
         <ActivityIndicator />
         <Text style={layoutBootStyles.hint}>加载中…</Text>
       </View>
@@ -187,6 +189,70 @@ export default function RootLayout() {
             <Stack.Screen
               name="settlement/index"
               options={{ headerShown: true, title: '日结' }}
+            />
+            <Stack.Screen
+              name="outbound/index"
+              options={{ headerShown: true, title: '出库' }}
+            />
+            <Stack.Screen
+              name="outbound/[id]"
+              options={{ headerShown: false, title: '出库单' }}
+            />
+            <Stack.Screen
+              name="customer/new"
+              options={{ headerShown: false, title: '新建客户' }}
+            />
+            <Stack.Screen
+              name="pickup/index"
+              options={{ headerShown: true, title: '取机管理' }}
+            />
+            <Stack.Screen
+              name="pickup/new"
+              options={{ headerShown: false, title: '新建取机单' }}
+            />
+            <Stack.Screen
+              name="pickup/[id]"
+              options={{ headerShown: false, title: '取机单' }}
+            />
+            <Stack.Screen
+              name="handover/index"
+              options={{ headerShown: true, title: '交接班' }}
+            />
+            <Stack.Screen
+              name="handover/new"
+              options={{ headerShown: false, title: '新建交接' }}
+            />
+            <Stack.Screen
+              name="spare-parts/index"
+              options={{ headerShown: true, title: '配件' }}
+            />
+            <Stack.Screen
+              name="spare-parts/inbound"
+              options={{ headerShown: false, title: '配件入库' }}
+            />
+            <Stack.Screen
+              name="inspection/[deviceId]"
+              options={{ headerShown: false, title: '检测报告' }}
+            />
+            <Stack.Screen
+              name="pre-orders/index"
+              options={{ headerShown: true, title: '预订单' }}
+            />
+            <Stack.Screen
+              name="pre-orders/new"
+              options={{ headerShown: false, title: '新建预订单' }}
+            />
+            <Stack.Screen
+              name="pre-orders/[id]"
+              options={{ headerShown: false, title: '预订单' }}
+            />
+            <Stack.Screen
+              name="announcements/index"
+              options={{ headerShown: true, title: '公告' }}
+            />
+            <Stack.Screen
+              name="announcements/[id]"
+              options={{ headerShown: false, title: '公告详情' }}
             />
             <Stack.Screen
               name="crash-logs"

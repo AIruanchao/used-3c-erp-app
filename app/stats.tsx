@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
-import { Card, Divider } from 'react-native-paper';
+import {  Card, Divider, useTheme } from 'react-native-paper';
 import { useAuth } from '../hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { getDailyReport } from '../services/stats-service';
@@ -10,6 +10,8 @@ import { formatDate, yuan } from '../lib/utils';
 import { COMPANY_NAME } from '../lib/constants';
 
 export default function StatsScreen() {
+  const theme = useTheme();
+
   const { storeId, organizationId } = useAuth();
 
   const { data: report, isLoading, isError, refetch, isRefetching } = useQuery({
@@ -27,7 +29,7 @@ export default function StatsScreen() {
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
       refreshControl={
         <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
       }
@@ -40,20 +42,20 @@ export default function StatsScreen() {
         <Card.Content>
           <View style={styles.metricRow}>
             <View style={styles.metric}>
-              <Text style={styles.metricLabel}>销售额</Text>
-              <Text style={[styles.metricValue, { color: '#2e7d32' }]}>
+              <Text style={[styles.metricLabel, { color: theme.colors.onSurfaceVariant }]}>销售额</Text>
+              <Text style={[styles.metricValue, { color: theme.colors.primary }]}>
                 {yuan(report?.sales.amount ?? 0)}
               </Text>
-              <Text style={styles.metricCount}>
+              <Text style={[styles.metricCount, { color: theme.colors.onSurface }]}>
                 {report?.sales.count ?? 0} 台
               </Text>
             </View>
             <View style={styles.metric}>
-              <Text style={styles.metricLabel}>采购额</Text>
+              <Text style={[styles.metricLabel, { color: theme.colors.onSurfaceVariant }]}>采购额</Text>
               <Text style={styles.metricValue}>
                 {yuan(report?.purchase.cost ?? 0)}
               </Text>
-              <Text style={styles.metricCount}>
+              <Text style={[styles.metricCount, { color: theme.colors.onSurface }]}>
                 {report?.purchase.count ?? 0} 台
               </Text>
             </View>
@@ -63,14 +65,14 @@ export default function StatsScreen() {
 
           <View style={styles.metricRow}>
             <View style={styles.metric}>
-              <Text style={styles.metricLabel}>净现金流</Text>
-              <Text style={[styles.metricValue, { color: (report?.netCashFlow ?? 0) >= 0 ? '#2e7d32' : '#e53935' }]}>
+              <Text style={[styles.metricLabel, { color: theme.colors.onSurfaceVariant }]}>净现金流</Text>
+              <Text style={[styles.metricValue, { color: (report?.netCashFlow ?? 0) >= 0 ? theme.colors.primary : theme.colors.error }]}>
                 {yuan(report?.netCashFlow ?? 0)}
               </Text>
             </View>
             <View style={styles.metric}>
-              <Text style={styles.metricLabel}>库存预警</Text>
-              <Text style={[styles.metricCount, { fontSize: 20 }, { color: (report?.stockAgeWarning ?? 0) > 0 ? '#ff9800' : '#4caf50' }]}>
+              <Text style={[styles.metricLabel, { color: theme.colors.onSurfaceVariant }]}>库存预警</Text>
+              <Text style={[styles.metricCount, { fontSize: 20 }, { color: (report?.stockAgeWarning ?? 0) > 0 ? theme.colors.error : theme.colors.primary }]}>
                 {report?.stockAgeWarning ?? 0}
               </Text>
             </View>
@@ -80,23 +82,23 @@ export default function StatsScreen() {
 
           <View style={styles.metricRow}>
             <View style={styles.metric}>
-              <Text style={styles.metricLabel}>应收到期</Text>
-              <Text style={styles.metricCount}>{report?.receivableDue ?? 0}</Text>
+              <Text style={[styles.metricLabel, { color: theme.colors.onSurfaceVariant }]}>应收到期</Text>
+              <Text style={[styles.metricCount, { color: theme.colors.onSurface }]}>{report?.receivableDue ?? 0}</Text>
             </View>
             <View style={styles.metric}>
-              <Text style={styles.metricLabel}>应付到期</Text>
-              <Text style={styles.metricCount}>{report?.payableDue ?? 0}</Text>
+              <Text style={[styles.metricLabel, { color: theme.colors.onSurfaceVariant }]}>应付到期</Text>
+              <Text style={[styles.metricCount, { color: theme.colors.onSurface }]}>{report?.payableDue ?? 0}</Text>
             </View>
           </View>
 
           {(report?.profitTop5?.length ?? 0) > 0 && (
             <>
               <Divider style={styles.divider} />
-              <Text style={styles.profitTitle}>利润TOP5型号</Text>
+              <Text style={[styles.profitTitle, { color: theme.colors.onSurface }]}>利润TOP5型号</Text>
               {report?.profitTop5.map((item) => (
                 <View key={item.modelName} style={styles.profitRow}>
-                  <Text style={styles.profitName}>{item.modelName}</Text>
-                  <Text style={[styles.profitValue, { color: item.profit >= 0 ? '#2e7d32' : '#e53935' }]}>
+                  <Text style={[styles.profitName, { color: theme.colors.onSurfaceVariant }]}>{item.modelName}</Text>
+                  <Text style={[styles.profitValue, { color: item.profit >= 0 ? theme.colors.primary : theme.colors.error }]}>
                     {yuan(item.profit)}
                   </Text>
                 </View>
@@ -106,7 +108,7 @@ export default function StatsScreen() {
         </Card.Content>
       </Card>
 
-      <Text style={styles.footer}>{COMPANY_NAME}</Text>
+      <Text style={[styles.footer, { color: theme.colors.onSurfaceVariant }]}>{COMPANY_NAME}</Text>
     </ScrollView>
   );
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
-import { Card, List, Divider, Text } from 'react-native-paper';
+import {  Card, List, Divider, Text, useTheme } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
@@ -10,6 +10,8 @@ import { QueryError } from '../../components/common/QueryError';
 import { yuan } from '../../lib/utils';
 
 export default function FinanceIndexScreen() {
+  const theme = useTheme();
+
   const router = useRouter();
   const { storeId, organizationId } = useAuth();
 
@@ -28,7 +30,7 @@ export default function FinanceIndexScreen() {
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
       refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
     >
       <Card style={styles.card} mode="elevated">
@@ -36,16 +38,16 @@ export default function FinanceIndexScreen() {
         <Card.Content>
           <View style={styles.summaryRow}>
             <View style={styles.summaryItem}>
-              <Text style={[styles.amountLarge, { color: '#2e7d32' }]}>
+              <Text style={[styles.amountLarge, { color: theme.colors.primary }]}>
                 {yuan(report?.sales.amount ?? 0)}
               </Text>
-              <Text style={styles.summaryLabel}>销售额 ({report?.sales.count ?? 0}台)</Text>
+              <Text style={[styles.summaryLabel, { color: theme.colors.onSurfaceVariant }]}>销售额 ({report?.sales.count ?? 0}台)</Text>
             </View>
             <View style={styles.summaryItem}>
               <Text style={styles.amountLarge}>
                 {yuan(report?.purchase.cost ?? 0)}
               </Text>
-              <Text style={styles.summaryLabel}>采购额 ({report?.purchase.count ?? 0}台)</Text>
+              <Text style={[styles.summaryLabel, { color: theme.colors.onSurfaceVariant }]}>采购额 ({report?.purchase.count ?? 0}台)</Text>
             </View>
           </View>
           <Divider />
@@ -53,7 +55,7 @@ export default function FinanceIndexScreen() {
             <List.Item
               title="净现金流"
               description={
-                <Text style={{ color: (report?.netCashFlow ?? 0) >= 0 ? '#2e7d32' : '#e53935', fontWeight: '600' }}>
+                <Text style={{ color: (report?.netCashFlow ?? 0) >= 0 ? theme.colors.primary : theme.colors.error, fontWeight: '600' }}>
                   {yuan(report?.netCashFlow ?? 0)}
                 </Text>
               }

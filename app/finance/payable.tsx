@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, RefreshControl, ScrollView } from 'react-native';
-import { Card, Text } from 'react-native-paper';
+import {  Card, Text, useTheme } from 'react-native-paper';
 import { useAuth } from '../../hooks/useAuth';
 import { getDailyReport } from '../../services/stats-service';
 import { EmptyState } from '../../components/common/EmptyState';
@@ -10,6 +10,8 @@ import { formatDate } from '../../lib/utils';
 import { useQuery } from '@tanstack/react-query';
 
 export default function PayableScreen() {
+  const theme = useTheme();
+
   const { storeId, organizationId } = useAuth();
 
   const { data: report, isLoading, isError, refetch, isRefetching } = useQuery({
@@ -32,11 +34,11 @@ export default function PayableScreen() {
     >
       <Card style={styles.card} mode="outlined">
         <Card.Content>
-          <Text style={styles.title}>应付账款概览</Text>
-          <Text style={styles.date}>截至 {formatDate(new Date().toISOString())}</Text>
+          <Text style={[styles.title, { color: theme.colors.onSurface }]}>应付账款概览</Text>
+          <Text style={[styles.date, { color: theme.colors.onSurfaceVariant }]}>截至 {formatDate(new Date().toISOString())}</Text>
           <View style={styles.row}>
-            <Text style={styles.label}>待付款</Text>
-            <Text style={[styles.value, { color: '#e53935' }]}>{report?.payableDue ?? 0} 笔</Text>
+            <Text style={[styles.label, { color: theme.colors.onSurfaceVariant }]}>待付款</Text>
+            <Text style={[styles.value, { color: theme.colors.error }]}>{report?.payableDue ?? 0} 笔</Text>
           </View>
         </Card.Content>
       </Card>
