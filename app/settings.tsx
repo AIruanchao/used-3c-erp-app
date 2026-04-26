@@ -7,6 +7,7 @@ import { APP_DISPLAY_NAME, COMPANY_NAME } from '../lib/constants';
 import { API_BASE } from '../lib/api';
 import { getApiBaseUrl, setApiBaseUrl, removeApiBaseUrl } from '../lib/storage';
 import { printerService } from '../services/printer-service';
+import { api } from '../lib/api';
 
 export default function SettingsScreen() {
   const theme = useAppStore((s) => s.theme);
@@ -15,6 +16,7 @@ export default function SettingsScreen() {
   const [printers, setPrinters] = useState<Array<{ id: string; name: string | null }>>([]);
   const [connected, setConnected] = useState(printerService.isConnected());
   const [apiBaseDraft, setApiBaseDraft] = useState(getApiBaseUrl() ?? '');
+  const [connTesting, setConnTesting] = useState(false);
 
   // Refresh connection state when screen gains focus
   useFocusEffect(
@@ -102,6 +104,38 @@ export default function SettingsScreen() {
               accessibilityLabel="清除自定义服务器地址"
             >
               清除自定义
+            </Button>
+          </View>
+          <View style={{ marginTop: 12 }}>
+            <Button
+              mode="outlined"
+              loading={connTesting}
+              disabled={connTesting}
+              onPress={async () => {
+                if (connTesting) return;
+                setConnTesting(true);
+                try {
+                  const started = Date.now();
+                  const res = await api.get('/api/auth/csrf');
+                  const ms = Date.now() - started;
+                  const token = (res.data as { csrfToken?: string })?.csrfToken ?? '(no csrfToken)';
+                  Alert.alert('连接正常', `GET /api/auth/csrf 成功（${ms}ms）\n${token}`);
+                } catch (e: unknown) {
+                  const msg =
+                    e && typeof e === 'object' && 'message' in e
+                      ? String((e as { message: unknown }).message)
+                      : String(e);
+                  Alert.alert(
+                    '连接失败',
+                    `服务器: ${getApiBaseUrl() ?? API_BASE}\n错误: ${msg}\n\n若提示 Network Error，多数是手机网络/DNS/证书/系统联网限制导致。`,
+                  );
+                } finally {
+                  setConnTesting(false);
+                }
+              }}
+              accessibilityLabel="测试服务器连接"
+            >
+              测试连接
             </Button>
           </View>
         </Card.Content>

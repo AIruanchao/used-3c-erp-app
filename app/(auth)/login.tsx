@@ -15,6 +15,7 @@ import { loginWithEmail, getUserStores } from '../../services/auth-service';
 import { setAuthSessionCookie } from '../../lib/storage';
 import { APP_DISPLAY_NAME, COMPANY_NAME } from '../../lib/constants';
 import { API_BASE } from '../../lib/api';
+import { getApiBaseUrl } from '../../lib/storage';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -60,9 +61,9 @@ export default function LoginScreen() {
       setAuth(result.user, result.token, stores);
       router.replace('/(tabs)');
     } catch (err) {
-      const msg =
-        err instanceof Error ? err.message : '登录失败，请重试';
-      setError(msg);
+      const base = getApiBaseUrl() ?? API_BASE;
+      const msg = err instanceof Error ? err.message : '登录失败，请重试';
+      setError(msg === 'Network Error' ? `网络错误（${base}）` : msg);
     } finally {
       setLoading(false);
     }
