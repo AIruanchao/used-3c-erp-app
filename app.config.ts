@@ -35,6 +35,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       permissions: [
         'android.permission.CAMERA',
         'android.permission.INTERNET',
+        'android.permission.ACCESS_NETWORK_STATE',
         'android.permission.POST_NOTIFICATIONS',
         'android.permission.VIBRATE',
         'android.permission.WAKE_LOCK',
