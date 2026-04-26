@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl, Alert } from 'react-native';
-import { Card, List, Button } from 'react-native-paper';
+import { Card, List, Button, useTheme } from 'react-native-paper';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { getDeviceById } from '../../services/device-service';
@@ -14,6 +14,7 @@ import { printerService } from '../../services/printer-service';
 
 export default function DeviceDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const theme = useTheme();
   const router = useRouter();
   const { organizationId, storeId, storeName, user } = useAuth();
   const [printing, setPrinting] = useState(false);
@@ -221,17 +222,17 @@ const styles = StyleSheet.create({
   },
   brand: {
     fontSize: 13,
-    color: '#9e9e9e',
+    color: theme.colors.onSurfaceVariant,
   },
   model: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#212121',
+    color: theme.colors.onSurface,
     marginTop: 2,
   },
   sn: {
     fontSize: 14,
-    color: '#616161',
+    color: theme.colors.onSurfaceVariant,
     fontFamily: 'Courier',
     marginTop: 4,
   },
@@ -246,7 +247,7 @@ const styles = StyleSheet.create({
   },
   priceLabel: {
     fontSize: 12,
-    color: '#9e9e9e',
+    color: theme.colors.onSurfaceVariant,
     marginBottom: 4,
   },
   priceValue: {

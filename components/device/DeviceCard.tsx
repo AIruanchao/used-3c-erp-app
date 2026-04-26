@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Card } from 'react-native-paper';
+import { Card, useTheme } from 'react-native-paper';
 import { DeviceStatusBadge } from './DeviceStatusBadge';
 import { AmountText } from '../finance/AmountText';
 import { formatDate } from '../../lib/utils';
@@ -14,6 +14,7 @@ interface DeviceCardProps {
 export const DeviceCard = React.memo(function DeviceCard({
   device,
   onPress,
+  const theme = useTheme();
 }: DeviceCardProps) {
   const skuName = device.Sku?.name ?? device.Sku?.Model?.name ?? '未知型号';
   const brandName = device.Sku?.Model?.Brand?.name ?? '';
@@ -79,19 +80,19 @@ const styles = StyleSheet.create({
   },
   brandText: {
     fontSize: 12,
-    color: '#9e9e9e',
+    color: theme.colors.onSurfaceVariant,
   },
   skuName: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#212121',
+    color: theme.colors.onSurface,
   },
   details: {
     marginTop: 8,
   },
   sn: {
     fontSize: 13,
-    color: '#616161',
+    color: theme.colors.onSurfaceVariant,
     fontFamily: 'Courier',
   },
   priceRow: {
@@ -104,7 +105,7 @@ const styles = StyleSheet.create({
   },
   date: {
     fontSize: 12,
-    color: '#9e9e9e',
+    color: theme.colors.onSurfaceVariant,
     marginTop: 4,
   },
 });

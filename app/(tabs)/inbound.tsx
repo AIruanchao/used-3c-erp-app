@@ -9,7 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { Button, Card, Chip, SegmentedButtons } from 'react-native-paper';
+import { Button, Card, Chip, SegmentedButtons, useTheme } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../hooks/useAuth';
@@ -26,6 +26,7 @@ type InboundStep = 'scan' | 'info' | 'confirm';
 
 export default function InboundScreen() {
   const router = useRouter();
+  const theme = useTheme();
   const queryClient = useQueryClient();
   const { storeId, organizationId } = useAuth();
   const { handleBarcodeScanned, isScanning } = useScanner();
@@ -309,7 +310,7 @@ export default function InboundScreen() {
                 {scanResults.length > 0 && (
                   <View style={styles.scanHistory}>
                     <View style={styles.scanHistoryHeader}>
-                      <Text style={styles.sectionTitle}>
+                      <Text style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>
                         扫码记录 ({scanResults.length})
                       </Text>
                       <Button mode="text" compact onPress={clearScanResults} accessibilityLabel="清空">
@@ -339,10 +340,10 @@ export default function InboundScreen() {
               <Card style={styles.card} mode="outlined">
                 <Card.Title title="入库信息" />
                 <Card.Content>
-                  <Text style={styles.label} numberOfLines={1}>SN: {sn}</Text>
+                  <Text style={[styles.label, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>SN: {sn}</Text>
 
                   {/* SKU lookup */}
-                  <Text style={styles.sectionTitle}>SKU查询 *</Text>
+                  <Text style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>SKU查询 *</Text>
                   <View style={styles.skuRow}>
                   <TextInput
                     style={[styles.input, { flex: 1 }]}
@@ -407,7 +408,7 @@ export default function InboundScreen() {
                     editable={!loading}
                   />
 
-                  <Text style={styles.sectionTitle}>成色</Text>
+                  <Text style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>成色</Text>
                   <View style={styles.chipRow}>
                     {CONDITION_OPTIONS.map((opt) => (
                       <Chip
@@ -423,7 +424,7 @@ export default function InboundScreen() {
                     ))}
                   </View>
 
-                  <Text style={styles.sectionTitle}>渠道</Text>
+                  <Text style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>渠道</Text>
                   <View style={styles.chipRow}>
                     {CHANNEL_OPTIONS.map((opt) => (
                       <Chip
@@ -439,7 +440,7 @@ export default function InboundScreen() {
                     ))}
                   </View>
 
-                  <Text style={styles.sectionTitle}>来源</Text>
+                  <Text style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>来源</Text>
                   <SegmentedButtons
                     value={sourceType}
                     onValueChange={setSourceType}
@@ -510,13 +511,11 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#424242',
     marginBottom: 8,
   },
   sectionTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#616161',
     marginTop: 12,
     marginBottom: 8,
   },
