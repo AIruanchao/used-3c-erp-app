@@ -20,6 +20,7 @@ const OFFLINE_ACTION_WHITELIST = new Set<string>([
   '/api/repair/quote',
   '/api/repair/start',
   '/api/repair/accept',
+  '/api/repair/payment',
   '/api/repair/complete',
   '/api/repair/qc',
   '/api/repair/deliver',

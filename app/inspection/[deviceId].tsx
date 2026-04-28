@@ -16,6 +16,7 @@ import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { submitInspection } from '../../services/inspection-service';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { InspectionTool } from '../../types/inspection';
+import { PhotoPickerGrid } from '../../components/common/PhotoPickerGrid';
 
 const TOOLS: { value: InspectionTool; label: string }[] = [
   { value: 'MANUAL', label: '手动' },
@@ -50,6 +51,7 @@ export default function InspectionScreen() {
   const [network, setNetwork] = useState('');
   const [exterior, setExterior] = useState('');
   const [issues, setIssues] = useState<string[]>(['']);
+  const [photos, setPhotos] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [snack, setSnack] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -118,6 +120,7 @@ export default function InspectionScreen() {
         exteriorCheck: exterior.trim() ? { text: exterior.trim() } : undefined,
         issues: cleaned.length ? cleaned : undefined,
         inspectionData: { note: 'app-inspection' },
+        photos: photos.length ? photos : undefined,
       });
       setSnack(true);
       setTimeout(() => router.back(), 500);
@@ -140,6 +143,7 @@ export default function InspectionScreen() {
     screen,
     sensor,
     tool,
+    photos,
   ]);
 
   return (
@@ -211,6 +215,9 @@ export default function InspectionScreen() {
         <Button onPress={addIssue} disabled={issues.length >= MAX_ISSUES} style={{ marginBottom: 12 }}>
           添加问题
         </Button>
+
+        <PhotoPickerGrid title="照片（可选）" value={photos} onChange={setPhotos} max={6} />
+
         {err && <HelperText type="error">{err}</HelperText>}
         <Button mode="contained" loading={saving} onPress={() => void save()}>
           提交

@@ -25,3 +25,18 @@ export async function getDailyReport(params: {
   const res = await api.get('/api/dashboard/daily-report', { params });
   return res.data;
 }
+
+export interface InventorySummary {
+  inStockCount: number;
+  inStockCost: string;
+  avgUnitCost: string;
+  ageBuckets: { lt15: number; d15to30: number; gt30: number };
+}
+
+export async function getInventorySummary(params: {
+  storeId?: string;
+  organizationId?: string;
+}): Promise<InventorySummary> {
+  const res = await api.get('/api/dashboard/inventory-summary', { params });
+  return res.data;
+}

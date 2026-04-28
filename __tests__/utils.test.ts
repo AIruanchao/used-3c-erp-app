@@ -17,7 +17,7 @@ describe('yuan', () => {
   });
 
   it('handles negative numbers', () => {
-    expect(yuan(-100)).toBe('¥-100.00');
+    expect(yuan(-100)).toBe('-¥100.00');
   });
 
   it('formats with comma separators for thousands', () => {

@@ -23,7 +23,7 @@ installCrashLogger();
 try {
   startAppLogging();
 } catch (e) {
-  console.warn('App logging init failed', e);
+  // If logging can't start, do not crash app startup.
 }
 
 const queryClient = new QueryClient({
@@ -57,16 +57,13 @@ export default function RootLayout() {
         setTheme(t);
         hydrate();
       } catch (e) {
-        console.warn('Storage bootstrap failed', e);
         hydrate();
       }
       if (!cancelled) {
         setStorageReady(true);
         // 🚀 自动回传崩溃日志（不阻塞启动，即使失败也不影响）
         autoUploadCrashLogs().then(({ uploaded }) => {
-          if (uploaded > 0) {
-            console.log('[CrashLogger] 📤 已上传', uploaded, '条崩溃日志');
-          }
+          // success is non-critical; no console noise
         }).catch(() => {});
       }
     })();
@@ -177,10 +174,6 @@ export default function RootLayout() {
             <Stack.Screen
               name="customer/[id]"
               options={{ headerShown: true, title: '客户详情' }}
-            />
-            <Stack.Screen
-              name="stats"
-              options={{ headerShown: true, title: '统计' }}
             />
             <Stack.Screen
               name="settings"

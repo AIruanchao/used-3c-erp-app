@@ -32,6 +32,16 @@ export interface OutboundItem {
   paymentItems?: OutboundPaymentItem[];
   /** 同方式/同 OTHER 说明合并后 */
   paymentBreakdown?: OutboundPaymentBreakdownLine[];
+
+  /** 出库行级设备明细（用于列表卡片增强展示） */
+  lines?: Array<{
+    sn: string;
+    unitCost: number;
+    salePrice: number;
+    lineType: string;
+    skuName: string;
+    condition: string;
+  }>;
 }
 
 /** 与 GET /api/outbound/print/[orderId] 对齐的打印单结构 */

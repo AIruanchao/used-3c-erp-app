@@ -3,6 +3,8 @@
  * Adapted from web version — removed DOM/Tailwind dependencies.
  */
 
+import { formatMoney, centsToFixed2, moneyToCents } from './money';
+
 type DecimalLike = string | number | null | undefined;
 
 export function isValidMoneyInput(input: string): boolean {
@@ -37,22 +39,12 @@ export function decStr(value: DecimalLike | unknown): string {
 
 /** Format a value as Chinese yuan: "¥1,234.56" */
 export function yuan(value: DecimalLike | unknown): string {
-  const s = decStr(value);
-  const num = parseFloat(s);
-  if (Number.isNaN(num)) return '¥0.00';
-  const fixed = num.toFixed(2);
-  const parts = fixed.split('.');
-  const intPart = parts[0] ?? '0';
-  const decPart = parts[1] ?? '00';
-  const withCommas = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  return `¥${withCommas}.${decPart}`;
+  return formatMoney(decStr(value), { prefix: '¥' });
 }
 
 /** Format a value with exactly 2 decimal places: "1234.56" */
 export function toFixed2(value: DecimalLike | unknown): string {
-  const num = parseFloat(decStr(value));
-  if (Number.isNaN(num)) return '0.00';
-  return num.toFixed(2);
+  return centsToFixed2(moneyToCents(decStr(value)));
 }
 
 /** Sanitize pagination params */

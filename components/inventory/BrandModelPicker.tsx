@@ -8,6 +8,7 @@ import {
   Animated,
   TouchableWithoutFeedback,
   Modal,
+  TextInput,
 } from 'react-native';
 import { Portal, Text, Badge, useTheme } from 'react-native-paper';
 import type { BrandItem, ModelItem } from '../../services/inventory-service';
@@ -25,6 +26,8 @@ interface BrandModelPickerProps {
   selectedBrandId?: string;
   selectedModelId?: string;
   onSelect: (brandId?: string, modelId?: string) => void;
+  onSelectNames?: (brandName?: string, modelName?: string) => void;
+  onManualInput?: (brandName: string, modelName: string) => void;
 }
 
 export function BrandModelPicker({
@@ -34,6 +37,8 @@ export function BrandModelPicker({
   selectedBrandId,
   selectedModelId,
   onSelect,
+  onSelectNames,
+  onManualInput,
 }: BrandModelPickerProps) {
   const theme = useTheme();
   const slideAnim = useRef(new Animated.Value(0)).current;
@@ -44,12 +49,20 @@ export function BrandModelPicker({
   const [activeBrandId, setActiveBrandId] = useState<string | undefined>(selectedBrandId);
   const [activeModelId, setActiveModelId] = useState<string | undefined>(selectedModelId);
   const [loading, setLoading] = useState(false);
+  const [query, setQuery] = useState('');
+  const [manualVisible, setManualVisible] = useState(false);
+  const [manualBrand, setManualBrand] = useState('');
+  const [manualModel, setManualModel] = useState('');
 
   // Reset local state when modal opens
   useEffect(() => {
     if (visible) {
       setActiveBrandId(selectedBrandId);
       setActiveModelId(selectedModelId);
+      setQuery('');
+      setManualVisible(false);
+      setManualBrand('');
+      setManualModel('');
     }
   }, [visible, selectedBrandId, selectedModelId]);
 
@@ -118,9 +131,12 @@ export function BrandModelPicker({
   }, []);
 
   const handleConfirm = useCallback(() => {
+    const brandName = activeBrandId ? brands.find((b) => b.id === activeBrandId)?.name : undefined;
+    const modelName = activeModelId ? models.find((m) => m.id === activeModelId)?.name : undefined;
     onSelect(activeBrandId, activeModelId);
+    onSelectNames?.(brandName, modelName);
     onDismiss();
-  }, [activeBrandId, activeModelId, onSelect, onDismiss]);
+  }, [activeBrandId, activeModelId, onSelect, onSelectNames, onDismiss, brands, models]);
 
   const handleClearAll = useCallback(() => {
     setActiveBrandId(undefined);
@@ -139,6 +155,13 @@ export function BrandModelPicker({
 
   const surfaceColor = theme.dark ? theme.colors.elevation.level2 : '#FFFFFF';
 
+  const filteredBrands = query.trim()
+    ? brands.filter((b) => b.name.includes(query.trim()))
+    : brands;
+  const filteredModels = query.trim()
+    ? models.filter((m) => m.name.includes(query.trim()))
+    : models;
+
   const renderBrand = useCallback(
     ({ item }: { item: BrandItem }) => {
       const selected = isSelectedBrand(item.id);
@@ -146,7 +169,7 @@ export function BrandModelPicker({
         <TouchableOpacity
           style={[
             styles.brandItem,
-            selected && { backgroundColor: '#FF6D00' },
+            selected && { backgroundColor: '#FFD700' },
           ]}
           onPress={() => handleBrandPress(item.id)}
           activeOpacity={0.7}
@@ -154,7 +177,7 @@ export function BrandModelPicker({
           <Text
             style={[
               styles.brandName,
-              { color: selected ? '#FFFFFF' : theme.colors.onSurface },
+              { color: selected ? '#333333' : theme.colors.onSurface },
               selected && styles.brandNameSelected,
             ]}
             numberOfLines={1}
@@ -180,7 +203,7 @@ export function BrandModelPicker({
         <TouchableOpacity
           style={[
             styles.modelItem,
-            selected && { backgroundColor: '#FF6D00' },
+            selected && { backgroundColor: '#FFD700' },
           ]}
           onPress={() => setActiveModelId(item.id)}
           activeOpacity={0.7}
@@ -188,7 +211,7 @@ export function BrandModelPicker({
           <Text
             style={[
               styles.modelName,
-              { color: selected ? '#FFFFFF' : theme.colors.onSurface },
+              { color: selected ? '#333333' : theme.colors.onSurface },
               selected && styles.modelNameSelected,
             ]}
             numberOfLines={1}
@@ -262,10 +285,69 @@ export function BrandModelPicker({
             <Text style={[styles.headerTitle, { color: theme.colors.onSurface }]}>
               选择品牌和型号
             </Text>
-            <TouchableOpacity onPress={handleClearAll}>
-              <Text style={styles.clearButton}>清除</Text>
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <TouchableOpacity onPress={() => setManualVisible(true)} disabled={!onManualInput}>
+                <Text style={[styles.clearButton, { opacity: onManualInput ? 1 : 0.4 }]}>手写</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleClearAll}>
+                <Text style={styles.clearButton}>清除</Text>
+              </TouchableOpacity>
+            </View>
           </View>
+
+          <View style={styles.searchWrap}>
+            <TextInput
+              value={query}
+              onChangeText={setQuery}
+              placeholder="搜索品牌/型号..."
+              placeholderTextColor={theme.colors.onSurfaceVariant}
+              style={[styles.searchInput, { borderColor: theme.colors.outlineVariant, color: theme.colors.onSurface }]}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+          </View>
+
+          {manualVisible ? (
+            <View style={styles.manualBox}>
+              <Text style={[styles.manualTitle, { color: theme.colors.onSurface }]}>手写机型</Text>
+              <TextInput
+                value={manualBrand}
+                onChangeText={setManualBrand}
+                placeholder="品牌（如：Apple）"
+                placeholderTextColor={theme.colors.onSurfaceVariant}
+                style={[styles.manualInput, { borderColor: theme.colors.outlineVariant, color: theme.colors.onSurface }]}
+              />
+              <TextInput
+                value={manualModel}
+                onChangeText={setManualModel}
+                placeholder="型号（如：iPhone 14 Pro）"
+                placeholderTextColor={theme.colors.onSurfaceVariant}
+                style={[styles.manualInput, { borderColor: theme.colors.outlineVariant, color: theme.colors.onSurface }]}
+              />
+              <View style={styles.manualBtns}>
+                <TouchableOpacity
+                  style={[styles.manualBtn, { borderColor: theme.colors.outlineVariant }]}
+                  onPress={() => setManualVisible(false)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={{ color: theme.colors.onSurfaceVariant, fontWeight: '700' }}>取消</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.manualBtn, { backgroundColor: '#FFD700', borderColor: '#FFD700' }]}
+                  onPress={() => {
+                    const b = manualBrand.trim();
+                    const m = manualModel.trim();
+                    if (!b || !m) return;
+                    onManualInput?.(b, m);
+                    onDismiss();
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={{ color: '#333', fontWeight: '800' }}>使用</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : null}
 
           {/* Body: sidebar + content */}
           <View style={styles.body}>
@@ -274,7 +356,7 @@ export function BrandModelPicker({
               <TouchableOpacity
                 style={[
                   styles.brandItem,
-                  !activeBrandId && { backgroundColor: '#FF6D00' },
+                  !activeBrandId && { backgroundColor: '#FFD700' },
                 ]}
                 onPress={handleAllBrands}
                 activeOpacity={0.7}
@@ -283,7 +365,7 @@ export function BrandModelPicker({
                   style={[
                     styles.brandName,
                     {
-                      color: !activeBrandId ? '#FFFFFF' : theme.colors.onSurface,
+                      color: !activeBrandId ? '#333333' : theme.colors.onSurface,
                     },
                     !activeBrandId && styles.brandNameSelected,
                   ]}
@@ -292,7 +374,7 @@ export function BrandModelPicker({
                 </Text>
               </TouchableOpacity>
               <FlatList
-                data={brands}
+                data={filteredBrands}
                 keyExtractor={(item) => item.id}
                 renderItem={renderBrand}
                 ListEmptyComponent={ListEmptyComponent}
@@ -307,7 +389,7 @@ export function BrandModelPicker({
                   <TouchableOpacity
                     style={[
                       styles.modelItem,
-                      !activeModelId && { backgroundColor: '#FF6D00' },
+                      !activeModelId && { backgroundColor: '#FFD700' },
                     ]}
                     onPress={() => setActiveModelId(undefined)}
                     activeOpacity={0.7}
@@ -316,7 +398,7 @@ export function BrandModelPicker({
                       style={[
                         styles.modelName,
                         {
-                          color: !activeModelId ? '#FFFFFF' : theme.colors.onSurface,
+                          color: !activeModelId ? '#333333' : theme.colors.onSurface,
                         },
                         !activeModelId && styles.modelNameSelected,
                       ]}
@@ -325,7 +407,7 @@ export function BrandModelPicker({
                     </Text>
                   </TouchableOpacity>
                   <FlatList
-                    data={models}
+                    data={filteredModels}
                     keyExtractor={(item) => item.id}
                     renderItem={renderModel}
                     ListEmptyComponent={ListEmptyComponent}
@@ -405,8 +487,48 @@ const styles = StyleSheet.create({
   },
   clearButton: {
     fontSize: 14,
-    color: '#FF6D00',
+    color: '#FFD700',
     fontWeight: '600',
+  },
+  searchWrap: {
+    paddingHorizontal: 16,
+    paddingBottom: 10,
+  },
+  searchInput: {
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    backgroundColor: '#FFFFFF',
+  },
+  manualBox: {
+    marginHorizontal: 16,
+    marginBottom: 10,
+    borderRadius: 14,
+    padding: 12,
+    backgroundColor: '#FFFDF3',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.08)',
+  },
+  manualTitle: { fontSize: 14, fontWeight: '800', marginBottom: 10 },
+  manualInput: {
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    backgroundColor: '#FFFFFF',
+    marginBottom: 8,
+  },
+  manualBtns: { flexDirection: 'row', gap: 10, marginTop: 4 },
+  manualBtn: {
+    flex: 1,
+    height: 40,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   body: {
     flexDirection: 'row',
@@ -485,7 +607,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(128,128,128,0.4)',
   },
   confirmButton: {
-    backgroundColor: '#FF6D00',
+    backgroundColor: '#FFD700',
   },
   buttonText: {
     fontSize: 15,

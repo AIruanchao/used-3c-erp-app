@@ -6,13 +6,15 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '../../hooks/useAuth';
 import { useAuthStore } from '../../stores/auth-store';
 import { SearchBar } from '../../components/common/SearchBar';
-import { DeviceCard } from '../../components/device/DeviceCard';
+import { DeviceCardPro } from '../../components/device/DeviceCardPro';
 import { EmptyState } from '../../components/common/EmptyState';
 import { QueryError } from '../../components/common/QueryError';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
 import { BrandModelPicker } from '../../components/inventory/BrandModelPicker';
 import { BottomSheetFilter } from '../../components/inventory/BottomSheetFilter';
 import type { FilterGroup } from '../../components/inventory/BottomSheetFilter';
+import { AdvancedFilterSheet, type AdvancedFilterValues } from '../../components/inventory/AdvancedFilterSheet';
+import { FloatingActionBar } from '../../components/common/FloatingActionBar';
 import { getInventoryList } from '../../services/inventory-service';
 import type { Device } from '../../types/device';
 
@@ -104,6 +106,8 @@ export default function InventoryScreen() {
   // Picker / sheet visibility
   const [pickerVisible, setPickerVisible] = useState(false);
   const [filterSheetKey, setFilterSheetKey] = useState<FilterSheetKey | null>(null);
+  const [advancedVisible, setAdvancedVisible] = useState(false);
+  const [advanced, setAdvanced] = useState<AdvancedFilterValues>({});
 
   // Selected brand/model names for display
   const [selectedBrandName, setSelectedBrandName] = useState<string>();
@@ -142,6 +146,7 @@ export default function InventoryScreen() {
       condition,
       apiCategory,
       search,
+      advanced,
     ],
     queryFn: ({ pageParam }) =>
       getInventoryList({
@@ -154,7 +159,16 @@ export default function InventoryScreen() {
         condition: condition || undefined,
         age: age || undefined,
         category: apiCategory,
-        q: search || undefined,
+        q: (advanced.sn || search) ? (advanced.sn || search) : undefined,
+        storage: advanced.storage || undefined,
+        inboundStart: advanced.inboundStart || undefined,
+        inboundEnd: advanced.inboundEnd || undefined,
+        unitCostMin: advanced.unitCostMin || undefined,
+        unitCostMax: advanced.unitCostMax || undefined,
+        peerPriceMin: advanced.peerPriceMin || undefined,
+        peerPriceMax: advanced.peerPriceMax || undefined,
+        retailPriceMin: advanced.retailPriceMin || undefined,
+        retailPriceMax: advanced.retailPriceMax || undefined,
         page: pageParam as number,
         pageSize: PAGE_SIZE,
       }),
@@ -225,6 +239,7 @@ export default function InventoryScreen() {
     setChannel('');
     setAge('');
     setCondition('');
+    setAdvanced({});
   }, []);
 
   // Compute display labels for filter chips
@@ -245,11 +260,11 @@ export default function InventoryScreen() {
     ? CONDITION_OPTIONS.find((o) => o.value === condition)?.label ?? '成色'
     : '成色';
 
-  const hasActiveFilters = brandId || channel || status || age || condition;
+  const hasActiveFilters = brandId || channel || status || age || condition || Object.keys(advanced).length > 0;
 
   const renderItem = useCallback(
     ({ item }: { item: Device }) => (
-      <DeviceCard device={item} onPress={handleDevicePress} />
+      <DeviceCardPro device={item} onPress={handleDevicePress} />
     ),
     [handleDevicePress],
   );
@@ -265,7 +280,7 @@ export default function InventoryScreen() {
     if (query.hasNextPage) {
       return (
         <TouchableOpacity style={styles.loadMoreButton} onPress={loadMore}>
-          <Text style={{ color: '#FF6D00', fontWeight: '600' }}>
+          <Text style={{ color: '#FFD700', fontWeight: '600' }}>
             加载更多 ({items.length}/{total})
           </Text>
         </TouchableOpacity>
@@ -394,7 +409,7 @@ export default function InventoryScreen() {
             style={[
               styles.filterChip,
               brandId && styles.filterChipActive,
-              { borderColor: brandId ? '#1890ff' : theme.colors.outlineVariant },
+              { borderColor: brandId ? '#FFD700' : theme.colors.outlineVariant },
             ]}
             onPress={() => setPickerVisible(true)}
             activeOpacity={0.7}
@@ -403,7 +418,7 @@ export default function InventoryScreen() {
               style={[
                 styles.filterChipText,
                 {
-                  color: brandId ? '#1890ff' : theme.colors.onSurfaceVariant,
+                  color: brandId ? '#FFD700' : theme.colors.onSurfaceVariant,
                 },
               ]}
               numberOfLines={1}
@@ -417,7 +432,7 @@ export default function InventoryScreen() {
             style={[
               styles.filterChip,
               channel && styles.filterChipActive,
-              { borderColor: channel ? '#1890ff' : theme.colors.outlineVariant },
+              { borderColor: channel ? '#FFD700' : theme.colors.outlineVariant },
             ]}
             onPress={() => openFilterSheet('channel')}
             activeOpacity={0.7}
@@ -425,7 +440,7 @@ export default function InventoryScreen() {
             <Text
               style={[
                 styles.filterChipText,
-                { color: channel ? '#1890ff' : theme.colors.onSurfaceVariant },
+                { color: channel ? '#FFD700' : theme.colors.onSurfaceVariant },
               ]}
               numberOfLines={1}
             >
@@ -438,7 +453,7 @@ export default function InventoryScreen() {
             style={[
               styles.filterChip,
               status && styles.filterChipActive,
-              { borderColor: status ? '#1890ff' : theme.colors.outlineVariant },
+              { borderColor: status ? '#FFD700' : theme.colors.outlineVariant },
             ]}
             onPress={() => openFilterSheet('status')}
             activeOpacity={0.7}
@@ -446,7 +461,7 @@ export default function InventoryScreen() {
             <Text
               style={[
                 styles.filterChipText,
-                { color: status ? '#1890ff' : theme.colors.onSurfaceVariant },
+                { color: status ? '#FFD700' : theme.colors.onSurfaceVariant },
               ]}
               numberOfLines={1}
             >
@@ -459,7 +474,7 @@ export default function InventoryScreen() {
             style={[
               styles.filterChip,
               age && styles.filterChipActive,
-              { borderColor: age ? '#1890ff' : theme.colors.outlineVariant },
+              { borderColor: age ? '#FFD700' : theme.colors.outlineVariant },
             ]}
             onPress={() => openFilterSheet('age')}
             activeOpacity={0.7}
@@ -467,7 +482,7 @@ export default function InventoryScreen() {
             <Text
               style={[
                 styles.filterChipText,
-                { color: age ? '#1890ff' : theme.colors.onSurfaceVariant },
+                { color: age ? '#FFD700' : theme.colors.onSurfaceVariant },
               ]}
               numberOfLines={1}
             >
@@ -480,7 +495,7 @@ export default function InventoryScreen() {
             style={[
               styles.filterChip,
               condition && styles.filterChipActive,
-              { borderColor: condition ? '#1890ff' : theme.colors.outlineVariant },
+              { borderColor: condition ? '#FFD700' : theme.colors.outlineVariant },
             ]}
             onPress={() => openFilterSheet('condition')}
             activeOpacity={0.7}
@@ -488,11 +503,32 @@ export default function InventoryScreen() {
             <Text
               style={[
                 styles.filterChipText,
-                { color: condition ? '#1890ff' : theme.colors.onSurfaceVariant },
+                { color: condition ? '#FFD700' : theme.colors.onSurfaceVariant },
               ]}
               numberOfLines={1}
             >
               {conditionLabel}
+            </Text>
+          </TouchableOpacity>
+
+          {/* Advanced filter chip */}
+          <TouchableOpacity
+            style={[
+              styles.filterChip,
+              Object.keys(advanced).length > 0 && styles.filterChipActive,
+              { borderColor: Object.keys(advanced).length > 0 ? '#FFD700' : theme.colors.outlineVariant },
+            ]}
+            onPress={() => setAdvancedVisible(true)}
+            activeOpacity={0.7}
+          >
+            <Text
+              style={[
+                styles.filterChipText,
+                { color: Object.keys(advanced).length > 0 ? '#FFD700' : theme.colors.onSurfaceVariant },
+              ]}
+              numberOfLines={1}
+            >
+              更多
             </Text>
           </TouchableOpacity>
 
@@ -560,6 +596,25 @@ export default function InventoryScreen() {
           onConfirm={closeFilterSheet}
         />
       )}
+
+      <AdvancedFilterSheet
+        visible={advancedVisible}
+        values={advanced}
+        onDismiss={() => setAdvancedVisible(false)}
+        onReset={() => setAdvanced({})}
+        onConfirm={(v) => {
+          setAdvanced(v);
+          setAdvancedVisible(false);
+        }}
+      />
+
+      <FloatingActionBar
+        items={[
+          { key: 'scan', label: '扫码入库', onPress: () => router.push('/(tabs)/inbound' as never) },
+          { key: 'filter', label: '高级筛选', onPress: () => setAdvancedVisible(true) },
+          { key: 'reset', label: '清空筛选', onPress: handleResetAll },
+        ]}
+      />
     </View>
   );
 }
@@ -604,7 +659,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(128,128,128,0.1)',
   },
   categoryTabActive: {
-    backgroundColor: '#1890ff',
+    backgroundColor: '#FFD700',
   },
   categoryTabText: {
     fontSize: 14,
@@ -627,7 +682,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   filterChipActive: {
-    backgroundColor: '#e6f7ff',
+    backgroundColor: '#FFF8E1',
   },
   filterChipText: {
     fontSize: 13,

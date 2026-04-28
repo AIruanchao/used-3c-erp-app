@@ -50,14 +50,22 @@ export default function CustomerListScreen() {
               <Text style={[styles.phone, { color: theme.colors.onSurfaceVariant }]}>{customer.phone || '未留电话'}</Text>
             </View>
             <View style={styles.right}>
-              <Text style={styles.level}>{customer.memberLevel ?? customer.tier ?? ''}</Text>
-              <AmountText value={customer.lifetimeValue} style={styles.ltv} />
+              {!!(customer.memberLevel ?? customer.tier) && (
+                <Text style={[styles.level, { color: '#B88700' }]}>{customer.memberLevel ?? customer.tier ?? ''}</Text>
+              )}
+              <Text style={[styles.small, { color: theme.colors.onSurfaceVariant }]}>
+                积分 {customer.memberPoints ?? 0}
+              </Text>
+              <View style={styles.moneyRow}>
+                <Text style={[styles.small, { color: theme.colors.onSurfaceVariant }]}>余额</Text>
+                <AmountText value={customer.balance ?? 0} style={styles.money} />
+              </View>
             </View>
           </View>
         </Card.Content>
       </Card>
     ),
-    [router],
+    [router, theme.colors.onSurface, theme.colors.onSurfaceVariant],
   );
 
   if (isLoading) return <LoadingScreen />;
@@ -98,6 +106,8 @@ const styles = StyleSheet.create({
   name: { fontSize: 15, fontWeight: '600', color: '#212121' },
   phone: { fontSize: 13, color: '#757575', marginTop: 2 },
   right: { alignItems: 'flex-end' },
-  level: { fontSize: 12, color: '#1976d2' },
-  ltv: { fontSize: 13, marginTop: 2 },
+  level: { fontSize: 12, fontWeight: '700' },
+  small: { fontSize: 12, marginTop: 2 },
+  moneyRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
+  money: { fontSize: 13, fontWeight: '800' },
 });

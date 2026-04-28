@@ -10,6 +10,7 @@ import {
   type CashAccountRow,
 } from '../lib/cash-accounts-api';
 import { getErrorMessage } from '../lib/errors';
+import { centsToFixed2, moneyToCents } from '../lib/money';
 
 const TYPE_LABEL: Record<string, string> = {
   CASH: '现金',
@@ -228,7 +229,7 @@ export default function CashAccountsScreen() {
             <Card.Content>
               <View style={styles.titleRow}>
                 <Text style={[styles.name, { color: theme.colors.onSurface }]}>{a.name}</Text>
-                <Text style={{ color: theme.colors.onSurfaceVariant }}>¥{Number(a.balance).toFixed(2)}</Text>
+                <Text style={{ color: theme.colors.onSurfaceVariant }}>¥{centsToFixed2(moneyToCents(a.balance))}</Text>
               </View>
               <Text style={[styles.sub, { color: theme.colors.onSurfaceVariant }]}>
                 类型: {TYPE_LABEL[a.accountType] ?? a.accountType}

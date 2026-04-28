@@ -1,6 +1,7 @@
 import React from 'react';
 import { Text, StyleSheet } from 'react-native';
-import { decStr } from '../../lib/utils';
+import { useAppStore } from '../../stores/app-store';
+import { formatMoney } from '../../lib/money';
 
 interface AmountTextProps {
   value: string | number | null | undefined;
@@ -15,22 +16,15 @@ export const AmountText = React.memo(function AmountText({
   style,
   colorize = false,
 }: AmountTextProps) {
-  const strVal = decStr(value);
-  const num = parseFloat(strVal);
-  const safeNum = Number.isNaN(num) ? 0 : num;
-  const isNegative = safeNum < 0;
-  const absStr = Math.abs(safeNum).toFixed(2);
-  const formatted = absStr.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-
-  let display = `${prefix}${formatted}`;
-  if (isNegative) {
-    display = `-${prefix}${formatted}`;
-  }
+  const hideAmounts = useAppStore((s) => s.hideAmounts);
+  const display = formatMoney(value, { prefix, hide: hideAmounts });
 
   const color = colorize
-    ? isNegative
+    ? display.startsWith('-')
       ? '#e53935'
-      : safeNum > 0
+      : display.includes('***')
+        ? '#757575'
+        : display !== `${prefix}0.00`
         ? '#2e7d32'
         : '#757575'
     : undefined;

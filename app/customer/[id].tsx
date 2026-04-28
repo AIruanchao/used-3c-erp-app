@@ -264,6 +264,27 @@ export default function CustomerDetailScreen() {
                 <AmountText value={c.lifetimeValue} />
               </View>
             </View>
+
+            <View style={styles.kpiRow}>
+              <View>
+                <Text style={{ color: theme.colors.onSurfaceVariant, fontSize: 12 }}>授信可用</Text>
+                <AmountText value={c.creditAvailable ?? 0} />
+              </View>
+              <View>
+                <Text style={{ color: theme.colors.onSurfaceVariant, fontSize: 12 }}>授信已用</Text>
+                <AmountText value={c.creditUsed ?? 0} />
+              </View>
+              <View>
+                <Text style={{ color: theme.colors.onSurfaceVariant, fontSize: 12 }}>授信额度</Text>
+                <AmountText value={c.creditLimit ?? 0} />
+              </View>
+            </View>
+
+            <View style={styles.scoreRow}>
+              {!!c.profitScore && <Chip compact style={styles.scoreChip}>利润分 {truncate(c.profitScore, 8)}</Chip>}
+              {!!c.loyaltyScore && <Chip compact style={styles.scoreChip}>忠诚分 {truncate(c.loyaltyScore, 8)}</Chip>}
+              {!!c.compositeScore && <Chip compact style={styles.scoreChip}>综合分 {truncate(c.compositeScore, 8)}</Chip>}
+            </View>
             {(data?.memberCards?.length ?? 0) > 0 && (
               <View style={styles.chipsRow}>
                 {data!.memberCards.map((m) => (
@@ -335,6 +356,8 @@ const styles = StyleSheet.create({
   line: { marginTop: 4, fontSize: 15 },
   chip: { marginTop: 6, alignSelf: 'flex-start' },
   kpiRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 },
+  scoreRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 },
+  scoreChip: { backgroundColor: '#FFF8E1' },
   chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, paddingHorizontal: 12, marginTop: 4, marginBottom: 6 },
   tabChip: { margin: 0 },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },

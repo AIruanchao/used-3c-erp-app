@@ -170,7 +170,7 @@ export function BottomSheetFilter({
                           styles.chip,
                           isActive && {
                             backgroundColor: '#e6f7ff',
-                            borderColor: '#1890ff',
+                            borderColor: '#FFD700',
                           },
                           { borderColor: theme.colors.outlineVariant },
                         ]}
@@ -181,7 +181,7 @@ export function BottomSheetFilter({
                           style={[
                             styles.chipText,
                             {
-                              color: isActive ? '#1890ff' : theme.colors.onSurfaceVariant,
+                              color: isActive ? '#FFD700' : theme.colors.onSurfaceVariant,
                             },
                           ]}
                         >
@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(128,128,128,0.4)',
   },
   confirmButton: {
-    backgroundColor: '#1890ff',
+    backgroundColor: '#FFD700',
   },
   buttonText: {
     fontSize: 15,

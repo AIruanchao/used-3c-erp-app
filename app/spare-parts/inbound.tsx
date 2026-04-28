@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../../hooks/useAuth';
 import { getSpareParts, inboundSparePart } from '../../services/spare-parts-service';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { moneyToCents } from '../../lib/money';
 
 const REL = [
   { value: 'PURCHASE', label: '采购' },
@@ -57,7 +58,7 @@ export default function SparePartInboundScreen() {
       setErr('数量必须大于 0');
       return;
     }
-    if (!cost || parseFloat(cost) <= 0) {
+    if (!cost || moneyToCents(cost) <= 0n) {
       setErr('单价必须大于 0');
       return;
     }

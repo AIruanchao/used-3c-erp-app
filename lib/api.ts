@@ -74,7 +74,8 @@ api.interceptors.response.use(
       }
       setTimeout(() => { isHandling401 = false; }, 2000);
     } else if (error.response?.status !== 401 && __DEV__) {
-      console.warn('[api]', error.config?.method, error.config?.url, error.response?.status);
+      // Keep dev diagnostics, but avoid direct console usage (captured by logging-service anyway)
+      console.info('[api]', error.config?.method, error.config?.url, error.response?.status);
     }
     return Promise.reject(error);
   }

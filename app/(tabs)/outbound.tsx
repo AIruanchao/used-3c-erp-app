@@ -14,6 +14,8 @@ import type { OutboundItem } from '../../types/outbound';
 import { AmountText } from '../../components/finance/AmountText';
 import { formatDate } from '../../lib/utils';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Chip } from 'react-native-paper';
+import { centsToFixed2, moneyToCents } from '../../lib/money';
 
 const PAGE_SIZE = 20;
 
@@ -64,8 +66,15 @@ export default function OutboundListScreen() {
   const renderItem = useCallback(
     ({ item }: { item: OutboundItem }) => (
       <Card
-        style={styles.card}
-        mode="outlined"
+        style={[
+          styles.card,
+          {
+            backgroundColor: theme.colors.surface,
+            borderColor:
+              item.receivableAmount != null && Number(String(item.receivableAmount)) > 0 ? '#E53935' : '#FFD700',
+          },
+        ]}
+        mode="elevated"
         onPress={() => router.push(`/outbound/${item.id}` as never)}
       >
         <Card.Content>
@@ -81,6 +90,13 @@ export default function OutboundListScreen() {
               <Text style={[styles.sub, { color: theme.colors.outline }]}>
                 {formatDate(item.createdAt, 'YYYY-MM-DD HH:mm')} · 设备 {item.deviceCount} 台
               </Text>
+              {item.channel ? (
+                <View style={styles.chipsRow}>
+                  <Chip compact style={styles.tagChip}>
+                    渠道 {item.channel}
+                  </Chip>
+                </View>
+              ) : null}
               {item.paymentSummary ? (
                 <Text
                   style={[styles.pay, { color: theme.colors.onSurfaceVariant }]}
@@ -89,15 +105,66 @@ export default function OutboundListScreen() {
                   {item.paymentSummary}
                 </Text>
               ) : null}
+              {(item.paymentBreakdown?.length ?? 0) > 0 ? (
+                <View style={styles.chipsRow}>
+                  {item.paymentBreakdown!.slice(0, 3).map((p) => (
+                    <Chip key={`${p.method}-${p.label}`} compact style={styles.payChip}>
+                      {p.label} <AmountText value={p.amount} />
+                    </Chip>
+                  ))}
+                  {(item.paymentBreakdown?.length ?? 0) > 3 ? (
+                    <Chip compact style={styles.moreChip}>+{(item.paymentBreakdown?.length ?? 0) - 3}</Chip>
+                  ) : null}
+                </View>
+              ) : null}
+
+              {/* 设备行 + 毛利（仅展示前3台，避免卡片过长） */}
+              {(item.lines ?? []).length > 0 ? (
+                <View style={{ marginTop: 6 }}>
+                  {(item.lines ?? []).slice(0, 3).map((line, idx) => {
+                    const profitCents = moneyToCents(line.salePrice) - moneyToCents(line.unitCost);
+                    return (
+                      <View key={`${line.sn}-${idx}`} style={styles.deviceRow}>
+                        <Text style={[styles.deviceName, { color: theme.colors.onSurface }]} numberOfLines={1}>
+                          {line.skuName || line.sn}
+                          {line.condition && line.condition !== 'NA' ? ` · ${line.condition}` : ''}
+                          {line.sn ? ` · ${line.sn}` : ''}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.profit,
+                            {
+                              color:
+                                profitCents > 0n
+                                  ? '#43A047'
+                                  : profitCents < 0n
+                                    ? '#E53935'
+                                    : theme.colors.onSurfaceVariant,
+                            },
+                          ]}
+                        >
+                          {(profitCents >= 0n ? '+' : '') + '¥' + centsToFixed2(profitCents)}
+                        </Text>
+                      </View>
+                    );
+                  })}
+                  {(item.lines ?? []).length > 3 ? (
+                    <Text style={[styles.moreLines, { color: theme.colors.onSurfaceVariant }]}>
+                      还有 {(item.lines ?? []).length - 3} 台
+                    </Text>
+                  ) : null}
+                </View>
+              ) : null}
+
               {item.receivableAmount != null && Number(String(item.receivableAmount)) > 0 ? (
                 <View style={styles.dueRow}>
-                  <Text style={{ color: theme.colors.tertiary, fontSize: 12, marginRight: 4 }}>待收</Text>
+                  <Text style={{ color: '#E53935', fontSize: 12, marginRight: 4, fontWeight: '700' }}>待收</Text>
                   <AmountText value={item.receivableAmount} colorize />
                 </View>
               ) : null}
             </View>
             <View style={styles.cardRight}>
-              <AmountText value={item.totalAmount} style={{ color: theme.colors.onSurface }} />
+              <AmountText value={item.totalAmount} style={{ color: theme.colors.onSurface, fontSize: 16, fontWeight: '800' }} />
             </View>
           </View>
         </Card.Content>
@@ -172,7 +239,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   listContent: { paddingBottom: 24, paddingTop: 4 },
-  card: { marginHorizontal: 16, marginVertical: 4 },
+  card: { marginHorizontal: 16, marginVertical: 6, borderRadius: 14, borderWidth: 1 },
   cardRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   cardLeft: { flex: 1, marginRight: 8 },
   cardRight: { alignItems: 'flex-end' },
@@ -180,4 +247,12 @@ const styles = StyleSheet.create({
   sub: { fontSize: 13, marginTop: 4 },
   pay: { fontSize: 12, marginTop: 4, lineHeight: 16 },
   dueRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
+  chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 6 },
+  tagChip: { backgroundColor: '#FFF8E1' },
+  payChip: { backgroundColor: 'rgba(0,0,0,0.04)' },
+  moreChip: { backgroundColor: 'rgba(0,0,0,0.06)' },
+  deviceRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 },
+  deviceName: { fontSize: 12, fontWeight: '700', flex: 1, marginRight: 8 },
+  profit: { fontSize: 12, fontWeight: '800' },
+  moreLines: { fontSize: 11, marginTop: 2 },
 });

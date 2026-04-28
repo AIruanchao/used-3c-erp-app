@@ -23,6 +23,7 @@ export const STORAGE_KEYS = {
   SELECTED_STORE: 'selected_store',
   SELECTED_ORG: 'selected_org',
   THEME: 'theme',
+  HIDE_AMOUNTS: 'hide_amounts',
   SCAN_HISTORY: 'scan_history',
   OFFLINE_QUEUE: 'offline_queue',
   API_BASE_URL: 'api_base_url',

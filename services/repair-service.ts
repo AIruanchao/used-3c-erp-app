@@ -1,4 +1,5 @@
 import { offlinePost } from './api-helpers';
+import { api } from '../lib/api';
 
 export interface RepairItem {
   id: string;
@@ -27,6 +28,12 @@ export async function createRepair(data: {
   faultCategory?: string;
   faultDescription: string;
   estimatedCost?: number | null;
+  faultPhotos?: string[];
+  source?: string;
+  password?: string;
+  keepStatus?: string;
+  repairStatusTags?: string[];
+  deviceConditionTags?: string[];
 }): Promise<{ ok: boolean; order: RepairItem }> {
   return offlinePost('/api/repair/create', data as Record<string, unknown>);
 }
@@ -34,6 +41,23 @@ export async function createRepair(data: {
 export interface RepairActionResult {
   ok: boolean;
   error?: string;
+}
+
+export interface RepairListResult<T = RepairItem> {
+  data: T[];
+  total: number;
+}
+
+export async function getRepairList(params: {
+  organizationId: string;
+  storeId: string;
+  status?: string;
+  warrantyFilter?: string;
+  page?: number;
+  pageSize?: number;
+}): Promise<RepairListResult> {
+  const res = await api.get<RepairListResult>('/api/repair', { params });
+  return res.data;
 }
 
 export async function quoteRepair(
@@ -79,4 +103,14 @@ export async function qcRepair(repairId: string): Promise<RepairActionResult> {
 
 export async function deliverRepair(repairId: string): Promise<RepairActionResult> {
   return offlinePost('/api/repair/deliver', { orderId: repairId, pickupMode: 'SELF' });
+}
+
+export async function createRepairPayment(data: {
+  repairOrderId: string;
+  amount: number;
+  method: string;
+  referenceNo?: string;
+  note?: string;
+}): Promise<{ ok: boolean; success?: string; paymentStatus?: string }> {
+  return offlinePost('/api/repair/payment', data as Record<string, unknown>);
 }

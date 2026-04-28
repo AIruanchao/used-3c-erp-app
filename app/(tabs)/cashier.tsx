@@ -22,6 +22,8 @@ import { fetchActivePosMethodOptions } from '../../lib/org-payment-channels';
 import { fetchCashAccountsForFlow, type CashAccountRow } from '../../lib/cash-accounts-api';
 import { getErrorMessage } from '../../lib/errors';
 import { isValidMoneyInput, moneyToNumber } from '../../lib/utils';
+import { centsToFixed2, moneyToCents } from '../../lib/money';
+import type { Device } from '../../types/device';
 
 export default function CashierTabScreen() {
   const theme = useTheme();
@@ -31,6 +33,7 @@ export default function CashierTabScreen() {
   const [deviceId, setDeviceId] = useState('');
   const [deviceSn, setDeviceSn] = useState('');
   const [salePrice, setSalePrice] = useState('');
+  const [device, setDevice] = useState<Device | null>(null);
   const [methodOptions, setMethodOptions] = useState(() =>
     PAYMENT_METHODS.map((m) => ({ value: m.value, label: m.label })),
   );
@@ -75,6 +78,7 @@ export default function CashierTabScreen() {
       const trimmedCode = code.trim();
       setDeviceSn(trimmedCode);
       setDeviceId('');
+      setDevice(null);
       try {
         const result = await searchDevice({
           sn: trimmedCode,
@@ -88,6 +92,7 @@ export default function CashierTabScreen() {
             return;
           }
           setDeviceId(result.id);
+          setDevice(result);
           if (result.DevicePricing?.retailPrice) {
             setSalePrice(String(result.DevicePricing.retailPrice));
           }
@@ -135,6 +140,7 @@ export default function CashierTabScreen() {
         }
         resolvedDeviceId = found.id;
         setDeviceId(found.id);
+        setDevice(found);
       }
 
       const result = await cashierCheckout({
@@ -150,8 +156,8 @@ export default function CashierTabScreen() {
           },
         ],
       });
-      const profitDisplay = Number.isFinite(result.profit) ? result.profit.toFixed(2) : '0.00';
-      Alert.alert('收银成功', `订单号: ${result.saleOrderId}\n利润: ¥${profitDisplay}`, [
+      const profitCents = moneyToCents(result.profit);
+      Alert.alert('收银成功', `订单号: ${result.saleOrderId}\n利润: ¥${centsToFixed2(profitCents)}`, [
         { text: '继续收银' },
         { text: '好的', onPress: () => router.push('/(tabs)/cashier' as never) },
       ]);
@@ -221,11 +227,37 @@ export default function CashierTabScreen() {
                 onChangeText={(text) => {
                   setDeviceSn(text);
                   setDeviceId('');
+                  setDevice(null);
                 }}
                 autoCapitalize="none"
                 autoCorrect={false}
                 editable={!loading}
               />
+
+              {device ? (
+                <View style={styles.deviceInfoBox}>
+                  <View style={styles.deviceInfoRow}>
+                    <Text style={styles.deviceTitle} numberOfLines={1}>
+                      {(device.Sku?.Model?.Brand?.name ?? '') + ' ' + (device.Sku?.Model?.name ?? device.Sku?.name ?? '未知型号')}
+                    </Text>
+                    <Text style={styles.deviceAge}>
+                      库龄 {device.inboundAt ? `${Math.floor((Date.now() - new Date(device.inboundAt).getTime()) / 86400000)}天` : '--'}
+                    </Text>
+                  </View>
+                  <Text style={styles.deviceSub} numberOfLines={1}>
+                    {(device.DeviceSpec?.condition ?? '')} {(device.DeviceSpec?.channel ?? '')}
+                  </Text>
+                  <View style={styles.deviceInfoRow}>
+                    <Text style={styles.deviceSub} numberOfLines={1}>IMEI: {device.sn}</Text>
+                  </View>
+                  <View style={styles.deviceInfoRow}>
+                    <AmountText value={device.DevicePricing?.unitCost ?? '0'} prefix="成本 ¥" style={styles.deviceCost} />
+                    <Text style={styles.deviceSub} numberOfLines={1}>
+                      同行 {device.DevicePricing?.peerPrice ?? '未定价'}
+                    </Text>
+                  </View>
+                </View>
+              ) : null}
               <TextInput
                 style={[styles.input, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]}
                 placeholder="销售价格 *"
@@ -270,7 +302,7 @@ export default function CashierTabScreen() {
                   Alert.alert('收款资金账户', '仅「仅收款」或「通用」类账户', [
                     { text: '不入账', onPress: () => setReceiveAccountId('') },
                     ...receiveAccounts.map((a) => ({
-                      text: `${a.name}（¥${Number(a.balance).toFixed(2)}）`,
+                      text: `${a.name}（¥${centsToFixed2(moneyToCents(a.balance))}）`,
                       onPress: () => setReceiveAccountId(a.id),
                     })),
                     { text: '取消', style: 'cancel' },
@@ -336,6 +368,19 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   chip: { marginBottom: 4 },
+  deviceInfoBox: {
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 10,
+    backgroundColor: '#FFFDF3',
+  },
+  deviceInfoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
+  deviceTitle: { flex: 1, fontSize: 13, fontWeight: '700', color: '#212121' },
+  deviceAge: { fontSize: 12, color: '#757575' },
+  deviceSub: { fontSize: 12, color: '#757575', marginTop: 4, flex: 1 },
+  deviceCost: { fontSize: 13, fontWeight: '800', color: '#E53935' },
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

@@ -102,11 +102,11 @@
   - 白名单 action（推荐）或校验 url 必须以 `/api/` 开头且在白名单集合内
   - 写操作必须加入幂等键（requestId）并由服务端支持（避免弱网重试重复单据）
 
-### P0-Money：金额链路仍大量 `parseFloat`/number 参与提交
+### P0-Money：金额链路仍大量 `parseFloat`/number 参与提交（已修复：改为 cents(BigInt)）
 
 - **影响**：科学计数法/Infinity/NaN 穿透，浮点精度导致 0.01 级误差，且与后端 Decimal/string 不对齐风险高。
-- **证据（需按全仓 grep 确认点位）**
-  - `app/(tabs)/inbound.tsx` / `app/cashier.tsx` / `lib/utils.ts` / `components/finance/AmountText.tsx` 等仍存在 `parseFloat(...)`
+- **修复**
+  - 前端金额显示/汇总改为 `lib/money.ts` 的 `moneyToCents(BigInt)` 方案，移除相关 `parseFloat/Number(...).toFixed(2)` 点位
 - **最小修复建议**
   - 输入层做正则白名单（最多 2 位小数，禁止科学计数法/Infinity/前缀数字）
   - schema 层 `z.coerce.number().finite()` 或改为 string 全链路

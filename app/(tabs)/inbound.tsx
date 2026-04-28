@@ -8,6 +8,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  TouchableOpacity,
 } from 'react-native';
 import { Button, Card, Chip, SegmentedButtons, Switch, useTheme } from 'react-native-paper';
 import { useRouter } from 'expo-router';
@@ -19,10 +20,15 @@ import { quickInbound, checkImei, getSkuInfo } from '../../services/inbound-serv
 import { CONDITION_OPTIONS, CHANNEL_OPTIONS, INVENTORY_STATUS_LABELS } from '../../lib/constants';
 import { getErrorMessage } from '../../lib/errors';
 import { isValidMoneyInput, moneyToNumber } from '../../lib/utils';
+import { moneyToCents } from '../../lib/money';
+import { centsToFixed2 } from '../../lib/money';
 import { fetchActivePosMethodOptions } from '../../lib/org-payment-channels';
 import { fetchCashAccountsForFlow, type CashAccountRow } from '../../lib/cash-accounts-api';
 import { BarcodeScannerView } from '../../components/scanner/BarcodeScannerView';
+import { DualCTAButton } from '../../components/common/DualCTAButton';
 import { ScanResultCard } from '../../components/scanner/ScanResultCard';
+import { ImageUploader } from '../../components/common/ImageUploader';
+import { attachDevicePhotos } from '../../services/upload-service';
 
 type InboundStep = 'scan' | 'info' | 'confirm';
 
@@ -57,6 +63,11 @@ export default function InboundScreen() {
   const [payAccountId, setPayAccountId] = useState('');
   const [payMethodOpts, setPayMethodOpts] = useState<{ value: string; label: string }[]>([]);
   const [payAccounts, setPayAccounts] = useState<CashAccountRow[]>([]);
+  const [showMore, setShowMore] = useState(false);
+  const [noteForPeer, setNoteForPeer] = useState('');
+  const [noteForCustomer, setNoteForCustomer] = useState('');
+  const [noteInternal, setNoteInternal] = useState('');
+  const [inspectionPhotoUrls, setInspectionPhotoUrls] = useState<string[]>([]);
 
   React.useEffect(() => {
     loadOfflineCache();
@@ -172,6 +183,7 @@ export default function InboundScreen() {
     setSourceType('TRADE_IN');
     setPayOnSite(false);
     setPayAccountId('');
+    setInspectionPhotoUrls([]);
     setStep('scan');
   }, []);
 
@@ -213,7 +225,7 @@ export default function InboundScreen() {
       }
       const cost = moneyToNumber(unitCost);
       const acc = payAccounts.find((a) => a.id === payAccountId);
-      if (acc && Number(acc.balance) < cost) {
+      if (acc && moneyToCents(acc.balance) < moneyToCents(unitCost)) {
         Alert.alert('错误', '所选资金账户余额不足，无法现场付款');
         return;
       }
@@ -251,6 +263,18 @@ export default function InboundScreen() {
       if (!result.success || !result.deviceId) {
         Alert.alert('入库失败', result.success ? '未获取设备ID' : '服务器返回失败');
         return;
+      }
+
+      if (inspectionPhotoUrls.length > 0) {
+        try {
+          await attachDevicePhotos({
+            deviceId: result.deviceId,
+            photoUrls: inspectionPhotoUrls,
+            photoType: 'INSPECTION',
+          });
+        } catch (e) {
+          Alert.alert('提示', '入库成功，但照片绑定失败，可稍后在设备详情补传');
+        }
       }
 
       Alert.alert('入库成功', `设备ID: ${result.deviceId}`, [
@@ -382,7 +406,7 @@ export default function InboundScreen() {
               </>
             )}
 
-            {/* Inbound Form - no Card wrapper */}
+            {/* Inbound Form */}
             {step === 'info' && (
               <View style={styles.section}>
                 <Text style={[styles.label, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>SN: {sn}</Text>
@@ -412,52 +436,12 @@ export default function InboundScreen() {
                   </Button>
                 </View>
                 {skuId ? (
-                  <Text style={[styles.skuFound, { color: theme.colors.primary }]}>
+                  <Text style={[styles.skuFound, { color: '#FFD700' }]}>
                     SKU: {skuName || skuId.slice(0, 8)}...
                   </Text>
                 ) : null}
 
-                <TextInput
-                  style={[styles.input, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]}
-                  placeholder="成本价 *"
-                  placeholderTextColor={theme.colors.onSurfaceVariant}
-                  value={unitCost}
-                  onChangeText={setUnitCost}
-                  keyboardType="decimal-pad"
-                  returnKeyType="done"
-                  editable={!loading}
-                />
-                <TextInput
-                  style={[styles.input, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]}
-                  placeholder="同行价"
-                  placeholderTextColor={theme.colors.onSurfaceVariant}
-                  value={peerPrice}
-                  onChangeText={setPeerPrice}
-                  keyboardType="decimal-pad"
-                  returnKeyType="done"
-                  editable={!loading}
-                />
-                <TextInput
-                  style={[styles.input, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]}
-                  placeholder="零售价"
-                  placeholderTextColor={theme.colors.onSurfaceVariant}
-                  value={retailPrice}
-                  onChangeText={setRetailPrice}
-                  keyboardType="decimal-pad"
-                  returnKeyType="done"
-                  editable={!loading}
-                />
-                <TextInput
-                  style={[styles.input, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]}
-                  placeholder="电池健康度(%)"
-                  placeholderTextColor={theme.colors.onSurfaceVariant}
-                  value={batteryHealth}
-                  onChangeText={setBatteryHealth}
-                  keyboardType="number-pad"
-                  maxLength={3}
-                  editable={!loading}
-                />
-
+                {/* 成色 */}
                 <Text style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>成色</Text>
                 <View style={styles.chipRow}>
                   {CONDITION_OPTIONS.map((opt) => (
@@ -465,8 +449,8 @@ export default function InboundScreen() {
                       key={opt.value}
                       selected={condition === opt.value}
                       onPress={() => setCondition(condition === opt.value ? '' : opt.value)}
-                      style={[styles.chip, condition === opt.value && { backgroundColor: '#FF6D00' }]}
-                      selectedColor={condition === opt.value ? '#fff' : undefined}
+                      style={[styles.chip, condition === opt.value && { backgroundColor: '#FFD700' }]}
+                      selectedColor={condition === opt.value ? '#333333' : undefined}
                       compact
                       accessibilityLabel={opt.value}
                     >
@@ -475,6 +459,7 @@ export default function InboundScreen() {
                   ))}
                 </View>
 
+                {/* 渠道 */}
                 <Text style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>渠道</Text>
                 <View style={styles.chipRow}>
                   {CHANNEL_OPTIONS.map((opt) => (
@@ -482,8 +467,8 @@ export default function InboundScreen() {
                       key={opt}
                       selected={channel === opt}
                       onPress={() => setChannel(channel === opt ? '' : opt)}
-                      style={[styles.chip, channel === opt && { backgroundColor: '#FF6D00' }]}
-                      selectedColor={channel === opt ? '#fff' : undefined}
+                      style={[styles.chip, channel === opt && { backgroundColor: '#FFD700' }]}
+                      selectedColor={channel === opt ? '#333333' : undefined}
                       compact
                       accessibilityLabel={opt}
                     >
@@ -492,26 +477,117 @@ export default function InboundScreen() {
                   ))}
                 </View>
 
-                <Text style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>来源</Text>
-                <SegmentedButtons
-                  value={sourceType}
-                  onValueChange={setSourceType}
-                  buttons={[
-                    { value: 'TRADE_IN', label: '以旧换新' },
-                    { value: 'PURCHASE', label: '采购' },
-                    { value: 'OTHER', label: '其他' },
-                  ]}
-                />
+                {/* 成本价 - 28px大字号 */}
+                <Text style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>成本价 *</Text>
+                <View style={styles.costInputWrap}>
+                  <Text style={styles.costPrefix}>¥</Text>
+                  <TextInput
+                    style={[styles.costInput, { color: '#E53935' }]}
+                    placeholder="0.00"
+                    placeholderTextColor="#CCCCCC"
+                    value={unitCost}
+                    onChangeText={setUnitCost}
+                    keyboardType="decimal-pad"
+                    returnKeyType="done"
+                    editable={!loading}
+                  />
+                </View>
+
+                {/* 更多入库信息 - 可展开 */}
+                <TouchableOpacity
+                  style={styles.moreToggle}
+                  onPress={() => setShowMore(!showMore)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.moreToggleText}>
+                    {showMore ? '收起更多入库信息 ▲' : '+ 更多入库信息 ▼'}
+                  </Text>
+                </TouchableOpacity>
+
+                {showMore && (
+                  <>
+                    <TextInput
+                      style={[styles.input, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]}
+                      placeholder="同行价"
+                      placeholderTextColor={theme.colors.onSurfaceVariant}
+                      value={peerPrice}
+                      onChangeText={setPeerPrice}
+                      keyboardType="decimal-pad"
+                      returnKeyType="done"
+                      editable={!loading}
+                    />
+                    <TextInput
+                      style={[styles.input, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]}
+                      placeholder="零售价"
+                      placeholderTextColor={theme.colors.onSurfaceVariant}
+                      value={retailPrice}
+                      onChangeText={setRetailPrice}
+                      keyboardType="decimal-pad"
+                      returnKeyType="done"
+                      editable={!loading}
+                    />
+                    <TextInput
+                      style={[styles.input, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]}
+                      placeholder="电池健康度(%)"
+                      placeholderTextColor={theme.colors.onSurfaceVariant}
+                      value={batteryHealth}
+                      onChangeText={setBatteryHealth}
+                      keyboardType="number-pad"
+                      maxLength={3}
+                      editable={!loading}
+                    />
+
+                    {/* 三层备注 */}
+                    <Text style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>备注</Text>
+                    <TextInput
+                      style={[styles.input, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]}
+                      placeholder="同行备注（给同行看的）"
+                      placeholderTextColor={theme.colors.onSurfaceVariant}
+                      value={noteForPeer}
+                      onChangeText={setNoteForPeer}
+                      editable={!loading}
+                    />
+                    <TextInput
+                      style={[styles.input, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]}
+                      placeholder="顾客备注（给顾客看的）"
+                      placeholderTextColor={theme.colors.onSurfaceVariant}
+                      value={noteForCustomer}
+                      onChangeText={setNoteForCustomer}
+                      editable={!loading}
+                    />
+                    <TextInput
+                      style={[styles.input, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]}
+                      placeholder="内部备注（仅内部可见）"
+                      placeholderTextColor={theme.colors.onSurfaceVariant}
+                      value={noteInternal}
+                      onChangeText={setNoteInternal}
+                      editable={!loading}
+                    />
+
+                    <Text style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>来源</Text>
+                    <SegmentedButtons
+                      value={sourceType}
+                      onValueChange={setSourceType}
+                      buttons={[
+                        { value: 'TRADE_IN', label: '以旧换新' },
+                        { value: 'PURCHASE', label: '采购' },
+                        { value: 'OTHER', label: '其他' },
+                      ]}
+                    />
+
+                    <ImageUploader
+                      maxCount={13}
+                      label="机况照片"
+                      photoType="INSPECTION"
+                      onUpload={setInspectionPhotoUrls}
+                    />
+                  </>
+                )}
 
                 <View style={styles.payOnSiteRow}>
                   <Text style={{ color: theme.colors.onSurface, flex: 1 }}>现场付款（从资金账户扣减）</Text>
                   <Switch value={payOnSite} onValueChange={setPayOnSite} />
                 </View>
-                {payOnSite ? (
-                  <Text style={{ fontSize: 12, color: theme.colors.onSurfaceVariant, marginBottom: 8 }}>
-                    与 Web 共用资金账户；请选择「仅付款」或「通用」账户
-                  </Text>
-                ) : null}
                 {payOnSite ? (
                   <>
                     <Text style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>支付方式</Text>
@@ -521,8 +597,8 @@ export default function InboundScreen() {
                           key={m.value}
                           selected={payMethod === m.value}
                           onPress={() => setPayMethod(m.value)}
-                          style={[styles.chip, payMethod === m.value && { backgroundColor: '#FF6D00' }]}
-                          selectedColor={payMethod === m.value ? '#fff' : undefined}
+                          style={[styles.chip, payMethod === m.value && { backgroundColor: '#FFD700' }]}
+                          selectedColor={payMethod === m.value ? '#333333' : undefined}
                           compact
                         >
                           {m.label}
@@ -535,7 +611,7 @@ export default function InboundScreen() {
                       onPress={() => {
                         Alert.alert('付款资金账户', undefined, [
                           ...payAccounts.map((a) => ({
-                            text: `${a.name}（¥${Number(a.balance).toFixed(2)}）`,
+                            text: `${a.name}（¥${centsToFixed2(moneyToCents(a.balance))}）`,
                             onPress: () => setPayAccountId(a.id),
                           })),
                           { text: '取消', style: 'cancel' },
@@ -549,16 +625,17 @@ export default function InboundScreen() {
                   </>
                 ) : null}
 
-                <Button
-                  mode="contained"
-                  onPress={handleSubmit}
-                  loading={loading}
-                  disabled={loading || !unitCost || !skuId}
-                  style={styles.submitBtn}
-                  accessibilityLabel="确认入库"
-                >
-                  确认入库
-                </Button>
+                {/* Dual CTA */}
+                <View style={styles.dualCtaWrap}>
+                  <DualCTAButton
+                    leftLabel="入库并打印"
+                    leftOnPress={handleSubmit}
+                    leftVariant="dark"
+                    rightLabel="确认入库"
+                    rightOnPress={handleSubmit}
+                    rightVariant="primary"
+                  />
+                </View>
               </View>
             )}
           </>
@@ -632,9 +709,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
   },
-  submitBtn: {
-    marginTop: 16,
-  },
   payOnSiteRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -651,6 +725,42 @@ const styles = StyleSheet.create({
   skuFound: {
     fontSize: 13,
     fontWeight: '500',
+    marginBottom: 8,
+  },
+  costInputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 12,
+    marginBottom: 8,
+    height: 56,
+  },
+  costPrefix: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#E53935',
+    marginRight: 8,
+  },
+  costInput: {
+    flex: 1,
+    fontSize: 28,
+    fontWeight: '700',
+    padding: 0,
+  },
+  moreToggle: {
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  moreToggleText: {
+    fontSize: 14,
+    color: '#FFD700',
+    fontWeight: '500',
+  },
+  dualCtaWrap: {
+    marginTop: 16,
     marginBottom: 8,
   },
 });

@@ -5,18 +5,40 @@ import { useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppStore } from '../../stores/app-store';
+import { useQuery } from '@tanstack/react-query';
+import { fetchCashAccountsForFlow } from '../../lib/cash-accounts-api';
+import { AmountText } from '../../components/finance/AmountText';
+import { SectionHeader } from '../../components/common/SectionHeader';
 import { COMPANY_NAME } from '../../lib/constants';
+import { addCents, centsToFixed2 } from '../../lib/money';
 
 export default function ProfileScreen() {
 const paperTheme = useTheme();
 
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { user, stores, currentStore, selectStore, logout } = useAuth();
+  const { user, stores, currentStore, selectStore, logout, storeId, organizationId } = useAuth();
   const theme = useAppStore((s) => s.theme);
   const setTheme = useAppStore((s) => s.setTheme);
+  const hideAmounts = useAppStore((s) => s.hideAmounts);
+  const setHideAmounts = useAppStore((s) => s.setHideAmounts);
   const isOffline = useAppStore((s) => s.isOffline);
   const [showStorePicker, setShowStorePicker] = useState(false);
+
+  const payAccounts = useQuery({
+    queryKey: ['cashAccounts', organizationId, storeId, 'PAY'],
+    queryFn: () => fetchCashAccountsForFlow(organizationId ?? '', storeId ?? '', 'PAY'),
+    enabled: !!organizationId && !!storeId,
+  });
+  const receiveAccounts = useQuery({
+    queryKey: ['cashAccounts', organizationId, storeId, 'RECEIVE'],
+    queryFn: () => fetchCashAccountsForFlow(organizationId ?? '', storeId ?? '', 'RECEIVE'),
+    enabled: !!organizationId && !!storeId,
+  });
+
+  const sumBalance = (items: Array<{ balance: number | string }> | undefined) => {
+    return centsToFixed2(addCents((items ?? []).map((x) => x.balance)));
+  };
 
   const handleStoreSelect = useCallback(() => {
     if (stores.length === 0) {
@@ -71,6 +93,28 @@ const paperTheme = useTheme();
         </Card.Content>
       </Card>
 
+      {/* Member Info */}
+      <Card style={styles.card} mode="outlined">
+        <Card.Content>
+          <View style={styles.memberRow}>
+            <View style={styles.memberLeft}>
+              <Text style={styles.memberTitle}>会员等级</Text>
+              <Text style={styles.memberBadge}>💎 普通会员</Text>
+            </View>
+            <View style={styles.memberRight}>
+              <Text style={styles.memberStat}>
+                <Text style={styles.memberStatLabel}>积分</Text>{' '}
+                <Text style={styles.memberStatValue}>0</Text>
+              </Text>
+              <Text style={[styles.memberStat, { marginTop: 4 }]}>
+                <Text style={styles.memberStatLabel}>累计消费</Text>{' '}
+                <AmountText value="0" prefix="¥" style={styles.memberStatValue} />
+              </Text>
+            </View>
+          </View>
+        </Card.Content>
+      </Card>
+
       {/* Current Store */}
       <Card style={styles.card}>
         <List.Item
@@ -82,6 +126,23 @@ const paperTheme = useTheme();
           accessibilityLabel="选择门店"
         />
       </Card>
+
+      {/* Funds summary */}
+      <View style={{ marginTop: 4 }}>
+        <SectionHeader title="资金概览" />
+        <View style={styles.fundsRow}>
+          <View style={[styles.fundCard, { backgroundColor: paperTheme.colors.surface }]}>
+            <Text style={[styles.fundLabel, { color: paperTheme.colors.onSurfaceVariant }]}>采货资金</Text>
+            <AmountText value={sumBalance(payAccounts.data)} prefix="¥" style={styles.fundValue} />
+            <Text style={[styles.fundHint, { color: paperTheme.colors.onSurfaceVariant }]}>付款账户合计</Text>
+          </View>
+          <View style={[styles.fundCard, { backgroundColor: paperTheme.colors.surface }]}>
+            <Text style={[styles.fundLabel, { color: paperTheme.colors.onSurfaceVariant }]}>卖货资金</Text>
+            <AmountText value={sumBalance(receiveAccounts.data)} prefix="¥" style={styles.fundValue} />
+            <Text style={[styles.fundHint, { color: paperTheme.colors.onSurfaceVariant }]}>收款账户合计</Text>
+          </View>
+        </View>
+      </View>
 
       {/* Quick Links */}
       <Card style={styles.card}>
@@ -183,6 +244,19 @@ const paperTheme = useTheme();
         />
         <Divider />
         <List.Item
+          title="隐藏金额"
+          description="开启后金额将以 *** 显示"
+          left={(props) => <List.Icon {...props} icon="eye-off" />}
+          right={() => (
+            <Switch
+              value={hideAmounts}
+              onValueChange={(v) => setHideAmounts(v)}
+              accessibilityLabel="隐藏金额"
+            />
+          )}
+        />
+        <Divider />
+        <List.Item
           title="设置"
           left={(props) => <List.Icon {...props} icon="cog" />}
           right={(props) => <List.Icon {...props} icon="chevron-right" />}
@@ -253,6 +327,35 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginTop: 8,
   },
+  fundsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    paddingHorizontal: 16,
+    marginTop: 6,
+  },
+  fundCard: {
+    flex: 1,
+    borderRadius: 14,
+    padding: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  fundLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  fundValue: {
+    fontSize: 18,
+    fontWeight: '800',
+    marginTop: 10,
+  },
+  fundHint: {
+    fontSize: 11,
+    marginTop: 6,
+  },
   userHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -282,6 +385,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#757575',
   },
+  memberRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  memberLeft: { flex: 1 },
+  memberTitle: { fontSize: 12, color: '#757575', fontWeight: '600' },
+  memberBadge: { fontSize: 16, fontWeight: '800', marginTop: 6, color: '#1976d2' },
+  memberRight: { alignItems: 'flex-end' },
+  memberStat: { fontSize: 13 },
+  memberStatLabel: { color: '#757575' },
+  memberStatValue: { fontWeight: '800' },
   logoutBtn: {
     marginHorizontal: 16,
     marginTop: 16,

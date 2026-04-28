@@ -21,9 +21,9 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   override componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    if (__DEV__) {
-      console.warn('ErrorBoundary', error.message, errorInfo.componentStack);
-    }
+    // Avoid direct console usage; crash-logger captures uncaught errors already.
+    void error;
+    void errorInfo;
   }
 
   handleRetry = () => {

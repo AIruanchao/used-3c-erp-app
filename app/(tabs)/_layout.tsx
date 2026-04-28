@@ -5,11 +5,12 @@ import { useAuthStore } from '../../stores/auth-store';
 import { useTheme } from 'react-native-paper';
 
 const TAB_ICONS = {
-  index: 'view-dashboard',
-  inbound: 'package-down',
-  inventory: 'archive',
-  cashier: 'cash-register',
-  profile: 'dots-horizontal',
+  index: 'home',
+  inbound: 'plus-circle',
+  inventory: 'package',
+  stats: 'chart-bar',
+  marketplace: 'search',
+  profile: 'account',
 } as const;
 
 function createTabIcon(source: string) {
@@ -30,7 +31,7 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: true,
-        tabBarActiveTintColor: '#1890ff',
+        tabBarActiveTintColor: '#FFD700',
         tabBarInactiveTintColor: '#999999',
         tabBarStyle: {
           paddingBottom: 4,
@@ -38,7 +39,7 @@ export default function TabLayout() {
           backgroundColor: theme.colors.surface,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 10,
         },
       }}
     >
@@ -53,7 +54,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="inbound"
         options={{
-          title: '入库',
+          title: '开单',
           tabBarIcon: createTabIcon(TAB_ICONS.inbound),
         }}
       />
@@ -65,21 +66,34 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="cashier"
+        name="stats"
         options={{
-          title: '收银',
-          tabBarIcon: createTabIcon(TAB_ICONS.cashier),
+          title: '统计',
+          tabBarIcon: createTabIcon(TAB_ICONS.stats),
+        }}
+      />
+      <Tabs.Screen
+        name="marketplace"
+        options={{
+          title: '找货',
+          tabBarIcon: createTabIcon(TAB_ICONS.marketplace),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: '更多',
+          title: '我的',
           tabBarIcon: createTabIcon(TAB_ICONS.profile),
         }}
       />
       <Tabs.Screen
         name="outbound"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="cashier"
         options={{
           href: null,
         }}

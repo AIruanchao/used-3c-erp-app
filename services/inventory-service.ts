@@ -43,6 +43,15 @@ export interface InventoryListParams {
   category?: string;
   age?: string;
   q?: string;
+  storage?: string;
+  inboundStart?: string;
+  inboundEnd?: string;
+  unitCostMin?: string;
+  unitCostMax?: string;
+  peerPriceMin?: string;
+  peerPriceMax?: string;
+  retailPriceMin?: string;
+  retailPriceMax?: string;
   page?: number;
   pageSize?: number;
 }
