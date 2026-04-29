@@ -4,6 +4,8 @@ export async function searchMarketplace(params: {
   organizationId: string;
   storeId: string;
   keyword?: string;
+  brandId?: string;
+  categoryId?: string;
   minPrice?: number;
   maxPrice?: number;
 }) {
@@ -15,6 +17,7 @@ export async function searchMarketplace(params: {
       storeName: string;
       modelName: string;
       referencePrice: number | null;
+      marketRefPrice: number | null;
       franchiseListingStatus: string;
     }>;
   }>('/api/marketplace/search', { params });

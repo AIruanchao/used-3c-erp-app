@@ -8,15 +8,7 @@ import {
   Alert,
   Pressable,
 } from 'react-native';
-import {
-  Button,
-  Card,
-  Divider,
-  SegmentedButtons,
-  TextInput,
-  useTheme,
-  Badge,
-} from 'react-native-paper';
+import { Button, Card, Divider, SegmentedButtons, TextInput, useTheme } from 'react-native-paper';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../hooks/useAuth';
 import { getDailyReport } from '../../services/stats-service';
@@ -29,6 +21,10 @@ import { StatsCard } from '../../components/common/StatsCard';
 import { EmptyState } from '../../components/common/EmptyState';
 import { FlashList } from '../../components/ui/TypedFlashList';
 import { formatDate, yuan } from '../../lib/utils';
+import { AmountText } from '../../components/finance/AmountText';
+import { NumericKeypad } from '../../components/common/NumericKeypad';
+import { StatusBadge } from '../../components/common/StatusBadge';
+import { SectionHeader } from '../../components/common/SectionHeader';
 import { COMPANY_NAME } from '../../lib/constants';
 import { BRAND_COLOR } from '../../lib/theme';
 import { centsToFixed2, moneyToCents } from '../../lib/money';
@@ -77,7 +73,12 @@ export default function SettlementScreen() {
     enabled: !!storeId && !!organizationId,
   });
 
-  const { data: settlementsHistory, refetch: refetchHistory, isRefetching: refetchingHist } = useQuery({
+  const {
+    data: settlementsHistory,
+    refetch: refetchHistory,
+    isRefetching: refetchingHist,
+    isError: errHistory,
+  } = useQuery({
     queryKey: ['settlementsHistory', storeId, organizationId],
     queryFn: () =>
       getSettlementList({
@@ -103,13 +104,17 @@ export default function SettlementScreen() {
     return centsToFixed2(close - exp);
   }, [closingStr, expectedPreview]);
 
+  const diffPreviewCents = useMemo(() => {
+    return moneyToCents(closingStr || '0') - moneyToCents(expectedPreview);
+  }, [closingStr, expectedPreview]);
+
   const createMut = useMutation({
     mutationFn: () =>
       createSettlement({
         organizationId: organizationId ?? '',
         storeId: storeId ?? '',
-        openingCash: Number(openingStr || '0'),
-        closingCash: Number(closingStr || '0'),
+        openingCash: Number(centsToFixed2(moneyToCents(openingStr || '0'))),
+        closingCash: Number(centsToFixed2(moneyToCents(closingStr || '0'))),
         discrepancyNote: note.trim() || undefined,
       }),
     onSuccess: async () => {
@@ -202,6 +207,14 @@ export default function SettlementScreen() {
                 <StatsCard label="入库台数" value={`${report.purchase.count}`} />
                 <StatsCard label="出库台数" value={`${report.sales.count}`} />
               </View>
+              <SectionHeader title="库存变动" />
+              <Card style={styles.card}>
+                <Card.Content>
+                  <Text style={{ color: theme.colors.onSurface }}>
+                    入库 {report.purchase.count} 台 · 出库 {report.sales.count} 台
+                  </Text>
+                </Card.Content>
+              </Card>
               <Card style={styles.card}>
                 <Card.Title title="现金流与预警" />
                 <Card.Content>
@@ -243,26 +256,63 @@ export default function SettlementScreen() {
             <Card style={styles.card}>
               <Card.Title title="今日已日结" />
               <Card.Content>
-                <Text style={{ color: theme.colors.onSurface }}>差额 {yuan(todaySettlement.cashDifference)}</Text>
-                <Text style={{ marginTop: 4 }}>状态 {todaySettlement.status}</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}>
+                  <Text style={{ color: theme.colors.onSurface }}>差额 </Text>
+                  <AmountText value={String(todaySettlement.cashDifference)} />
+                </View>
+                <View style={{ marginTop: 8, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Text style={{ color: theme.colors.onSurfaceVariant }}>状态</Text>
+                  <StatusBadge
+                    status={todaySettlement.status}
+                    variant={todaySettlement.status === 'APPROVED' ? 'success' : 'warning'}
+                    label={todaySettlement.status === 'APPROVED' ? '已核准' : todaySettlement.status}
+                  />
+                </View>
               </Card.Content>
             </Card>
           ) : (
             <>
-              <TextInput label="期初现金" value={openingStr} onChangeText={setOpeningStr} keyboardType="decimal-pad" mode="outlined" />
+              <Text style={{ fontWeight: '600', marginBottom: 4, color: theme.colors.onSurface }}>期初现金</Text>
+              <TextInput
+                label="期初现金"
+                value={openingStr}
+                onChangeText={() => {}}
+                editable={false}
+                showSoftInputOnFocus={false}
+                mode="outlined"
+                dense
+              />
+              <NumericKeypad value={openingStr} onChange={setOpeningStr} />
+              <Text style={{ fontWeight: '600', marginTop: 16, marginBottom: 4, color: theme.colors.onSurface }}>期末现金</Text>
               <TextInput
                 label="期末现金"
                 value={closingStr}
-                onChangeText={setClosingStr}
-                keyboardType="decimal-pad"
+                onChangeText={() => {}}
+                editable={false}
+                showSoftInputOnFocus={false}
                 mode="outlined"
-                style={{ marginTop: 8 }}
+                dense
               />
+              <NumericKeypad value={closingStr} onChange={setClosingStr} />
               <Text style={{ marginTop: 12, color: theme.colors.onSurfaceVariant }}>
-                应有现金（预览）≈ 期初 + 当日销售 − 采购成本（与后台口径接近）
+                应有现金（预览）= 期初 + 当日销售 − 采购成本（与后台口径接近）
               </Text>
-              <Text style={[styles.preview, { color: BRAND_COLOR }]}>¥{expectedPreview}</Text>
-              <Text style={{ marginTop: 8, color: theme.colors.error }}>差额（预览）¥{diffPreview}</Text>
+              <AmountText value={expectedPreview} style={[styles.preview, { color: BRAND_COLOR }]} />
+              <Text style={{ marginTop: 8, color: theme.colors.onSurfaceVariant }}>差额（预览）</Text>
+              <AmountText
+                value={diffPreview}
+                style={[
+                  styles.preview,
+                  {
+                    color:
+                      diffPreviewCents === 0n
+                        ? theme.colors.onSurfaceVariant
+                        : diffPreviewCents < 0n
+                          ? theme.colors.error
+                          : theme.colors.tertiary,
+                  },
+                ]}
+              />
               <TextInput
                 label="备注（选填）"
                 value={note}
@@ -284,7 +334,11 @@ export default function SettlementScreen() {
         </ScrollView>
       )}
 
-      {tab === 'history' && (
+      {tab === 'history' && errHistory ? (
+        <QueryError onRetry={() => refetchHistory()} />
+      ) : null}
+
+      {tab === 'history' && !errHistory && (
         <View style={styles.flex}>
           <FlashList
             style={{ flex: 1 }}
@@ -297,19 +351,27 @@ export default function SettlementScreen() {
               <Card style={styles.card} mode="outlined">
                 <Card.Title
                   title={formatDate(item.date)}
-                  right={() =>
-                    item.status === 'APPROVED' ? (
-                      <Badge style={{ marginRight: 12 }}>已核准</Badge>
-                    ) : (
-                      <Badge style={{ marginRight: 12 }}>{item.status}</Badge>
-                    )
-                  }
+                  right={() => (
+                    <View style={{ marginRight: 12, alignSelf: 'center' }}>
+                      <StatusBadge
+                        status={item.status}
+                        variant={item.status === 'APPROVED' ? 'success' : 'warning'}
+                        label={item.status === 'APPROVED' ? '已核准' : item.status}
+                      />
+                    </View>
+                  )}
                 />
                 <Card.Content>
-                  <Text style={{ color: theme.colors.onSurface }}>
-                    收入 {yuan(item.totalSales)} · 支出 {yuan(item.totalPurchases)}
-                  </Text>
-                  <Text style={{ marginTop: 4, color: theme.colors.error }}>差额 {yuan(item.cashDifference)}</Text>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <Text style={{ color: theme.colors.onSurface }}>收入 </Text>
+                    <AmountText value={String(item.totalSales)} />
+                    <Text style={{ color: theme.colors.onSurface }}> · 支出 </Text>
+                    <AmountText value={String(item.totalPurchases)} />
+                  </View>
+                  <View style={{ marginTop: 4, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <Text style={{ color: theme.colors.onSurface }}>差额 </Text>
+                    <AmountText value={String(item.cashDifference)} colorize />
+                  </View>
                   <Button
                     mode="outlined"
                     compact

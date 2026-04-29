@@ -20,6 +20,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { getStoreTeam, createHandover } from '../../services/handover-service';
 import { getDailyReport } from '../../services/stats-service';
 import { yuan } from '../../lib/utils';
+import { centsToFixed2, moneyToCents } from '../../lib/money';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function NewHandoverScreen() {
@@ -70,10 +71,18 @@ export default function NewHandoverScreen() {
       setErr('请选择接收人');
       return;
     }
-    const n = cash.trim() ? Number(cash) : undefined;
-    if (n != null && (n < 0 || n > 99999999)) {
-      setErr('现金交接金额 0～99999999');
-      return;
+    let n: number | undefined;
+    if (cash.trim()) {
+      const cents = moneyToCents(cash);
+      if (cents < 0n) {
+        setErr('现金交接金额不能为负');
+        return;
+      }
+      n = Number(centsToFixed2(cents));
+      if (!Number.isFinite(n) || n < 0 || n > 99999999) {
+        setErr('现金交接金额 0～99999999');
+        return;
+      }
     }
     if (note.length > 500) {
       setErr('备注不超过500字');

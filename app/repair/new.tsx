@@ -33,7 +33,7 @@ export default function NewRepairScreen() {
   const theme = useTheme();
 
   const router = useRouter();
-  const params = useLocalSearchParams<{ sn?: string }>();
+  const params = useLocalSearchParams<{ sn?: string; deviceId?: string }>();
   const queryClient = useQueryClient();
   const { storeId, organizationId } = useAuth();
   const [step, setStep] = useState(0);
@@ -43,12 +43,20 @@ export default function NewRepairScreen() {
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [deviceSn, setDeviceSn] = useState('');
+  /** 质保页跳转携带的已建档设备 ID（任务卡：/repair/new?deviceId=） */
+  const [linkedDeviceId, setLinkedDeviceId] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof params.sn === 'string' && params.sn.trim()) {
       setDeviceSn(params.sn.trim());
     }
   }, [params.sn]);
+
+  useEffect(() => {
+    if (typeof params.deviceId === 'string' && params.deviceId.trim()) {
+      setLinkedDeviceId(params.deviceId.trim());
+    }
+  }, [params.deviceId]);
   const [password, setPassword] = useState('');
   const [source, setSource] = useState<string>('OFFLINE');
   const [keepStatus, setKeepStatus] = useState<string>('REPAIR_NOW');
@@ -94,6 +102,7 @@ export default function NewRepairScreen() {
     setLaborCost('');
     setDeposit('');
     setPayAccountId('');
+    setLinkedDeviceId(null);
     setStep(0);
     setScanVisible(false);
   }, []);
@@ -164,6 +173,7 @@ export default function NewRepairScreen() {
         storeId,
         organizationId,
         customerId: customer.id,
+        deviceId: linkedDeviceId ?? undefined,
         deviceSn: deviceSn.trim() || undefined,
         faultDescription: faultDescription.trim(),
         faultCategory,
@@ -241,6 +251,7 @@ export default function NewRepairScreen() {
     customerName,
     customerPhone,
     deviceSn,
+    linkedDeviceId,
     faultDescription,
     faultCategory,
     deviceBrand,

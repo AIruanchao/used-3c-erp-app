@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { View, StyleSheet, RefreshControl, LayoutAnimation, Platform, UIManager, Pressable } from 'react-native';
-import { Text, useTheme, Card, FAB, List, Chip } from 'react-native-paper';
+import { Text, useTheme, Card, FAB, List } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { FlashList } from '../../components/ui/TypedFlashList';
@@ -12,6 +12,7 @@ import { QueryError } from '../../components/common/QueryError';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
 import { formatDate } from '../../lib/utils';
 import { AmountText } from '../../components/finance/AmountText';
+import { StatusBadge } from '../../components/common/StatusBadge';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -54,16 +55,11 @@ export default function HandoverListScreen() {
                   {item.fromUserId} → {item.toUserId}
                 </Text>
               </View>
-              <Chip
-                style={{
-                  backgroundColor:
-                    item.status === 'PENDING'
-                      ? (theme.colors.tertiaryContainer ?? theme.colors.surfaceVariant)
-                      : theme.colors.primaryContainer,
-                }}
-              >
-                {item.toConfirmed ? '已确认' : '待确认'}
-              </Chip>
+              <StatusBadge
+                status={item.status}
+                variant={item.toConfirmed ? 'success' : 'warning'}
+                label={item.toConfirmed ? '已确认' : '待确认'}
+              />
             </View>
             {open && (
               <View style={{ marginTop: 8 }}>

@@ -11,9 +11,12 @@ export interface AuditLogRow {
   createdAt: string;
 }
 
+/** 任务卡：仅 organizationId 查询，不含 storeId */
 export async function getAuditLogs(params: {
   organizationId: string;
-  storeId: string;
+  action?: string;
+  from?: string;
+  to?: string;
   limit?: number;
 }) {
   const res = await api.get<{ items: AuditLogRow[]; total: number }>('/api/audit-logs', { params });
@@ -30,12 +33,16 @@ export interface AlertLogRow {
   isRead: boolean;
 }
 
-export async function getAlertLogs(params: { organizationId: string; storeId: string; isRead?: boolean }) {
+export async function getAlertLogs(params: {
+  organizationId: string;
+  isRead?: boolean;
+  severity?: string;
+}) {
   const res = await api.get<{ items: AlertLogRow[] }>('/api/alert-logs', { params });
   return res.data;
 }
 
-export async function markAlertsRead(params: { organizationId: string; storeId: string; ids: string[] }) {
+export async function markAlertsRead(params: { organizationId: string; ids: string[] }) {
   const res = await api.patch<{ ok: boolean }>('/api/alert-logs', params);
   return res.data;
 }
@@ -48,7 +55,7 @@ export interface CustomerNotificationRow {
   isRead: boolean;
 }
 
-export async function getCustomerNotifications(params: { organizationId: string; storeId: string; limit?: number }) {
+export async function getCustomerNotifications(params: { organizationId: string; limit?: number }) {
   const res = await api.get<{ items: CustomerNotificationRow[] }>('/api/customer-notifications', { params });
   return res.data;
 }

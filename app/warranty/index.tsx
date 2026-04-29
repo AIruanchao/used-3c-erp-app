@@ -50,8 +50,11 @@ export default function WarrantyScreen() {
 
   const goRepair = useCallback(() => {
     if (!result?.found || !sn.trim()) return;
-    router.push(`/repair/new?sn=${encodeURIComponent(sn.trim())}` as never);
-  }, [result?.found, router, sn]);
+    const q = new URLSearchParams();
+    q.set('sn', sn.trim());
+    if (result.deviceId) q.set('deviceId', result.deviceId);
+    router.push(`/repair/new?${q.toString()}` as never);
+  }, [result?.deviceId, result?.found, router, sn]);
 
   return (
     <View style={[styles.root, { backgroundColor: theme.colors.background }]}>
@@ -105,10 +108,10 @@ export default function WarrantyScreen() {
                   result.repairHistory.map((h) => (
                     <View key={h.id} style={{ marginBottom: 12 }}>
                       <Text style={{ fontWeight: '600' }}>{h.orderNo}</Text>
-                      <StatusBadge status={repairStatusLabel(h.status)} />
+                      <StatusBadge status={h.status} label={repairStatusLabel(h.status)} />
                       <Text style={{ color: theme.colors.onSurfaceVariant, marginTop: 4 }}>
                         {formatDate(h.createdAt)}
-                        {h.completedAt ? ` · 完工 ${formatDate(h.completedAt)}` : ''}
+                        {h.completedAt != null && h.completedAt !== '' ? ` · 完工 ${formatDate(h.completedAt)}` : ''}
                       </Text>
                     </View>
                   ))
@@ -138,7 +141,7 @@ export default function WarrantyScreen() {
           />
           <BarcodeScannerView
             isActive={scan}
-            onBarcodeScanned={(code) => {
+            onBarcodeScanned={(code, _format) => {
               setSn(code);
               setScan(false);
             }}

@@ -11,13 +11,14 @@ function colors(variant: Variant): { bg: string; fg: string } {
   return { bg: '#F5F5F5', fg: '#616161' };
 }
 
-export function StatusBadge(props: { status: string; variant?: Variant }) {
+export function StatusBadge(props: { status: string; variant?: Variant; /** 展示文案；不传则显示 status（如维修单原始状态码） */ label?: string }) {
   const v = props.variant ?? 'default';
   const c = colors(v);
+  const text = props.label ?? props.status;
   return (
     <View style={[styles.badge, { backgroundColor: c.bg }]}>
       <Text style={[styles.text, { color: c.fg }]} numberOfLines={1}>
-        {props.status}
+        {text}
       </Text>
     </View>
   );
