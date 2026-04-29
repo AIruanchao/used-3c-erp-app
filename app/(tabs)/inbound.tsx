@@ -29,6 +29,7 @@ import { DualCTAButton } from '../../components/common/DualCTAButton';
 import { ScanResultCard } from '../../components/scanner/ScanResultCard';
 import { ImageUploader } from '../../components/common/ImageUploader';
 import { attachDevicePhotos } from '../../services/upload-service';
+import { BRAND_COLOR } from '../../lib/theme';
 
 type InboundStep = 'scan' | 'info' | 'confirm';
 
@@ -285,8 +286,10 @@ export default function InboundScreen() {
       resetForm();
 
       queryClient.invalidateQueries({ queryKey: ['dailyReport'] });
-      queryClient.invalidateQueries({ queryKey: ['inventorySearch'] });
-      queryClient.invalidateQueries({ queryKey: ['outboundSearch'] });
+      queryClient.invalidateQueries({ queryKey: ['dailyReportAgg'] });
+      queryClient.invalidateQueries({ queryKey: ['inventorySummary'] });
+      queryClient.invalidateQueries({ queryKey: ['inventoryList'] });
+      queryClient.invalidateQueries({ queryKey: ['outboundList'] });
       queryClient.invalidateQueries({ queryKey: ['device'] });
     } catch (err) {
       Alert.alert('入库失败', getErrorMessage(err));
@@ -436,7 +439,7 @@ export default function InboundScreen() {
                   </Button>
                 </View>
                 {skuId ? (
-                  <Text style={[styles.skuFound, { color: '#FFD700' }]}>
+                  <Text style={[styles.skuFound, { color: BRAND_COLOR }]}>
                     SKU: {skuName || skuId.slice(0, 8)}...
                   </Text>
                 ) : null}
@@ -449,7 +452,7 @@ export default function InboundScreen() {
                       key={opt.value}
                       selected={condition === opt.value}
                       onPress={() => setCondition(condition === opt.value ? '' : opt.value)}
-                      style={[styles.chip, condition === opt.value && { backgroundColor: '#FFD700' }]}
+                      style={[styles.chip, condition === opt.value && { backgroundColor: BRAND_COLOR }]}
                       selectedColor={condition === opt.value ? '#333333' : undefined}
                       compact
                       accessibilityLabel={opt.value}
@@ -467,7 +470,7 @@ export default function InboundScreen() {
                       key={opt}
                       selected={channel === opt}
                       onPress={() => setChannel(channel === opt ? '' : opt)}
-                      style={[styles.chip, channel === opt && { backgroundColor: '#FFD700' }]}
+                      style={[styles.chip, channel === opt && { backgroundColor: BRAND_COLOR }]}
                       selectedColor={channel === opt ? '#333333' : undefined}
                       compact
                       accessibilityLabel={opt}
@@ -597,7 +600,7 @@ export default function InboundScreen() {
                           key={m.value}
                           selected={payMethod === m.value}
                           onPress={() => setPayMethod(m.value)}
-                          style={[styles.chip, payMethod === m.value && { backgroundColor: '#FFD700' }]}
+                          style={[styles.chip, payMethod === m.value && { backgroundColor: BRAND_COLOR }]}
                           selectedColor={payMethod === m.value ? '#333333' : undefined}
                           compact
                         >
@@ -756,7 +759,7 @@ const styles = StyleSheet.create({
   },
   moreToggleText: {
     fontSize: 14,
-    color: '#FFD700',
+    color: BRAND_COLOR,
     fontWeight: '500',
   },
   dualCtaWrap: {

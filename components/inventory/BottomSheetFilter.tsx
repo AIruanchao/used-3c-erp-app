@@ -9,6 +9,7 @@ import {
   Modal,
 } from 'react-native';
 import { Portal, Text, useTheme } from 'react-native-paper';
+import { BRAND_COLOR, BRAND_TEXT_ON_BRAND_LIGHT } from '../../lib/theme';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const SHEET_HEIGHT = SCREEN_HEIGHT * 0.55;
@@ -170,7 +171,7 @@ export function BottomSheetFilter({
                           styles.chip,
                           isActive && {
                             backgroundColor: '#e6f7ff',
-                            borderColor: '#FFD700',
+                            borderColor: BRAND_COLOR,
                           },
                           { borderColor: theme.colors.outlineVariant },
                         ]}
@@ -181,7 +182,7 @@ export function BottomSheetFilter({
                           style={[
                             styles.chipText,
                             {
-                              color: isActive ? '#FFD700' : theme.colors.onSurfaceVariant,
+                              color: isActive ? BRAND_COLOR : theme.colors.onSurfaceVariant,
                             },
                           ]}
                         >
@@ -211,7 +212,7 @@ export function BottomSheetFilter({
               onPress={handleConfirm}
               activeOpacity={0.7}
             >
-              <Text style={[styles.buttonText, { color: '#FFFFFF' }]}>确定</Text>
+              <Text style={[styles.buttonText, { color: BRAND_TEXT_ON_BRAND_LIGHT }]}>确定</Text>
             </TouchableOpacity>
           </View>
         </Animated.View>
@@ -292,7 +293,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(128,128,128,0.4)',
   },
   confirmButton: {
-    backgroundColor: '#FFD700',
+    backgroundColor: BRAND_COLOR,
   },
   buttonText: {
     fontSize: 15,

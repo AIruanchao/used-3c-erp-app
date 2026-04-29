@@ -27,6 +27,7 @@ import { isValidMoneyInput, moneyToNumber } from '../../lib/utils';
 import { fetchActivePosMethodOptions } from '../../lib/org-payment-channels';
 import { fetchCashAccountsForFlow, type CashAccountRow } from '../../lib/cash-accounts-api';
 import { BarcodeScannerView } from '../../components/scanner/BarcodeScannerView';
+import { BRAND_COLOR, BRAND_SURFACE_LIGHT } from '../../lib/theme';
 
 export default function NewRepairScreen() {
   const theme = useTheme();
@@ -310,7 +311,7 @@ export default function NewRepairScreen() {
               key={label}
               selected={step === idx}
               onPress={() => setStep(idx)}
-              style={[styles.chip, step === idx && { backgroundColor: '#FFD700' }]}
+              style={[styles.chip, step === idx && { backgroundColor: BRAND_COLOR }]}
               selectedColor={step === idx ? '#333' : undefined}
               compact
             >
@@ -401,7 +402,7 @@ export default function NewRepairScreen() {
                   key={v}
                   selected={source === v}
                   onPress={() => setSource(v)}
-                  style={[styles.chip, source === v && { backgroundColor: '#FFD700' }]}
+                  style={[styles.chip, source === v && { backgroundColor: BRAND_COLOR }]}
                   selectedColor={source === v ? '#333' : undefined}
                   compact
                 >
@@ -420,7 +421,7 @@ export default function NewRepairScreen() {
                   key={x.v}
                   selected={keepStatus === x.v}
                   onPress={() => setKeepStatus(x.v)}
-                  style={[styles.chip, keepStatus === x.v && { backgroundColor: '#FFD700' }]}
+                  style={[styles.chip, keepStatus === x.v && { backgroundColor: BRAND_COLOR }]}
                   selectedColor={keepStatus === x.v ? '#333' : undefined}
                   compact
                 >
@@ -436,7 +437,7 @@ export default function NewRepairScreen() {
                   key={t}
                   selected={repairStatusTags.includes(t)}
                   onPress={() => toggleTag(repairStatusTags, t, setRepairStatusTags)}
-                  style={[styles.chip, repairStatusTags.includes(t) && { backgroundColor: '#FFD700' }]}
+                  style={[styles.chip, repairStatusTags.includes(t) && { backgroundColor: BRAND_COLOR }]}
                   selectedColor={repairStatusTags.includes(t) ? '#333' : undefined}
                   compact
                 >
@@ -457,7 +458,7 @@ export default function NewRepairScreen() {
                   key={v}
                   selected={faultCategory === v}
                   onPress={() => setFaultCategory(v)}
-                  style={[styles.chip, faultCategory === v && { backgroundColor: '#FFD700' }]}
+                  style={[styles.chip, faultCategory === v && { backgroundColor: BRAND_COLOR }]}
                   selectedColor={faultCategory === v ? '#333' : undefined}
                   compact
                 >
@@ -600,7 +601,7 @@ export default function NewRepairScreen() {
                       key={m.value}
                       selected={payMethod === m.value}
                       onPress={() => setPayMethod(m.value)}
-                      style={[styles.chip, payMethod === m.value && { backgroundColor: '#FFD700' }]}
+                      style={[styles.chip, payMethod === m.value && { backgroundColor: BRAND_COLOR }]}
                       selectedColor={payMethod === m.value ? '#333' : undefined}
                       compact
                     >
@@ -612,7 +613,7 @@ export default function NewRepairScreen() {
                       key={v}
                       selected={payMethod === v}
                       onPress={() => setPayMethod(v)}
-                      style={[styles.chip, payMethod === v && { backgroundColor: '#FFD700' }]}
+                      style={[styles.chip, payMethod === v && { backgroundColor: BRAND_COLOR }]}
                       selectedColor={payMethod === v ? '#333' : undefined}
                       compact
                     >
@@ -705,7 +706,7 @@ const styles = StyleSheet.create({
   quoteGroupTitle: { fontSize: 13, fontWeight: '700', color: '#424242', marginBottom: 8 },
   quoteItemRow: { marginBottom: 8 },
   quotePick: { borderWidth: 1, borderColor: '#E0E0E0', borderRadius: 10, padding: 12, backgroundColor: '#fff' },
-  quotePickActive: { backgroundColor: '#FFF8E1', borderColor: '#FFD700' },
+  quotePickActive: { backgroundColor: BRAND_SURFACE_LIGHT, borderColor: BRAND_COLOR },
   priceInput: { marginTop: 6, borderWidth: 1, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8 },
   summaryBox: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10 },
   summaryText: { fontSize: 13, color: '#757575' },

@@ -1,5 +1,6 @@
 import React, { useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { BRAND_COLOR } from '../../lib/theme';
 
 interface SectionHeaderProps {
   title: string;
@@ -45,7 +46,7 @@ const styles = StyleSheet.create({
   },
   action: {
     fontSize: 13,
-    color: '#FFD700',
+    color: BRAND_COLOR,
     fontWeight: '500',
   },
 });

@@ -1,5 +1,6 @@
 import React, { useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { BRAND_COLOR } from '../../lib/theme';
 
 interface FilterChipProps {
   label: string;
@@ -14,7 +15,7 @@ export const FilterChip = React.memo(function FilterChip({
   active,
   onPress,
   onRemove,
-  color = '#FFD700',
+  color = BRAND_COLOR,
 }: FilterChipProps) {
   const handlePress = useCallback(() => {
     if (active && onRemove) {

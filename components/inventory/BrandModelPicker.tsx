@@ -13,6 +13,7 @@ import {
 import { Portal, Text, Badge, useTheme } from 'react-native-paper';
 import type { BrandItem, ModelItem } from '../../services/inventory-service';
 import { getBrands, getModels } from '../../services/inventory-service';
+import { BRAND_COLOR } from '../../lib/theme';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const SIDEBAR_WIDTH = Math.floor(SCREEN_WIDTH * 0.3);
@@ -169,7 +170,7 @@ export function BrandModelPicker({
         <TouchableOpacity
           style={[
             styles.brandItem,
-            selected && { backgroundColor: '#FFD700' },
+            selected && { backgroundColor: BRAND_COLOR },
           ]}
           onPress={() => handleBrandPress(item.id)}
           activeOpacity={0.7}
@@ -203,7 +204,7 @@ export function BrandModelPicker({
         <TouchableOpacity
           style={[
             styles.modelItem,
-            selected && { backgroundColor: '#FFD700' },
+            selected && { backgroundColor: BRAND_COLOR },
           ]}
           onPress={() => setActiveModelId(item.id)}
           activeOpacity={0.7}
@@ -333,7 +334,7 @@ export function BrandModelPicker({
                   <Text style={{ color: theme.colors.onSurfaceVariant, fontWeight: '700' }}>取消</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.manualBtn, { backgroundColor: '#FFD700', borderColor: '#FFD700' }]}
+                  style={[styles.manualBtn, { backgroundColor: BRAND_COLOR, borderColor: BRAND_COLOR }]}
                   onPress={() => {
                     const b = manualBrand.trim();
                     const m = manualModel.trim();
@@ -356,7 +357,7 @@ export function BrandModelPicker({
               <TouchableOpacity
                 style={[
                   styles.brandItem,
-                  !activeBrandId && { backgroundColor: '#FFD700' },
+                  !activeBrandId && { backgroundColor: BRAND_COLOR },
                 ]}
                 onPress={handleAllBrands}
                 activeOpacity={0.7}
@@ -389,7 +390,7 @@ export function BrandModelPicker({
                   <TouchableOpacity
                     style={[
                       styles.modelItem,
-                      !activeModelId && { backgroundColor: '#FFD700' },
+                      !activeModelId && { backgroundColor: BRAND_COLOR },
                     ]}
                     onPress={() => setActiveModelId(undefined)}
                     activeOpacity={0.7}
@@ -487,7 +488,7 @@ const styles = StyleSheet.create({
   },
   clearButton: {
     fontSize: 14,
-    color: '#FFD700',
+    color: BRAND_COLOR,
     fontWeight: '600',
   },
   searchWrap: {
@@ -607,7 +608,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(128,128,128,0.4)',
   },
   confirmButton: {
-    backgroundColor: '#FFD700',
+    backgroundColor: BRAND_COLOR,
   },
   buttonText: {
     fontSize: 15,

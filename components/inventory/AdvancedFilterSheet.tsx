@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Portal, Text, useTheme } from 'react-native-paper';
 import { ConditionTagGroup } from '../common/ConditionTagGroup';
+import { BRAND_COLOR } from '../../lib/theme';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const SHEET_HEIGHT = SCREEN_HEIGHT * 0.75;
@@ -133,7 +134,7 @@ export function AdvancedFilterSheet({
                     key={o.value}
                     style={[
                       styles.chip,
-                      { borderColor: active ? '#FFD700' : theme.colors.outlineVariant },
+                      { borderColor: active ? BRAND_COLOR : theme.colors.outlineVariant },
                       active && styles.chipActive,
                     ]}
                     onPress={() => setField('storage', active ? '' : o.value)}
@@ -285,7 +286,7 @@ const styles = StyleSheet.create({
   },
   btn: { flex: 1, height: 44, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   btnGhost: { backgroundColor: 'transparent', borderWidth: 1, borderColor: 'rgba(128,128,128,0.4)' },
-  btnPrimary: { backgroundColor: '#FFD700' },
+  btnPrimary: { backgroundColor: BRAND_COLOR },
   btnText: { fontSize: 15, fontWeight: '700' },
 });
 

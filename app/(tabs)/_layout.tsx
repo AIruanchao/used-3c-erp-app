@@ -1,3 +1,4 @@
+import { BRAND_COLOR } from '../../lib/theme';
 import { Tabs } from 'expo-router';
 import { Icon } from 'react-native-paper';
 import { Redirect } from 'expo-router';
@@ -31,7 +32,7 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: true,
-        tabBarActiveTintColor: '#FFD700',
+        tabBarActiveTintColor: BRAND_COLOR,
         tabBarInactiveTintColor: '#999999',
         tabBarStyle: {
           paddingBottom: 4,

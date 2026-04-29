@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { View, StyleSheet, TextInput, TouchableOpacity, Image } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
+import { BRAND_COLOR } from '../../lib/theme';
 
 export function PhotoPickerGrid(props: {
   value: string[];
@@ -44,7 +45,7 @@ export function PhotoPickerGrid(props: {
       <TouchableOpacity
         onPress={add}
         activeOpacity={0.7}
-        style={[styles.addBtn, { backgroundColor: '#FFD700' }]}
+        style={[styles.addBtn, { backgroundColor: BRAND_COLOR }]}
         disabled={props.value.length >= max}
       >
         <Text style={{ color: '#333', fontWeight: '800' }}>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { BRAND_COLOR, BRAND_TEXT_ON_BRAND_LIGHT } from '../../lib/theme';
 
 type LeftVariant = 'red' | 'dark' | 'outlined';
 type RightVariant = 'orange' | 'primary' | 'outlined';
@@ -23,7 +24,7 @@ const LEFT_COLORS: Record<LeftVariant, { bg: string; text: string }> = {
 
 const RIGHT_COLORS: Record<RightVariant, { bg: string; text: string; border?: string }> = {
   orange: { bg: '#FF9800', text: '#FFFFFF' },
-  primary: { bg: '#FFD700', text: '#333333' },
+  primary: { bg: BRAND_COLOR, text: BRAND_TEXT_ON_BRAND_LIGHT },
   outlined: { bg: 'transparent', text: '#757575', border: '#E0E0E0' },
 };
 

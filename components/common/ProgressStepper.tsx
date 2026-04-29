@@ -1,5 +1,6 @@
 import React, { useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { BRAND_COLOR } from '../../lib/theme';
 
 interface ProgressStepperProps {
   steps: string[];
@@ -29,7 +30,7 @@ export const ProgressStepper = React.memo(function ProgressStepper({
         const isFuture = index > currentStep;
 
         const circleBg = isCurrent
-          ? '#FFD700'
+          ? BRAND_COLOR
           : isCompleted
             ? '#43A047'
             : '#F5F5F5';
@@ -68,7 +69,7 @@ export const ProgressStepper = React.memo(function ProgressStepper({
                   styles.stepName,
                   {
                     color: isCurrent
-                      ? '#FFD700'
+                      ? BRAND_COLOR
                       : isCompleted
                         ? '#43A047'
                         : '#9E9E9E',

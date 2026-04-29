@@ -9,6 +9,7 @@ import { QueryError } from '../../components/common/QueryError';
 import { AmountText } from '../../components/finance/AmountText';
 import { StatsCard } from '../../components/common/StatsCard';
 import { COMPANY_NAME } from '../../lib/constants';
+import { centsToFixed2, moneyToCents } from '../../lib/money';
 
 export default function StatsScreen() {
   const theme = useTheme();
@@ -40,28 +41,38 @@ export default function StatsScreen() {
     const reports = await Promise.all(
       dateList.map((d) => getDailyReport({ storeId: store, organizationId: org, date: d })),
     );
-    return reports.reduce(
-      (acc, r) => ({
-        purchaseCount: acc.purchaseCount + (r.purchase.count ?? 0),
-        purchaseCost: acc.purchaseCost + (r.purchase.cost ?? 0),
-        salesCount: acc.salesCount + (r.sales.count ?? 0),
-        salesAmount: acc.salesAmount + (r.sales.amount ?? 0),
-        netCashFlow: acc.netCashFlow + (r.netCashFlow ?? 0),
-        receivableDue: acc.receivableDue + (r.receivableDue ?? 0),
-        payableDue: acc.payableDue + (r.payableDue ?? 0),
-        stockAgeWarning: Math.max(acc.stockAgeWarning, r.stockAgeWarning ?? 0),
-      }),
-      {
-        purchaseCount: 0,
-        purchaseCost: 0,
-        salesCount: 0,
-        salesAmount: 0,
-        netCashFlow: 0,
-        receivableDue: 0,
-        payableDue: 0,
-        stockAgeWarning: 0,
-      },
-    );
+    let purchaseCount = 0;
+    let salesCount = 0;
+    let stockAgeWarning = 0;
+
+    let purchaseCostCents = 0n;
+    let salesAmountCents = 0n;
+    let netCashFlowCents = 0n;
+    let receivableDueCents = 0n;
+    let payableDueCents = 0n;
+
+    for (const r of reports) {
+      purchaseCount += r.purchase?.count ?? 0;
+      salesCount += r.sales?.count ?? 0;
+      stockAgeWarning = Math.max(stockAgeWarning, r.stockAgeWarning ?? 0);
+
+      purchaseCostCents += moneyToCents(r.purchase?.cost ?? 0);
+      salesAmountCents += moneyToCents(r.sales?.amount ?? 0);
+      netCashFlowCents += moneyToCents(r.netCashFlow ?? 0);
+      receivableDueCents += moneyToCents(r.receivableDue ?? 0);
+      payableDueCents += moneyToCents(r.payableDue ?? 0);
+    }
+
+    return {
+      purchaseCount,
+      purchaseCost: centsToFixed2(purchaseCostCents),
+      salesCount,
+      salesAmount: centsToFixed2(salesAmountCents),
+      netCashFlow: centsToFixed2(netCashFlowCents),
+      receivableDue: centsToFixed2(receivableDueCents),
+      payableDue: centsToFixed2(payableDueCents),
+      stockAgeWarning,
+    };
   }, [dateList, storeId, organizationId]);
 
   const { data: agg, isLoading, isError, refetch, isRefetching } = useQuery({

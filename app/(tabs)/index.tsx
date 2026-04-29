@@ -24,6 +24,7 @@ import { SectionHeader } from '../../components/common/SectionHeader';
 import { NotificationBanner } from '../../components/common/NotificationBanner';
 import { yuan } from '../../lib/utils';
 import { useAppStore } from '../../stores/app-store';
+import { BRAND_COLOR, BRAND_TEXT_ON_BRAND_LIGHT } from '../../lib/theme';
 
 interface QuickAction {
   icon: string;
@@ -33,7 +34,7 @@ interface QuickAction {
 
 const TOOLBAR_ACTIONS: QuickAction[] = [
   { icon: 'printer', label: '打印标签', route: '/spare-parts/index' },
-  { icon: 'shield-check', label: '保修查询', route: '/stats' },
+  { icon: 'shield-check', label: '保修查询', route: '__wip__' },
   { icon: 'camera', label: '扫码入库', route: '/(tabs)/inbound' },
   { icon: 'swap-horizontal', label: '交接班', route: '/handover/new' },
   { icon: 'calendar-check', label: '日结', route: '/settlement/index' },
@@ -114,6 +115,10 @@ export default function WorkspaceScreen() {
 
   const handleAction = useCallback(
     (route: string) => {
+      if (route === '__wip__') {
+        Alert.alert('开发中', '该功能正在开发中，敬请期待');
+        return;
+      }
       router.push(route as never);
     },
     [router],
@@ -131,7 +136,7 @@ export default function WorkspaceScreen() {
       showsVerticalScrollIndicator={false}
     >
       {/* Header with store info */}
-      <View style={[styles.header, { backgroundColor: '#FFD700' }]}>
+      <View style={[styles.header, { backgroundColor: BRAND_COLOR }]}>
         <View style={styles.headerTop}>
           <View style={styles.headerInfo}>
             <Text style={styles.greeting}>

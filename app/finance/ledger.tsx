@@ -10,6 +10,7 @@ import { AmountText } from '../../components/finance/AmountText';
 import { NumericKeypad } from '../../components/common/NumericKeypad';
 import { createQuickBook, listQuickBooks } from '../../services/quickbook-service';
 import { addCents, moneyToCents } from '../../lib/money';
+import { BRAND_COLOR } from '../../lib/theme';
 
 export default function LedgerScreen() {
   const theme = useTheme();
@@ -115,7 +116,7 @@ export default function LedgerScreen() {
         </View>
       )}
 
-      <FAB icon="plus" style={[styles.fab, { backgroundColor: '#FFD700' }]} onPress={() => setCreateOpen(true)} />
+      <FAB icon="plus" style={[styles.fab, { backgroundColor: BRAND_COLOR }]} onPress={() => setCreateOpen(true)} />
 
       <Portal>
         <Modal

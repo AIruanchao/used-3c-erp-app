@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
+import { BRAND_COLOR } from '../../lib/theme';
 
 export function StepProgress(props: {
   steps: { label: string }[];
@@ -16,7 +17,7 @@ export function StepProgress(props: {
         const state: 'done' | 'current' | 'todo' =
           idx < current ? 'done' : idx === current ? 'current' : 'todo';
         const circleBg =
-          state === 'current' ? '#FFD700' : state === 'done' ? '#43A047' : '#F5F5F5';
+          state === 'current' ? BRAND_COLOR : state === 'done' ? '#43A047' : '#F5F5F5';
         const circleText =
           state === 'todo' ? theme.colors.onSurfaceVariant : '#212121';
 

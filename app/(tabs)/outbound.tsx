@@ -16,6 +16,7 @@ import { formatDate } from '../../lib/utils';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Chip } from 'react-native-paper';
 import { centsToFixed2, moneyToCents } from '../../lib/money';
+import { BRAND_COLOR } from '../../lib/theme';
 
 const PAGE_SIZE = 20;
 
@@ -71,7 +72,7 @@ export default function OutboundListScreen() {
           {
             backgroundColor: theme.colors.surface,
             borderColor:
-              item.receivableAmount != null && Number(String(item.receivableAmount)) > 0 ? '#E53935' : '#FFD700',
+              item.receivableAmount != null && Number(String(item.receivableAmount)) > 0 ? '#E53935' : BRAND_COLOR,
           },
         ]}
         mode="elevated"

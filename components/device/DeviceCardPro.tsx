@@ -9,6 +9,7 @@ import {
 import { useTheme } from 'react-native-paper';
 import { AmountText } from '../finance/AmountText';
 import type { Device } from '../../types/device';
+import { BRAND_COLOR } from '../../lib/theme';
 
 interface DeviceCardProProps {
   device: Device;
@@ -193,7 +194,7 @@ const styles = StyleSheet.create({
   },
   copyBtn: {
     fontSize: 12,
-    color: '#FFD700',
+    color: BRAND_COLOR,
     fontWeight: '500',
   },
   priceRow: {
@@ -241,7 +242,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
-    backgroundColor: '#FFD700',
+    backgroundColor: BRAND_COLOR,
   },
   actionBtnTextGray: {
     fontSize: 12,

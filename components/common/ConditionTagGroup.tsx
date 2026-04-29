@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { CONDITION_OPTIONS } from '../../lib/constants';
+import { BRAND_COLOR } from '../../lib/theme';
 
 interface ConditionTagGroupProps {
   value: string[];
@@ -52,7 +53,7 @@ export const ConditionTagGroup = React.memo(function ConditionTagGroup({
                   style={[
                     styles.tag,
                     {
-                      backgroundColor: active ? '#FFD700' : '#F5F5F5',
+                      backgroundColor: active ? BRAND_COLOR : '#F5F5F5',
                     },
                   ]}
                   onPress={() => handlePress(item.value)}

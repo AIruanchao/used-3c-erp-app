@@ -16,6 +16,7 @@ import { ErrorBoundary } from '../components/common/ErrorBoundary';
 import { useOffline } from '../hooks/useOffline';
 import { startAppLogging } from '../services/logging-service';
 import '../i18n';
+import { BRAND_ACCENT } from '../lib/theme';
 
 // 🛡️ 崩溃日志捕获器 — 最早安装，确保所有异常都被记录
 installCrashLogger();
@@ -97,8 +98,8 @@ export default function RootLayout() {
   const isDark =
     theme === 'dark' || (theme === 'system' && colorScheme === 'dark');
   const paperTheme = isDark
-    ? { ...MD3DarkTheme, colors: { ...MD3DarkTheme.colors, secondaryContainer: '#FF6D00', onSecondaryContainer: '#FFFFFF' } }
-    : { ...DefaultTheme, colors: { ...DefaultTheme.colors, secondaryContainer: '#FF6D00', onSecondaryContainer: '#FFFFFF' } };
+    ? { ...MD3DarkTheme, colors: { ...MD3DarkTheme.colors, secondaryContainer: BRAND_ACCENT, onSecondaryContainer: '#FFFFFF' } }
+    : { ...DefaultTheme, colors: { ...DefaultTheme.colors, secondaryContainer: BRAND_ACCENT, onSecondaryContainer: '#FFFFFF' } };
 
   if (!storageReady) {
     return (

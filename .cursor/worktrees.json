@@ -1,0 +1,7 @@
+{
+  "setupCommands": [
+    "npm ci",
+    "cp $ROOT_WORKTREE_PATH/.env .env 2>/dev/null || true",
+    "cp $ROOT_WORKTREE_PATH/app.json app.json 2>/dev/null || true"
+  ]
+}

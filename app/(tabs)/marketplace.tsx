@@ -1,56 +1,133 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { View, Text, StyleSheet, RefreshControl, FlatList } from 'react-native';
 import { useTheme } from 'react-native-paper';
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
+import { SearchBar } from '../../components/common/SearchBar';
+import { BrandModelPicker } from '../../components/inventory/BrandModelPicker';
+import { EmptyState } from '../../components/common/EmptyState';
+import { QueryError } from '../../components/common/QueryError';
+import { LoadingScreen } from '../../components/common/LoadingScreen';
+import { DeviceCardPro } from '../../components/device/DeviceCardPro';
+import { useAuth } from '../../hooks/useAuth';
+import { getInventoryList } from '../../services/inventory-service';
+import { BRAND_COLOR } from '../../lib/theme';
+import type { Device } from '../../types/device';
 
 export default function MarketplaceScreen() {
   const theme = useTheme();
+  const router = useRouter();
+  const { organizationId } = useAuth();
+
+  const [search, setSearch] = useState('');
+  const [brandId, setBrandId] = useState<string>();
+  const [modelId, setModelId] = useState<string>();
+  const [pickerVisible, setPickerVisible] = useState(false);
+
+  const query = useInfiniteQuery({
+    queryKey: ['marketplaceInventory', organizationId, brandId, modelId, search],
+    queryFn: ({ pageParam }) =>
+      getInventoryList({
+        organizationId: organizationId ?? '',
+        // Marketplace: search across org, no storeId scoping by default.
+        storeId: undefined,
+        brandId,
+        modelId,
+        status: 'IN_STOCK',
+        q: search.trim() || undefined,
+        page: pageParam as number,
+        pageSize: 20,
+      }),
+    initialPageParam: 1,
+    getNextPageParam: (last) => (last.page < last.totalPages ? last.page + 1 : undefined),
+    enabled: !!organizationId,
+  });
+
+  const items = useMemo(() => query.data?.pages.flatMap((p) => p.items) ?? [], [query.data]);
+
+  const handleDevicePress = useCallback(
+    (id: string) => {
+      router.push(`/device/${id}` as never);
+    },
+    [router],
+  );
+
+  const renderItem = useCallback(
+    ({ item }: { item: Device }) => <DeviceCardPro device={item} onPress={handleDevicePress} />,
+    [handleDevicePress],
+  );
+
+  const onEndReached = useCallback(() => {
+    if (query.hasNextPage && !query.isFetchingNextPage) {
+      void query.fetchNextPage();
+    }
+  }, [query]);
+
+  if (!organizationId) return <LoadingScreen message="加载门店信息…" />;
+  if (query.isLoading) return <LoadingScreen message="加载中…" />;
+  if (query.isError) return <QueryError message="加载失败" onRetry={() => query.refetch()} />;
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-      contentContainerStyle={styles.content}
-    >
-      <View style={styles.heroSection}>
-        <Text style={styles.heroTitle}>同行市集</Text>
-        <Text style={styles.heroSubtitle}>即将上线</Text>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <View style={styles.header}>
+        <View style={styles.heroRow}>
+          <Text style={styles.heroTitle}>同行市集</Text>
+          <Text style={styles.heroBadge}>Beta</Text>
+        </View>
+        <Text style={[styles.heroSubtitle, { color: theme.colors.onSurfaceVariant }]}>
+          当前展示为“全组织在库”快速找货视图
+        </Text>
       </View>
 
-      <View style={[styles.featureCard, { backgroundColor: theme.colors.surface }]}>
-        <Text style={styles.featureTitle}>即将支持</Text>
-
-        <View style={styles.featureItem}>
-          <Text style={styles.featureIcon}>🔍</Text>
-          <View style={styles.featureText}>
-            <Text style={[styles.featureName, { color: theme.colors.onSurface }]}>找货发布</Text>
-            <Text style={styles.featureDesc}>一键发布库存到同行市集</Text>
-          </View>
-        </View>
-
-        <View style={styles.featureItem}>
-          <Text style={styles.featureIcon}>🤝</Text>
-          <View style={styles.featureText}>
-            <Text style={[styles.featureName, { color: theme.colors.onSurface }]}>同行交易</Text>
-            <Text style={styles.featureDesc}>0佣金，安全有保障</Text>
-          </View>
-        </View>
-
-        <View style={styles.featureItem}>
-          <Text style={styles.featureIcon}>📊</Text>
-          <View style={styles.featureText}>
-            <Text style={[styles.featureName, { color: theme.colors.onSurface }]}>行情参考</Text>
-            <Text style={styles.featureDesc}>实时同行报价，定价不再纠结</Text>
-          </View>
-        </View>
-
-        <View style={styles.featureItem}>
-          <Text style={styles.featureIcon}>🚀</Text>
-          <View style={styles.featureText}>
-            <Text style={[styles.featureName, { color: theme.colors.onSurface }]}>多渠道销货</Text>
-            <Text style={styles.featureDesc}>多平台发布，流速更快</Text>
-          </View>
+      <View style={{ paddingHorizontal: 16, paddingBottom: 8 }}>
+        <SearchBar placeholder="搜索SN/型号/IMEI…" onSearch={setSearch} debounceMs={400} />
+        <View style={styles.filtersRow}>
+          <Text
+            style={[styles.filterChip, { borderColor: theme.colors.outlineVariant, color: theme.colors.onSurface }]}
+            onPress={() => setPickerVisible(true)}
+          >
+            型号筛选
+          </Text>
+          <Text
+            style={[styles.filterChip, { borderColor: theme.colors.outlineVariant, color: theme.colors.onSurface }]}
+            onPress={() => {
+              setBrandId(undefined);
+              setModelId(undefined);
+            }}
+          >
+            清空
+          </Text>
         </View>
       </View>
-    </ScrollView>
+
+      {items.length === 0 ? (
+        <EmptyState icon="store-search" title="暂无结果" subtitle="可尝试换关键词或清空筛选" />
+      ) : (
+        <FlatList
+          data={items}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          onEndReached={onEndReached}
+          onEndReachedThreshold={0.4}
+          refreshControl={<RefreshControl refreshing={query.isRefetching} onRefresh={() => query.refetch()} />}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
+
+      <BrandModelPicker
+        visible={pickerVisible}
+        onDismiss={() => setPickerVisible(false)}
+        organizationId={organizationId}
+        selectedBrandId={brandId}
+        selectedModelId={modelId}
+        onSelect={(bId, mId) => {
+          setBrandId(bId);
+          setModelId(mId);
+          setPickerVisible(false);
+        }}
+      />
+    </View>
   );
 }
 
@@ -58,63 +135,31 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  content: {
-    paddingBottom: 32,
-  },
-  heroSection: {
-    backgroundColor: '#FFD700',
-    paddingVertical: 48,
-    paddingHorizontal: 24,
-    alignItems: 'center',
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-  },
+  header: { backgroundColor: BRAND_COLOR, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 12 },
+  heroRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   heroTitle: {
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: '700',
     color: '#333333',
-    marginBottom: 8,
   },
-  heroSubtitle: {
-    fontSize: 16,
-    color: 'rgba(51,51,51,0.7)',
-    fontWeight: '500',
+  heroBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.35)',
+    color: '#333333',
+    fontWeight: '800',
+    fontSize: 12,
   },
-  featureCard: {
-    margin: 16,
-    borderRadius: 16,
-    padding: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+  heroSubtitle: { marginTop: 8, fontSize: 12, fontWeight: '600' },
+  filtersRow: { flexDirection: 'row', gap: 10, marginTop: 10 },
+  filterChip: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    overflow: 'hidden',
+    fontWeight: '700',
   },
-  featureTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#212121',
-    marginBottom: 20,
-  },
-  featureItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  featureIcon: {
-    fontSize: 28,
-    marginRight: 16,
-  },
-  featureText: {
-    flex: 1,
-  },
-  featureName: {
-    fontSize: 15,
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  featureDesc: {
-    fontSize: 13,
-    color: '#9E9E9E',
-  },
+  listContent: { paddingBottom: 24, paddingTop: 4 },
 });

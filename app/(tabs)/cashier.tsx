@@ -24,6 +24,7 @@ import { getErrorMessage } from '../../lib/errors';
 import { isValidMoneyInput, moneyToNumber } from '../../lib/utils';
 import { centsToFixed2, moneyToCents } from '../../lib/money';
 import type { Device } from '../../types/device';
+import { BRAND_COLOR } from '../../lib/theme';
 
 export default function CashierTabScreen() {
   const theme = useTheme();
@@ -164,8 +165,10 @@ export default function CashierTabScreen() {
 
       // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: ['dailyReport'] });
-      queryClient.invalidateQueries({ queryKey: ['inventorySearch'] });
-      queryClient.invalidateQueries({ queryKey: ['outboundSearch'] });
+      queryClient.invalidateQueries({ queryKey: ['dailyReportAgg'] });
+      queryClient.invalidateQueries({ queryKey: ['inventorySummary'] });
+      queryClient.invalidateQueries({ queryKey: ['inventoryList'] });
+      queryClient.invalidateQueries({ queryKey: ['outboundList'] });
       queryClient.invalidateQueries({ queryKey: ['device'] });
       queryClient.invalidateQueries({ queryKey: ['customers'] });
 
@@ -279,7 +282,7 @@ export default function CashierTabScreen() {
                     key={method.value}
                     selected={paymentMethod === method.value}
                     onPress={() => setPaymentMethod(method.value)}
-                    style={[styles.chip, paymentMethod === method.value && { backgroundColor: '#FF6D00' }]}
+                    style={[styles.chip, paymentMethod === method.value && { backgroundColor: BRAND_COLOR }]}
                     selectedColor={paymentMethod === method.value ? '#fff' : undefined}
                     accessibilityLabel={method.label}
                   >

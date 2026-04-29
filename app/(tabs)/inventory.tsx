@@ -17,6 +17,7 @@ import { AdvancedFilterSheet, type AdvancedFilterValues } from '../../components
 import { FloatingActionBar } from '../../components/common/FloatingActionBar';
 import { getInventoryList } from '../../services/inventory-service';
 import type { Device } from '../../types/device';
+import { BRAND_COLOR, BRAND_TEXT_ON_BRAND_LIGHT } from '../../lib/theme';
 
 // ─── Filter definitions ────────────────────────────────────────
 
@@ -280,7 +281,7 @@ export default function InventoryScreen() {
     if (query.hasNextPage) {
       return (
         <TouchableOpacity style={styles.loadMoreButton} onPress={loadMore}>
-          <Text style={{ color: '#FFD700', fontWeight: '600' }}>
+          <Text style={{ color: BRAND_COLOR, fontWeight: '600' }}>
             加载更多 ({items.length}/{total})
           </Text>
         </TouchableOpacity>
@@ -387,7 +388,7 @@ export default function InventoryScreen() {
                 style={[
                   styles.categoryTabText,
                   {
-                    color: isActive ? '#FFFFFF' : theme.colors.onSurfaceVariant,
+                    color: isActive ? BRAND_TEXT_ON_BRAND_LIGHT : theme.colors.onSurfaceVariant,
                   },
                 ]}
               >
@@ -409,7 +410,7 @@ export default function InventoryScreen() {
             style={[
               styles.filterChip,
               brandId && styles.filterChipActive,
-              { borderColor: brandId ? '#FFD700' : theme.colors.outlineVariant },
+              { borderColor: brandId ? BRAND_COLOR : theme.colors.outlineVariant },
             ]}
             onPress={() => setPickerVisible(true)}
             activeOpacity={0.7}
@@ -418,7 +419,7 @@ export default function InventoryScreen() {
               style={[
                 styles.filterChipText,
                 {
-                  color: brandId ? '#FFD700' : theme.colors.onSurfaceVariant,
+                  color: brandId ? BRAND_COLOR : theme.colors.onSurfaceVariant,
                 },
               ]}
               numberOfLines={1}
@@ -432,7 +433,7 @@ export default function InventoryScreen() {
             style={[
               styles.filterChip,
               channel && styles.filterChipActive,
-              { borderColor: channel ? '#FFD700' : theme.colors.outlineVariant },
+              { borderColor: channel ? BRAND_COLOR : theme.colors.outlineVariant },
             ]}
             onPress={() => openFilterSheet('channel')}
             activeOpacity={0.7}
@@ -440,7 +441,7 @@ export default function InventoryScreen() {
             <Text
               style={[
                 styles.filterChipText,
-                { color: channel ? '#FFD700' : theme.colors.onSurfaceVariant },
+                { color: channel ? BRAND_COLOR : theme.colors.onSurfaceVariant },
               ]}
               numberOfLines={1}
             >
@@ -453,7 +454,7 @@ export default function InventoryScreen() {
             style={[
               styles.filterChip,
               status && styles.filterChipActive,
-              { borderColor: status ? '#FFD700' : theme.colors.outlineVariant },
+              { borderColor: status ? BRAND_COLOR : theme.colors.outlineVariant },
             ]}
             onPress={() => openFilterSheet('status')}
             activeOpacity={0.7}
@@ -461,7 +462,7 @@ export default function InventoryScreen() {
             <Text
               style={[
                 styles.filterChipText,
-                { color: status ? '#FFD700' : theme.colors.onSurfaceVariant },
+                { color: status ? BRAND_COLOR : theme.colors.onSurfaceVariant },
               ]}
               numberOfLines={1}
             >
@@ -474,7 +475,7 @@ export default function InventoryScreen() {
             style={[
               styles.filterChip,
               age && styles.filterChipActive,
-              { borderColor: age ? '#FFD700' : theme.colors.outlineVariant },
+              { borderColor: age ? BRAND_COLOR : theme.colors.outlineVariant },
             ]}
             onPress={() => openFilterSheet('age')}
             activeOpacity={0.7}
@@ -482,7 +483,7 @@ export default function InventoryScreen() {
             <Text
               style={[
                 styles.filterChipText,
-                { color: age ? '#FFD700' : theme.colors.onSurfaceVariant },
+                { color: age ? BRAND_COLOR : theme.colors.onSurfaceVariant },
               ]}
               numberOfLines={1}
             >
@@ -495,7 +496,7 @@ export default function InventoryScreen() {
             style={[
               styles.filterChip,
               condition && styles.filterChipActive,
-              { borderColor: condition ? '#FFD700' : theme.colors.outlineVariant },
+              { borderColor: condition ? BRAND_COLOR : theme.colors.outlineVariant },
             ]}
             onPress={() => openFilterSheet('condition')}
             activeOpacity={0.7}
@@ -503,7 +504,7 @@ export default function InventoryScreen() {
             <Text
               style={[
                 styles.filterChipText,
-                { color: condition ? '#FFD700' : theme.colors.onSurfaceVariant },
+                { color: condition ? BRAND_COLOR : theme.colors.onSurfaceVariant },
               ]}
               numberOfLines={1}
             >
@@ -516,7 +517,7 @@ export default function InventoryScreen() {
             style={[
               styles.filterChip,
               Object.keys(advanced).length > 0 && styles.filterChipActive,
-              { borderColor: Object.keys(advanced).length > 0 ? '#FFD700' : theme.colors.outlineVariant },
+              { borderColor: Object.keys(advanced).length > 0 ? BRAND_COLOR : theme.colors.outlineVariant },
             ]}
             onPress={() => setAdvancedVisible(true)}
             activeOpacity={0.7}
@@ -524,7 +525,7 @@ export default function InventoryScreen() {
             <Text
               style={[
                 styles.filterChipText,
-                { color: Object.keys(advanced).length > 0 ? '#FFD700' : theme.colors.onSurfaceVariant },
+                { color: Object.keys(advanced).length > 0 ? BRAND_COLOR : theme.colors.onSurfaceVariant },
               ]}
               numberOfLines={1}
             >
@@ -659,7 +660,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(128,128,128,0.1)',
   },
   categoryTabActive: {
-    backgroundColor: '#FFD700',
+    backgroundColor: BRAND_COLOR,
   },
   categoryTabText: {
     fontSize: 14,
