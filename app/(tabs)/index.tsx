@@ -34,7 +34,7 @@ interface QuickAction {
 
 const TOOLBAR_ACTIONS: QuickAction[] = [
   { icon: 'printer', label: '打印标签', route: '/spare-parts/index' },
-  { icon: 'shield-check', label: '保修查询', route: '__wip__' },
+  { icon: 'shield-check', label: '质保查询', route: '/warranty/index' },
   { icon: 'camera', label: '扫码入库', route: '/(tabs)/inbound' },
   { icon: 'swap-horizontal', label: '交接班', route: '/handover/new' },
   { icon: 'calendar-check', label: '日结', route: '/settlement/index' },
@@ -44,6 +44,7 @@ const QUICK_ACTIONS: { group: string; items: QuickAction[] }[] = [
   {
     group: '机器管理',
     items: [
+      { icon: 'recycle', label: '回收登记', route: '/trade/index' },
       { icon: 'package-variant', label: '库存盘点', route: '/stocktake/index' },
       { icon: 'truck-fast', label: '调拨', route: '/stocktake/index' },
       { icon: 'cart-arrow-down', label: '进货统计', route: '/stats' },
@@ -144,6 +145,13 @@ export default function WorkspaceScreen() {
             </Text>
             <Text style={styles.storeLabel}>{storeName ?? '嫩叶ERP'}</Text>
           </View>
+          <TouchableOpacity
+            onPress={() => router.push('/notification/index' as never)}
+            accessibilityLabel="通知中心"
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          >
+            <Text style={{ fontSize: 22 }}>🔔</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Search bar */}
@@ -286,6 +294,7 @@ function getToolbarEmoji(icon: string): string {
 
 function getMatrixEmoji(label: string): string {
   const map: Record<string, string> = {
+    '回收登记': '♻️',
     '库存盘点': '📋',
     '调拨': '🚚',
     '进货统计': '📊',

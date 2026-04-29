@@ -1,165 +1,155 @@
-import React, { useCallback, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, RefreshControl, FlatList } from 'react-native';
-import { useTheme } from 'react-native-paper';
-import { useInfiniteQuery } from '@tanstack/react-query';
-import { useRouter } from 'expo-router';
+import React, { useCallback, useState } from 'react';
+import { View, StyleSheet, RefreshControl, Alert } from 'react-native';
+import { Text, SegmentedButtons, Button, useTheme } from 'react-native-paper';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { FlashList } from '../../components/ui/TypedFlashList';
 import { SearchBar } from '../../components/common/SearchBar';
-import { BrandModelPicker } from '../../components/inventory/BrandModelPicker';
 import { EmptyState } from '../../components/common/EmptyState';
-import { QueryError } from '../../components/common/QueryError';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
-import { DeviceCardPro } from '../../components/device/DeviceCardPro';
+import { QueryError } from '../../components/common/QueryError';
 import { useAuth } from '../../hooks/useAuth';
-import { getInventoryList } from '../../services/inventory-service';
+import { searchMarketplace, getMyListings, batchListDevices } from '../../services/marketplace-service';
+import { yuan } from '../../lib/utils';
 import { BRAND_COLOR } from '../../lib/theme';
-import type { Device } from '../../types/device';
 
-export default function MarketplaceScreen() {
+export default function MarketplaceTabScreen() {
   const theme = useTheme();
-  const router = useRouter();
-  const { organizationId } = useAuth();
+  const qc = useQueryClient();
+  const { organizationId, storeId } = useAuth();
+  const [tab, setTab] = useState<'find' | 'sell'>('find');
+  const [q, setQ] = useState('');
 
-  const [search, setSearch] = useState('');
-  const [brandId, setBrandId] = useState<string>();
-  const [modelId, setModelId] = useState<string>();
-  const [pickerVisible, setPickerVisible] = useState(false);
-
-  const query = useInfiniteQuery({
-    queryKey: ['marketplaceInventory', organizationId, brandId, modelId, search],
-    queryFn: ({ pageParam }) =>
-      getInventoryList({
+  const findQ = useQuery({
+    queryKey: ['marketplaceFind', organizationId, storeId, q],
+    queryFn: () =>
+      searchMarketplace({
         organizationId: organizationId ?? '',
-        // Marketplace: search across org, no storeId scoping by default.
-        storeId: undefined,
-        brandId,
-        modelId,
-        status: 'IN_STOCK',
-        q: search.trim() || undefined,
-        page: pageParam as number,
-        pageSize: 20,
+        storeId: storeId ?? '',
+        keyword: q.trim() || undefined,
       }),
-    initialPageParam: 1,
-    getNextPageParam: (last) => (last.page < last.totalPages ? last.page + 1 : undefined),
-    enabled: !!organizationId,
+    enabled: !!organizationId && !!storeId && tab === 'find',
   });
 
-  const items = useMemo(() => query.data?.pages.flatMap((p) => p.items) ?? [], [query.data]);
+  const mineQ = useQuery({
+    queryKey: ['marketplaceMine', organizationId, storeId],
+    queryFn: () =>
+      getMyListings({
+        organizationId: organizationId ?? '',
+        storeId: storeId ?? '',
+      }),
+    enabled: !!organizationId && !!storeId && tab === 'sell',
+  });
 
-  const handleDevicePress = useCallback(
-    (id: string) => {
-      router.push(`/device/${id}` as never);
+  const delist = useCallback(
+    async (id: string) => {
+      if (!storeId) return;
+      try {
+        await batchListDevices({ storeId, ids: [id], action: 'DELIST' });
+        await qc.invalidateQueries({ queryKey: ['marketplaceMine'] });
+        Alert.alert('已下架', '');
+      } catch (e) {
+        Alert.alert('下架失败', e instanceof Error ? e.message : '仅总部或无权操作时可失败');
+      }
     },
-    [router],
+    [qc, storeId],
   );
 
-  const renderItem = useCallback(
-    ({ item }: { item: Device }) => <DeviceCardPro device={item} onPress={handleDevicePress} />,
-    [handleDevicePress],
-  );
-
-  const onEndReached = useCallback(() => {
-    if (query.hasNextPage && !query.isFetchingNextPage) {
-      void query.fetchNextPage();
-    }
-  }, [query]);
-
-  if (!organizationId) return <LoadingScreen message="加载门店信息…" />;
-  if (query.isLoading) return <LoadingScreen message="加载中…" />;
-  if (query.isError) return <QueryError message="加载失败" onRetry={() => query.refetch()} />;
+  if (!organizationId || !storeId) return <LoadingScreen />;
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={styles.header}>
-        <View style={styles.heroRow}>
-          <Text style={styles.heroTitle}>同行市集</Text>
-          <Text style={styles.heroBadge}>Beta</Text>
-        </View>
-        <Text style={[styles.heroSubtitle, { color: theme.colors.onSurfaceVariant }]}>
-          当前展示为“全组织在库”快速找货视图
-        </Text>
+    <View style={[styles.root, { backgroundColor: theme.colors.background }]}>
+      <View style={[styles.hero, { backgroundColor: BRAND_COLOR }]}>
+        <Text style={styles.heroTitle}>同行市集</Text>
+        <Text style={styles.heroSub}>找货 · 我的上架</Text>
       </View>
 
-      <View style={{ paddingHorizontal: 16, paddingBottom: 8 }}>
-        <SearchBar placeholder="搜索SN/型号/IMEI…" onSearch={setSearch} debounceMs={400} />
-        <View style={styles.filtersRow}>
-          <Text
-            style={[styles.filterChip, { borderColor: theme.colors.outlineVariant, color: theme.colors.onSurface }]}
-            onPress={() => setPickerVisible(true)}
-          >
-            型号筛选
-          </Text>
-          <Text
-            style={[styles.filterChip, { borderColor: theme.colors.outlineVariant, color: theme.colors.onSurface }]}
-            onPress={() => {
-              setBrandId(undefined);
-              setModelId(undefined);
-            }}
-          >
-            清空
-          </Text>
-        </View>
-      </View>
-
-      {items.length === 0 ? (
-        <EmptyState icon="store-search" title="暂无结果" subtitle="可尝试换关键词或清空筛选" />
-      ) : (
-        <FlatList
-          data={items}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id}
-          onEndReached={onEndReached}
-          onEndReachedThreshold={0.4}
-          refreshControl={<RefreshControl refreshing={query.isRefetching} onRefresh={() => query.refetch()} />}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-        />
-      )}
-
-      <BrandModelPicker
-        visible={pickerVisible}
-        onDismiss={() => setPickerVisible(false)}
-        organizationId={organizationId}
-        selectedBrandId={brandId}
-        selectedModelId={modelId}
-        onSelect={(bId, mId) => {
-          setBrandId(bId);
-          setModelId(mId);
-          setPickerVisible(false);
-        }}
+      <SegmentedButtons
+        value={tab}
+        onValueChange={(v) => setTab(v as 'find' | 'sell')}
+        buttons={[
+          { value: 'find', label: '找货' },
+          { value: 'sell', label: '卖货' },
+        ]}
+        style={styles.seg}
       />
+
+      {tab === 'find' ? (
+        <View style={{ flex: 1 }}>
+          <SearchBar placeholder="SN / 关键词" onSearch={(s) => setQ(s)} debounceMs={400} />
+          {findQ.isLoading ? (
+            <LoadingScreen />
+          ) : findQ.isError ? (
+            <QueryError onRetry={() => findQ.refetch()} />
+          ) : (
+            <FlashList
+              data={findQ.data?.items ?? []}
+              estimatedItemSize={96}
+              keyExtractor={(it) => it.id}
+              refreshControl={<RefreshControl refreshing={findQ.isRefetching} onRefresh={() => findQ.refetch()} />}
+              ListEmptyComponent={<EmptyState icon="store" title="暂无上架设备" />}
+              renderItem={({ item }) => (
+                <View style={[styles.card, { borderColor: theme.colors.outline }]}>
+                  <Text style={{ fontWeight: '700' }}>{item.modelName}</Text>
+                  <Text style={{ color: theme.colors.onSurfaceVariant, marginTop: 4 }}>
+                    {item.storeName} · SN {item.sn}
+                  </Text>
+                  <Text style={{ marginTop: 6 }}>参考 {item.referencePrice != null ? yuan(item.referencePrice) : '—'}</Text>
+                  <Button mode="outlined" compact style={{ marginTop: 8 }} onPress={() => Alert.alert('联系卖家', '功能开发中')}>
+                    联系卖家
+                  </Button>
+                </View>
+              )}
+            />
+          )}
+        </View>
+      ) : null}
+
+      {tab === 'sell' ? (
+        mineQ.isLoading ? (
+          <LoadingScreen />
+        ) : mineQ.isError ? (
+          <QueryError onRetry={() => mineQ.refetch()} />
+        ) : (
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.hint, { color: theme.colors.onSurfaceVariant }]}>
+              上架请从库存列表批量操作；此处仅管理已上架。
+            </Text>
+            <FlashList
+              data={mineQ.data?.items ?? []}
+              estimatedItemSize={88}
+              keyExtractor={(it) => it.id}
+              refreshControl={<RefreshControl refreshing={mineQ.isRefetching} onRefresh={() => mineQ.refetch()} />}
+              ListEmptyComponent={<EmptyState icon="store-off" title="暂无已上架设备" />}
+              renderItem={({ item }) => (
+                <View style={[styles.card, { borderColor: theme.colors.outline }]}>
+                  <Text style={{ fontWeight: '700' }}>{item.modelName}</Text>
+                  <Text style={{ marginTop: 4 }}>SN {item.sn}</Text>
+                  <Text style={{ marginTop: 4 }}>{item.referencePrice != null ? yuan(item.referencePrice) : '—'}</Text>
+                  <Button mode="text" textColor={theme.colors.error} onPress={() => delist(item.id)}>
+                    下架
+                  </Button>
+                </View>
+              )}
+            />
+          </View>
+        )
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  root: { flex: 1 },
+  hero: { paddingHorizontal: 16, paddingTop: 48, paddingBottom: 16 },
+  heroTitle: { fontSize: 22, fontWeight: '800', color: '#fff' },
+  heroSub: { color: 'rgba(255,255,255,0.85)', marginTop: 4 },
+  seg: { marginHorizontal: 12, marginVertical: 8 },
+  hint: { marginHorizontal: 16, marginBottom: 8 },
+  card: {
+    marginHorizontal: 12,
+    marginBottom: 10,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: StyleSheet.hairlineWidth,
   },
-  header: { backgroundColor: BRAND_COLOR, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 12 },
-  heroRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  heroTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#333333',
-  },
-  heroBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.35)',
-    color: '#333333',
-    fontWeight: '800',
-    fontSize: 12,
-  },
-  heroSubtitle: { marginTop: 8, fontSize: 12, fontWeight: '600' },
-  filtersRow: { flexDirection: 'row', gap: 10, marginTop: 10 },
-  filterChip: {
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    overflow: 'hidden',
-    fontWeight: '700',
-  },
-  listContent: { paddingBottom: 24, paddingTop: 4 },
 });

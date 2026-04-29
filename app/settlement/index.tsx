@@ -1,136 +1,346 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl, Alert } from 'react-native';
-import {  Card, Divider, Button, useTheme } from 'react-native-paper';
+import React, { useCallback, useMemo, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  RefreshControl,
+  Alert,
+  Pressable,
+} from 'react-native';
+import {
+  Button,
+  Card,
+  Divider,
+  SegmentedButtons,
+  TextInput,
+  useTheme,
+  Badge,
+} from 'react-native-paper';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../hooks/useAuth';
-import { useQuery } from '@tanstack/react-query';
 import { getDailyReport } from '../../services/stats-service';
+import { getSettlementList, createSettlement } from '../../services/settlement-service';
 import { printerService } from '../../services/printer-service';
 import { LoadingScreen } from '../../components/common/LoadingScreen';
 import { QueryError } from '../../components/common/QueryError';
+import { PageHeader } from '../../components/common/PageHeader';
+import { StatsCard } from '../../components/common/StatsCard';
+import { EmptyState } from '../../components/common/EmptyState';
+import { FlashList } from '../../components/ui/TypedFlashList';
 import { formatDate, yuan } from '../../lib/utils';
 import { COMPANY_NAME } from '../../lib/constants';
+import { BRAND_COLOR } from '../../lib/theme';
+import { centsToFixed2, moneyToCents } from '../../lib/money';
+import type { DailySettlement } from '../../types/settlement';
+
+function isoDate(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
 
 export default function SettlementScreen() {
   const theme = useTheme();
-
+  const queryClient = useQueryClient();
   const { storeId, organizationId, storeName } = useAuth();
-  const [printing, setPrinting] = useState(false);
+  const [tab, setTab] = useState<'report' | 'confirm' | 'history'>('report');
+  const [dateStr, setDateStr] = useState(() => isoDate(new Date()));
+  const [openingStr, setOpeningStr] = useState('');
+  const [closingStr, setClosingStr] = useState('');
+  const [note, setNote] = useState('');
+  const [printingId, setPrintingId] = useState<string | null>(null);
 
-  const { data: report, isLoading, isError, refetch, isRefetching } = useQuery({
-    queryKey: ['dailyReport', storeId, organizationId],
+  const shiftDay = useCallback((delta: number) => {
+    const d = new Date(`${dateStr}T12:00:00`);
+    d.setDate(d.getDate() + delta);
+    setDateStr(isoDate(d));
+  }, [dateStr]);
+
+  const { data: report, isLoading: loadingReport, isError: errReport, refetch: refetchReport, isRefetching: refetchingReport } = useQuery({
+    queryKey: ['dailyReport', storeId, organizationId, dateStr],
     queryFn: () =>
       getDailyReport({
         storeId: storeId ?? undefined,
         organizationId: organizationId ?? undefined,
+        date: dateStr,
       }),
     enabled: !!storeId && !!organizationId,
   });
 
-  const handlePrint = async () => {
-    if (printing) return;
-    setPrinting(true);
+  const { data: settlementsToday, refetch: refetchToday } = useQuery({
+    queryKey: ['settlements', storeId, organizationId, dateStr],
+    queryFn: () =>
+      getSettlementList({
+        organizationId: organizationId ?? '',
+        storeId: storeId ?? '',
+        date: dateStr,
+      }),
+    enabled: !!storeId && !!organizationId,
+  });
+
+  const { data: settlementsHistory, refetch: refetchHistory, isRefetching: refetchingHist } = useQuery({
+    queryKey: ['settlementsHistory', storeId, organizationId],
+    queryFn: () =>
+      getSettlementList({
+        organizationId: organizationId ?? '',
+        storeId: storeId ?? '',
+      }),
+    enabled: !!storeId && !!organizationId && tab === 'history',
+  });
+
+  const todaySettlement = settlementsToday?.items?.[0];
+
+  const expectedPreview = useMemo(() => {
+    const oc = moneyToCents(openingStr || '0');
+    const sales = moneyToCents(String(report?.sales.amount ?? 0));
+    const purchase = moneyToCents(String(report?.purchase.cost ?? 0));
+    const sum = oc + sales - purchase;
+    return centsToFixed2(sum);
+  }, [openingStr, report?.purchase.cost, report?.sales.amount]);
+
+  const diffPreview = useMemo(() => {
+    const close = moneyToCents(closingStr || '0');
+    const exp = moneyToCents(expectedPreview);
+    return centsToFixed2(close - exp);
+  }, [closingStr, expectedPreview]);
+
+  const createMut = useMutation({
+    mutationFn: () =>
+      createSettlement({
+        organizationId: organizationId ?? '',
+        storeId: storeId ?? '',
+        openingCash: Number(openingStr || '0'),
+        closingCash: Number(closingStr || '0'),
+        discrepancyNote: note.trim() || undefined,
+      }),
+    onSuccess: async () => {
+      Alert.alert('成功', '日结已提交');
+      setNote('');
+      await queryClient.invalidateQueries({ queryKey: ['settlements'] });
+      await queryClient.invalidateQueries({ queryKey: ['settlementsHistory'] });
+      await refetchToday();
+    },
+    onError: (e: unknown) => Alert.alert('失败', e instanceof Error ? e.message : '提交失败'),
+  });
+
+  const handlePrintRow = useCallback(
+    async (row: DailySettlement) => {
+      setPrintingId(row.id);
+      try {
+        const ok = await printerService.printDailySettlement({
+          storeName: storeName ?? '未知门店',
+          date: formatDate(row.date),
+          totalSales: yuan(row.totalSales),
+          totalPurchases: yuan(row.totalPurchases),
+          deviceCount: row.devicesIn,
+          repairCount: row.devicesOut,
+        });
+        if (!ok) Alert.alert('打印', '当前为打印占位，未连接蓝牙打印机');
+      } finally {
+        setPrintingId(null);
+      }
+    },
+    [storeName],
+  );
+
+  const handlePrintCurrent = useCallback(async () => {
+    if (!report) return;
     try {
       const ok = await printerService.printDailySettlement({
         storeName: storeName ?? '未知门店',
-        date: formatDate(new Date().toISOString()),
-        totalSales: yuan(report?.sales.amount ?? 0),
-        totalPurchases: yuan(report?.purchase.cost ?? 0),
-        deviceCount: report?.purchase.count ?? 0,
-        repairCount: report?.sales.count ?? 0,
+        date: formatDate(dateStr),
+        totalSales: yuan(report.sales.amount),
+        totalPurchases: yuan(report.purchase.cost),
+        deviceCount: report.purchase.count,
+        repairCount: report.sales.count,
       });
-      if (!ok) {
-        Alert.alert('打印失败', '请检查打印机连接');
-      } else {
-        Alert.alert('成功', '日结单已打印');
-      }
-    } catch (err) {
-      Alert.alert('打印失败', err instanceof Error ? err.message : '请检查打印机连接');
-    } finally {
-      setPrinting(false);
+      if (!ok) Alert.alert('打印', '当前为打印占位，未连接蓝牙打印机');
+    } catch (e) {
+      Alert.alert('打印失败', e instanceof Error ? e.message : '');
     }
-  };
+  }, [dateStr, report, storeName]);
 
-  if (isLoading) return <LoadingScreen />;
-  if (isError) return <QueryError onRetry={() => refetch()} />;
-
-  const today = formatDate(new Date().toISOString());
+  if (!storeId || !organizationId) return <LoadingScreen />;
+  if (loadingReport && tab === 'report') return <LoadingScreen />;
+  if (errReport && tab === 'report') return <QueryError onRetry={() => refetchReport()} />;
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-      refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
-    >
-      <Card style={styles.card} mode="elevated">
-        <Card.Title title={`日结单 - ${today}`} titleStyle={styles.cardTitle} />
-        <Card.Content>
-          <Text style={[styles.storeName, { color: theme.colors.onSurfaceVariant }]}>{storeName ?? '未选择门店'}</Text>
-          <Divider style={styles.divider} />
+    <View style={[styles.root, { backgroundColor: theme.colors.background }]}>
+      <PageHeader title="日结交账" showBack />
+      <SegmentedButtons
+        value={tab}
+        onValueChange={(v) => setTab(v as 'report' | 'confirm' | 'history')}
+        buttons={[
+          { value: 'report', label: '经营日报' },
+          { value: 'confirm', label: '确认日结' },
+          { value: 'history', label: '历史' },
+        ]}
+        style={styles.seg}
+      />
 
-          <View style={styles.metricRow}>
-            <View style={styles.metric}>
-              <Text style={[styles.metricLabel, { color: theme.colors.onSurfaceVariant }]}>销售额</Text>
-              <Text style={[styles.metricValue, { color: theme.colors.primary }]}>
-                {yuan(report?.sales.amount ?? 0)}
-              </Text>
-            </View>
-            <View style={styles.metric}>
-              <Text style={[styles.metricLabel, { color: theme.colors.onSurfaceVariant }]}>采购额</Text>
-              <Text style={styles.metricValue}>
-                {yuan(report?.purchase.cost ?? 0)}
-              </Text>
-            </View>
+      {tab === 'report' && (
+        <ScrollView
+          refreshControl={<RefreshControl refreshing={refetchingReport} onRefresh={() => refetchReport()} />}
+          contentContainerStyle={styles.pad}
+        >
+          <View style={styles.dateRow}>
+            <Pressable onPress={() => shiftDay(-1)} style={styles.dateBtn}>
+              <Text style={{ color: BRAND_COLOR }}>←</Text>
+            </Pressable>
+            <Text style={[styles.dateText, { color: theme.colors.onSurface }]}>{dateStr}</Text>
+            <Pressable onPress={() => shiftDay(1)} style={styles.dateBtn}>
+              <Text style={{ color: BRAND_COLOR }}>→</Text>
+            </Pressable>
           </View>
 
-          <Divider style={styles.divider} />
+          {report && (
+            <>
+              <View style={styles.statsRow}>
+                <StatsCard label="销售额" value={yuan(report.sales.amount)} color={BRAND_COLOR} />
+                <StatsCard label="采购成本" value={yuan(report.purchase.cost)} />
+              </View>
+              <View style={styles.statsRow}>
+                <StatsCard label="入库台数" value={`${report.purchase.count}`} />
+                <StatsCard label="出库台数" value={`${report.sales.count}`} />
+              </View>
+              <Card style={styles.card}>
+                <Card.Title title="现金流与预警" />
+                <Card.Content>
+                  <Text style={{ color: theme.colors.onSurface }}>
+                    净现金流 {yuan(report.netCashFlow)}
+                  </Text>
+                  <Text style={{ marginTop: 8, color: theme.colors.onSurfaceVariant }}>
+                    库存预警 {report.stockAgeWarning} · 应收到期 {report.receivableDue} · 应付到期 {report.payableDue}
+                  </Text>
+                  <Divider style={{ marginVertical: 12 }} />
+                  <Text style={{ fontWeight: '600', marginBottom: 8 }}>毛利 TOP5</Text>
+                  {report.profitTop5?.length ? (
+                    report.profitTop5.map((p) => (
+                      <Text key={p.modelName} style={{ color: theme.colors.onSurface }}>
+                        {p.modelName} · {yuan(p.profit)}
+                      </Text>
+                    ))
+                  ) : (
+                    <Text style={{ color: theme.colors.onSurfaceVariant }}>暂无数据</Text>
+                  )}
+                </Card.Content>
+              </Card>
+            </>
+          )}
 
-          <View style={styles.metricRow}>
-            <View style={styles.metric}>
-              <Text style={[styles.metricLabel, { color: theme.colors.onSurfaceVariant }]}>入库</Text>
-              <Text style={[styles.countValue, { color: theme.colors.onSurface }]}>{report?.purchase.count ?? 0} 台</Text>
-            </View>
-            <View style={styles.metric}>
-              <Text style={[styles.metricLabel, { color: theme.colors.onSurfaceVariant }]}>出库</Text>
-              <Text style={[styles.countValue, { color: theme.colors.onSurface }]}>{report?.sales.count ?? 0} 台</Text>
-            </View>
-          </View>
+          <Button mode="contained" icon="printer" onPress={() => void handlePrintCurrent()} style={styles.mb}>
+            打印当前日报摘要
+          </Button>
+          <Text style={[styles.footer, { color: theme.colors.onSurfaceVariant }]}>{COMPANY_NAME}</Text>
+        </ScrollView>
+      )}
 
-          <Divider style={styles.divider} />
-
-          <View style={styles.metricRow}>
-            <View style={styles.metric}>
-              <Text style={[styles.metricLabel, { color: theme.colors.onSurfaceVariant }]}>净现金流</Text>
-              <Text style={[styles.metricValue, { color: (report?.netCashFlow ?? 0) >= 0 ? theme.colors.primary : theme.colors.error }]}>
-                {yuan(report?.netCashFlow ?? 0)}
+      {tab === 'confirm' && (
+        <ScrollView contentContainerStyle={styles.pad}>
+          <Text style={{ color: theme.colors.onSurfaceVariant, marginBottom: 8 }}>
+            日期 {dateStr}（与日报 Tab 同步）
+          </Text>
+          {todaySettlement ? (
+            <Card style={styles.card}>
+              <Card.Title title="今日已日结" />
+              <Card.Content>
+                <Text style={{ color: theme.colors.onSurface }}>差额 {yuan(todaySettlement.cashDifference)}</Text>
+                <Text style={{ marginTop: 4 }}>状态 {todaySettlement.status}</Text>
+              </Card.Content>
+            </Card>
+          ) : (
+            <>
+              <TextInput label="期初现金" value={openingStr} onChangeText={setOpeningStr} keyboardType="decimal-pad" mode="outlined" />
+              <TextInput
+                label="期末现金"
+                value={closingStr}
+                onChangeText={setClosingStr}
+                keyboardType="decimal-pad"
+                mode="outlined"
+                style={{ marginTop: 8 }}
+              />
+              <Text style={{ marginTop: 12, color: theme.colors.onSurfaceVariant }}>
+                应有现金（预览）≈ 期初 + 当日销售 − 采购成本（与后台口径接近）
               </Text>
-            </View>
-            <View style={styles.metric}>
-              <Text style={[styles.metricLabel, { color: theme.colors.onSurfaceVariant }]}>库存预警</Text>
-              <Text style={[styles.countValue, { color: theme.colors.onSurface }]}>{report?.stockAgeWarning ?? 0}</Text>
-            </View>
-          </View>
-        </Card.Content>
-      </Card>
+              <Text style={[styles.preview, { color: BRAND_COLOR }]}>¥{expectedPreview}</Text>
+              <Text style={{ marginTop: 8, color: theme.colors.error }}>差额（预览）¥{diffPreview}</Text>
+              <TextInput
+                label="备注（选填）"
+                value={note}
+                onChangeText={setNote}
+                mode="outlined"
+                multiline
+                style={{ marginTop: 12 }}
+              />
+              <Button
+                mode="contained"
+                loading={createMut.isPending}
+                onPress={() => createMut.mutate()}
+                style={{ marginTop: 16 }}
+              >
+                确认日结
+              </Button>
+            </>
+          )}
+        </ScrollView>
+      )}
 
-      <Button mode="contained" icon="printer" onPress={handlePrint} style={styles.printBtn} loading={printing} disabled={printing} accessibilityLabel="打印日结单">
-        打印日结单
-      </Button>
-
-      <Text style={[styles.footer, { color: theme.colors.onSurfaceVariant }]}>{COMPANY_NAME}</Text>
-    </ScrollView>
+      {tab === 'history' && (
+        <View style={styles.flex}>
+          <FlashList
+            style={{ flex: 1 }}
+            data={settlementsHistory?.items ?? []}
+            estimatedItemSize={120}
+            refreshControl={<RefreshControl refreshing={refetchingHist} onRefresh={() => refetchHistory()} />}
+            keyExtractor={(item) => item.id}
+            ListEmptyComponent={<EmptyState icon="calendar" title="暂无日结记录" />}
+            renderItem={({ item }) => (
+              <Card style={styles.card} mode="outlined">
+                <Card.Title
+                  title={formatDate(item.date)}
+                  right={() =>
+                    item.status === 'APPROVED' ? (
+                      <Badge style={{ marginRight: 12 }}>已核准</Badge>
+                    ) : (
+                      <Badge style={{ marginRight: 12 }}>{item.status}</Badge>
+                    )
+                  }
+                />
+                <Card.Content>
+                  <Text style={{ color: theme.colors.onSurface }}>
+                    收入 {yuan(item.totalSales)} · 支出 {yuan(item.totalPurchases)}
+                  </Text>
+                  <Text style={{ marginTop: 4, color: theme.colors.error }}>差额 {yuan(item.cashDifference)}</Text>
+                  <Button
+                    mode="outlined"
+                    compact
+                    icon="printer"
+                    loading={printingId === item.id}
+                    onPress={() => void handlePrintRow(item)}
+                    style={{ marginTop: 8 }}
+                  >
+                    打印
+                  </Button>
+                </Card.Content>
+              </Card>
+            )}
+          />
+        </View>
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fafafa' },
-  card: { margin: 16 },
-  cardTitle: { fontSize: 16, fontWeight: '600' },
-  storeName: { fontSize: 14, color: '#757575', marginBottom: 8 },
-  divider: { marginVertical: 8 },
-  metricRow: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 8 },
-  metric: { alignItems: 'center', flex: 1 },
-  metricLabel: { fontSize: 13, color: '#9e9e9e', marginBottom: 4 },
-  metricValue: { fontSize: 20, fontWeight: 'bold' },
-  countValue: { fontSize: 18, fontWeight: '600', color: '#424242' },
-  printBtn: { marginHorizontal: 16, marginBottom: 16 },
-  footer: { textAlign: 'center', fontSize: 12, color: '#bdbdbd', marginBottom: 24 },
+  root: { flex: 1 },
+  seg: { marginHorizontal: 12, marginBottom: 8 },
+  pad: { padding: 16, paddingBottom: 32 },
+  flex: { flex: 1, paddingHorizontal: 12 },
+  dateRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+  dateBtn: { paddingHorizontal: 16, paddingVertical: 8 },
+  dateText: { fontSize: 16, fontWeight: '600' },
+  statsRow: { flexDirection: 'row', gap: 8, marginBottom: 8 },
+  card: { marginBottom: 12 },
+  mb: { marginVertical: 12 },
+  footer: { textAlign: 'center', fontSize: 12, marginBottom: 24 },
+  preview: { fontSize: 22, fontWeight: '700', marginTop: 4 },
 });

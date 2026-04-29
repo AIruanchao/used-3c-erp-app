@@ -190,7 +190,7 @@ export default function RootLayout() {
             />
             <Stack.Screen
               name="settlement/index"
-              options={{ headerShown: true, title: '日结' }}
+              options={{ headerShown: false, title: '日结' }}
             />
             <Stack.Screen
               name="outbound/index"
@@ -260,6 +260,10 @@ export default function RootLayout() {
               name="crash-logs"
               options={{ headerShown: true, title: '🐛 崩溃日志' }}
             />
+            <Stack.Screen name="warranty/index" options={{ headerShown: false, title: '质保查询' }} />
+            <Stack.Screen name="notification/index" options={{ headerShown: false, title: '通知' }} />
+            <Stack.Screen name="trade/index" options={{ headerShown: false, title: '回收登记' }} />
+            <Stack.Screen name="trade/new" options={{ headerShown: false, title: '新建回收' }} />
           </Stack>
         </PaperProvider>
       </QueryClientProvider>

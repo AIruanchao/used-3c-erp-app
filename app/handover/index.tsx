@@ -57,10 +57,12 @@ export default function HandoverListScreen() {
               <Chip
                 style={{
                   backgroundColor:
-                    item.status === 'PENDING' ? (theme.colors.tertiaryContainer ?? theme.colors.surfaceVariant) : theme.colors.primaryContainer,
+                    item.status === 'PENDING'
+                      ? (theme.colors.tertiaryContainer ?? theme.colors.surfaceVariant)
+                      : theme.colors.primaryContainer,
                 }}
               >
-                {item.status}
+                {item.toConfirmed ? '已确认' : '待确认'}
               </Chip>
             </View>
             {open && (
@@ -81,6 +83,21 @@ export default function HandoverListScreen() {
                   titleStyle={{ color: theme.colors.onSurfaceVariant, fontSize: 13 }}
                   description={String(item.pendingShipments?.count ?? 0)}
                 />
+                {item.pendingReturns != null &&
+                  (item.pendingReturns.pendingRepairs > 0 || item.pendingReturns.pendingPickupRepairs > 0) && (
+                  <>
+                    {item.pendingReturns.pendingRepairs > 0 ? (
+                      <Text style={{ color: theme.colors.error, marginTop: 4 }}>
+                        ⚠️ 有 {item.pendingReturns.pendingRepairs} 台维修中
+                      </Text>
+                    ) : null}
+                    {item.pendingReturns.pendingPickupRepairs > 0 ? (
+                      <Text style={{ color: theme.colors.primary, marginTop: 4 }}>
+                        📦 有 {item.pendingReturns.pendingPickupRepairs} 台待取机
+                      </Text>
+                    ) : null}
+                  </>
+                )}
                 {item.cashHandover != null && (
                   <List.Item
                     title="现金交接"

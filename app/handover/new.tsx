@@ -12,11 +12,14 @@ import {
   Portal,
   Dialog,
   RadioButton,
+  Card,
 } from 'react-native-paper';
 import { useRouter, Stack } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../../hooks/useAuth';
 import { getStoreTeam, createHandover } from '../../services/handover-service';
+import { getDailyReport } from '../../services/stats-service';
+import { yuan } from '../../lib/utils';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function NewHandoverScreen() {
@@ -37,6 +40,16 @@ export default function NewHandoverScreen() {
   const { data: team } = useQuery({
     queryKey: ['storeTeam', organizationId, storeId],
     queryFn: () => getStoreTeam({ organizationId: organizationId ?? '', storeId: storeId ?? '' }),
+    enabled: !!organizationId && !!storeId,
+  });
+
+  const { data: todayReport } = useQuery({
+    queryKey: ['dailyReport', organizationId, storeId, 'handover-preview'],
+    queryFn: () =>
+      getDailyReport({
+        organizationId: organizationId ?? '',
+        storeId: storeId ?? '',
+      }),
     enabled: !!organizationId && !!storeId,
   });
 
@@ -122,6 +135,14 @@ export default function NewHandoverScreen() {
           <Switch value={safeH} onValueChange={setSafeH} />
         </View>
         <TextInput label="特殊备注" value={note} onChangeText={setNote} multiline numberOfLines={3} maxLength={500} mode="outlined" style={styles.in} />
+        {todayReport ? (
+          <Card style={[styles.in, { padding: 12 }]}>
+            <Text style={{ fontWeight: '600', marginBottom: 8 }}>今日业务概况（预览）</Text>
+            <Text style={{ color: theme.colors.onSurfaceVariant }}>
+              入库 {todayReport.purchase.count} 台 · 出库 {todayReport.sales.count} 台 · 净现金流 {yuan(todayReport.netCashFlow)}
+            </Text>
+          </Card>
+        ) : null}
         {err && <HelperText type="error">{err}</HelperText>}
         <Button mode="contained" onPress={() => void submit()} loading={saving}>
           提交

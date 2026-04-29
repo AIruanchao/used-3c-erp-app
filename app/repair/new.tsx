@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   StyleSheet,
   TextInput,
@@ -11,7 +11,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Button, Chip, Divider, useTheme } from 'react-native-paper';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../hooks/useAuth';
 import { acceptRepairQuote, createRepair, createRepairPayment, quoteRepair } from '../../services/repair-service';
@@ -33,6 +33,7 @@ export default function NewRepairScreen() {
   const theme = useTheme();
 
   const router = useRouter();
+  const params = useLocalSearchParams<{ sn?: string }>();
   const queryClient = useQueryClient();
   const { storeId, organizationId } = useAuth();
   const [step, setStep] = useState(0);
@@ -42,6 +43,12 @@ export default function NewRepairScreen() {
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [deviceSn, setDeviceSn] = useState('');
+
+  useEffect(() => {
+    if (typeof params.sn === 'string' && params.sn.trim()) {
+      setDeviceSn(params.sn.trim());
+    }
+  }, [params.sn]);
   const [password, setPassword] = useState('');
   const [source, setSource] = useState<string>('OFFLINE');
   const [keepStatus, setKeepStatus] = useState<string>('REPAIR_NOW');
